@@ -12,9 +12,10 @@ PISS16 is a 16bit architecture designed for educational purposes. It focuses on 
 ### Key Features
 - *16-bit Data and Address Width*
 - *Variable-length instructions* (16-bit or 32-bit)
-- *64KiB Addressable Memory*
+- *128kiB (64kiW) Word Addressable Memory*
 - *Simple instruction format* for decoding simplicity
 - *Educational focus* with clear, logical instruction organization
+- *LSBian machine*
 
 ## Table of contents
 
@@ -68,7 +69,14 @@ PISS16 is a 16bit architecture designed for educational purposes. It focuses on 
 | ldw Rd src | 1000 | XXX | Rd <-- MEM[src] |
 | stw Rd src | 1001 | XXX | MEM[src] <-- Rd |
 | call src | 1010 | XXX | IP <-- src ; MEM[SP - 2] <-- IP ; SP <-- SP - 2|
-| ret | 1011 | XXX | IP <-- MEM[SP] ; SP <-- SP + 2|
+| ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 2|
+| iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 2 ; turns on interrupts |
+|      | 1011 | 010 | reserved |
+|      | 1011 | 011 | reserved |
+|      | 1011 | 100 | reserved |
+|      | 1011 | 101 | reserved |
+|      | 1011 | 110 | reserved |
+|      | 1011 | 111 | reserved |
 | push src | 1100 | XXX | MEM[SP - 2] <-- src ; SP <-- SP - 2  |   
 | pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 2  |   
 |    | 1110 |     | reserved |
@@ -98,6 +106,27 @@ if J = 1 then second operand is immediate and S is ignored
 if J = 0 then second operand is register and I field **is not present**  
  `OOOO0FFF'DDDDSSSS`  
 
+
+<a name="memory"></a>
+## Memory
+
+<a name="general"></a>
+### General
+
+There are 128kiB of memory addressable, 64kiB are general purpose (see address map below).
+
+The memory is word addressable, it is not possible to access a single byte.
+
+<a name="address map"></a>
+### Address Map
+
+```
+0x0000 to 0x7FFF:
+    writes - video memory
+    reads  - instruction memory
+0x8000 to 0xFFFF:
+    general purpose memory
+```
 
 <a name="registers"></a>
 ## Registers
@@ -171,15 +200,55 @@ IO is based on 2 mechanisms:
 <!-- TOC --><a name="polling"></a>
 #### polling
 
-Communication is initiated by the CPU via `in` and `out` instructions, these instructions can only be executed when IO device has its busy flag set to 0, otherwise the behavior is undefined
+Communication is initiated by the CPU via `in` and `out` instructions, these instructions can only be executed when IO device has its busy flag set to 0, otherwise the behavior is undefined.
+Whenever processor issues `in` or `out` a device either writes a value to or reads a value from specified register.
+The exact behavior depends on the device and can be found in corresponding manual, but there is **no** delay induced by these instructions, any delay must happen *before* or *after* them via busy flag.
 
 <!-- TOC --><a name="interrupts"></a>
 #### Interrupts
 
-TODO
+Interrupt happens ALWAYS AFTER the current instruction, NEVER during one, this means that IRET can NOT be followd be an interrupt.
+
+When a device signals readiness to a processor, it sets an interrupt, this interrupt appears as a flag in CR0 (the bit position from the left indicates the device id, count starts from 0).  
+
+IF `interrupt_flag[device_id] AND interrupt_mask[device_id] = 1` THEN an interrupt takes place, in case more than one interrupt were to occur, the leftmost one (lowest ID) takes priority.
+An interrupt starts by saving IP of instruction which would execute if there was no interrupt. to the stack, then the control is passed to proper subroutine.
+
+Switching to interrupt handler automatically surpresses further interrupts (does NOT clear them, only surpresses) until manually turned back on again.
+The interrupts can be turned back on by writing x0001 to IO 0 - `out 0 x0000`.
+
+<!-- TOC --><a name="interrupt-handler-table"></a>
+#### Interrupt Handler Table
+
+An 8 entry table is located in internal memory, each word stores a *pointer* into actual interrupt handling routines.
+to set n-th entry, use `out 0 n` followed by `out 0 handler_addres`, respecting usual rules of using `out`.
+An interrupt handling routine may be located anywhere in readable memory.
+
+<!-- TOC --><a name="interrupt-handler-routine"></a>
+#### Interrupt Handler Routine
+
+The Instruction Pointer is automatically handle by HW, all other registers are NOT SAVED, therefore it is the job of programmer to ensure proper register saving via PUSH and PULL.
+The interrupt information is received by using `in` with appropriate device id. Device stops signaling interrupt when **it** decides that it is handled, usually that means reading from it via `in`.
+
+Each IHR must end with IRET to turn interrupts back on.
 
 
-#### Interrupt Handler
+<!-- TOC --><a name="IO device id list"></a>
+#### IO device List
+
+| id | device |
+| :---: | :---: |
+| 000 | board (and timer) |
+| 001 | keyboard |
+| 010 | gpu |
+| 011 | persistent storage |
+| 100 | reserved |
+| 101 | reserved |
+| 110 | reserved |
+| 111 | reserved |
+
+
+For more detailed description of behavior see corresponding manual.
 
 <!-- TOC --><a name="processor-flags"></a>
 ## Processor Flags
@@ -459,6 +528,14 @@ The processor maintains four condition flags that are automatically updated by a
 - funct: XXX 
 - flags: unmodified
 - description: IP <-- MEM[SP] ; SP <-- SP + 2
+
+<!-- TOC --><a name="instruction iret"></a>
+### IRET 
+- instruction: ret 
+- opcode 1011 
+- funct: XXX 
+- flags: unmodified
+- description: IP <-- MEM[SP] ; SP <-- SP + 2 ; turns on interrupts
 
 <!-- TOC --><a name="instruction push"></a>
 ### PUSH 
