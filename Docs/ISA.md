@@ -62,7 +62,7 @@ PISS16 is a 16bit architecture designed for educational purposes. It focuses on 
 |bbe src | 0101 | 100 | if(FC = 1 or ZF = 1) IP <-- src (branch if below or equal (unsigned)) |
 |baa src | 0101 | 101 | if(FC = 0 and FZ = 0) IP <-- src (branch if above (unsigned)) |
 |bbb src | 0101 | 110 | if(FC = 1) IP <-- src (branch if below (unsigned)) |
-|boo src | 0101 | 111 | if(FO = 0) IP <-- src (branch if no overflow)
+|bno src | 0101 | 111 | if(FO = 0) IP <-- src (branch if no overflow)
 |    | |     |     |
 | in Rd | 0110 | fff  | Rd <-- IO[fff] |
 | out Rd | 0111 | fff  | IO[fff] <--- Rd |
@@ -473,9 +473,9 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FC = 1) IP <-- src (branch if below (unsigned)) 
 
-<!-- TOC --><a name="instruction boo"></a>
+<!-- TOC --><a name="instruction bno"></a>
 ### BOO 
-- instruction: boo src 
+- instruction: bno src 
 - opcode 0101 
 - funct: 111 
 - flags: unmodified

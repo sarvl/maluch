@@ -11,7 +11,7 @@ int code()
 
 	i_mov(R15, 4);
 	i_cmp(R15, 0);
-	i_bre("end");
+	i_bee("end");
 	
 
 	label("loop");
@@ -21,7 +21,7 @@ int code()
 	i_add(R9, R10);
 
 	i_sub(R15, 1);
-	i_bre("end");
+	i_bne("loop");
 
 	label("end");
 

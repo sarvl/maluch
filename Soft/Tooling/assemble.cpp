@@ -1,8 +1,5 @@
 #include "./asm.h"
-
-/* FOR NOW ONLY PRINTS INSTRUCTIONS
- * ENCODING WILL BE IMPLEMENTED ONCE IT IS FINALIZED
- */
+#include "./assemble.h"
 
 #include <cstdio> //printf
 
@@ -21,15 +18,21 @@ struct t_Label{
 };
 
 std::vector<t_Label> labels;
+std::vector<uint16_t> instructions;
 
 int label_to_pos(std::string_view const lab)
 {
+	//necessary for simplicity of trampolines
+	//they WILL call this function but the result does nott matter
+	if(label_only)
+		return 0;
+
 	for(auto const& l : labels)
 		if(l.name == lab)
 			return l.pos;
 
 
-	printf("ERROR: label %s undefined\n", &lab[0]);
+	printf("ERROR: label %s undefined\ninstruction in memory: 0x%04X\n", &lab[0], code_position);
 	return -1;
 }
 
@@ -43,160 +46,277 @@ void label(std::string_view const lab)
 }
 
 //no operand
-void i_ret()
-{
-	if(not label_only)
-		printf("x%04x: ret\n", code_position);
-
-	code_position++;
-	return;
+#define INSTR_NOARG(name, opcode, funct)\
+void name ()\
+{\
+	code_position++;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (funct  <<  8);\
+	\
+	instructions.emplace_back(instr);\
+	return;\
+}
+#define INSTR_RR(name, opcode, funct)\
+void name (t_reg const Rd, t_reg const src)\
+{\
+	code_position++;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (funct  <<  8)\
+	                     | (Rd  << 4)\
+	                     | (src << 0);\
+	\
+	instructions.emplace_back(instr);\
+	return;\
+}
+#define INSTR_RS(name, opcode, funct)\
+void name (t_reg const src)\
+{\
+	code_position++;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (funct  <<  8)\
+	                     | (src << 0);\
+	\
+	instructions.emplace_back(instr);\
+	return;\
+}
+#define INSTR_RD(name, opcode, funct)\
+void name (t_reg const Rd)\
+{\
+	code_position++;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (funct  <<  8)\
+	                     | (Rd << 4);\
+	\
+	instructions.emplace_back(instr);\
+	return;\
 }
 
-//reg
-#define INSTR_R(name)                                                          \
-void i_ ##name (reg::Type const src)                                           \
-{                                                                              \
-	if(not label_only)                                                         \
-		printf("x%04x: "#name" R%d\n", code_position, (src));                  \
-                                                                               \
-	code_position++;                                                           \
-	return;                                                                    \
+#define INSTR_FRS(name, opcode)\
+void name (uint8_t const funct, t_reg const src)\
+{\
+	code_position++;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (funct  <<  8)\
+	                     | (src << 0);\
+	\
+	instructions.emplace_back(instr);\
+	return;\
+}
+#define INSTR_FRD(name, opcode)\
+void name (uint8_t const funct, t_reg const Rd)\
+{\
+	code_position++;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (funct  <<  8)\
+	                     | (Rd << 4);\
+	\
+	instructions.emplace_back(instr);\
+	return;\
 }
 
-INSTR_R(jmp)
-INSTR_R(bre)
-INSTR_R(bne)
-INSTR_R(bgt)
-INSTR_R(bls)
-INSTR_R(call)
-INSTR_R(push)
-INSTR_R(pull)
-
-//reg-reg
-#define INSTR_RR(name)                                                                                    \
-void i_ ## name(reg::Type const dst, reg::Type const src)                                                 \
-{                                                                                                         \
-	if(not label_only)                                                                                    \
-		printf("x%04x: "#name" R%d R%d\n", code_position, (dst), (src));                                  \
-                                                                                                          \
-	code_position++;                                                                                      \
-	return;                                                                                               \
+#define INSTR_RI(name, opcode, funct)\
+void name (t_reg const Rd, uint16_t const src)\
+{\
+	code_position += 2;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (0b1 << 11)\
+	                     | (funct << 8)\
+	                     | (Rd  << 4);\
+	\
+	instructions.emplace_back(instr);\
+	instructions.emplace_back(src);\
+	return;\
+}
+#define INSTR_I(name, opcode, funct)\
+void name (uint16_t const src)\
+{\
+	code_position += 2;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (0b1 << 11)\
+	                     | (funct  <<  8);\
+	\
+	instructions.emplace_back(instr);\
+	instructions.emplace_back(src);\
+	return;\
 }
 
-INSTR_RR(mov)
-INSTR_RR(ldw)
-INSTR_RR(sdw)
-INSTR_RR(cmp)
-INSTR_RR(add)
-INSTR_RR(sub)
-INSTR_RR(and)
-INSTR_RR(or)
-INSTR_RR(xor)
-INSTR_RR(not)
-INSTR_RR(lsr)
-INSTR_RR(lsl)
-
-//imm
-#define INSTR_I(name)                                                      \
-void i_ ##name (uint16_t const imm)                                        \
-{                                                                          \
-	if(not label_only)                                                     \
-		printf("x%04x: "#name" x%04x\n", code_position, imm);              \
-                                                                           \
-	code_position++;                                                       \
-	return;                                                                \
+#define INSTR_FI(name, opcode)\
+void name (uint8_t const funct, uint16_t const src)\
+{\
+	code_position += 2;\
+	if(label_only) return;\
+\
+	uint16_t const instr = (opcode << 12)\
+	                     | (0b1 << 11)\
+	                     | (funct  <<  8);\
+	\
+	instructions.emplace_back(instr);\
+	instructions.emplace_back(src);\
+	return;\
 }
 
-#define INSTR_L(name)                                                      \
-void i_ ##name (std::string_view const lab)                                \
-{                                                                          \
-	if(not label_only)                                                     \
-		printf("x%04x: "#name" x%04x\n", code_position, label_to_pos(lab));\
-                                                                           \
-	code_position++;                                                       \
-	return;                                                                \
-}
+INSTR_NOARG(i_ret , 0b1011, 0b000)
+INSTR_NOARG(i_iret, 0b1011, 0b001)
 
-INSTR_I(jmp)
-INSTR_I(bre)
-INSTR_I(bne)
-INSTR_I(bgt)
-INSTR_I(bls)
-INSTR_I(call)
+//reg-reg variants
+INSTR_RR(i_mov , 0b0001, 0b000)
+INSTR_RR(i_ldw , 0b1000, 0b000)
+INSTR_RR(i_stw , 0b1001, 0b000)
 
-INSTR_L(jmp)
-INSTR_L(bre)
-INSTR_L(bne)
-INSTR_L(bgt)
-INSTR_L(bls)
-INSTR_L(call)
+INSTR_RR(i_add , 0b0010, 0b000)
+INSTR_RR(i_sub , 0b0010, 0b001)
+INSTR_RR(i_and , 0b0010, 0b010)
+INSTR_RR(i_or  , 0b0010, 0b011)
+INSTR_RR(i_xor , 0b0010, 0b100)
+INSTR_RR(i_not , 0b0010, 0b101)
+INSTR_RR(i_lsl , 0b0010, 0b110)
+INSTR_RR(i_lsr , 0b0010, 0b111)
 
-//reg-imm
-#define INSTR_RI(name)                                                                                 \
-void i_ ##name (reg::Type const dst, uint16_t const imm)                                               \
-{                                                                                                      \
-	if(not label_only)                                                                                 \
-		printf("x%04x: "#name" R%d x%04x\n", code_position, (dst), imm);                               \
-                                                                                                       \
-	code_position++;                                                                                   \
-	return;                                                                                            \
-}
-#define INSTR_RL(name)                                                                                 \
-void i_ ##name (reg::Type const dst, std::string_view const lab)                                       \
-{                                                                                                      \
-	if(not label_only)                                                                                 \
-		printf("x%04x: "#name" R%d x%04x\n", code_position, (dst), label_to_pos(lab));                 \
-                                                                                                       \
-	code_position++;                                                                                   \
-	return;                                                                                            \
-}
+INSTR_RR(i_cmp , 0b0011, 0b000)
+INSTR_RR(i_test, 0b0011, 0b001)
 
-INSTR_RI(mov)
-INSTR_RI(ldw)
-INSTR_RI(sdw)
-INSTR_RI(cmp)
+//reg variants
 
-INSTR_RI(add)
-INSTR_RI(sub)
-INSTR_RI(and)
-INSTR_RI(or)
-INSTR_RI(xor)
-INSTR_RI(not)
-INSTR_RI(lsr)
-INSTR_RI(lsl)
+INSTR_RS(i_jmp , 0b0100, 0b000)
+INSTR_RS(i_bee , 0b0100, 0b001)
+INSTR_RS(i_bne , 0b0100, 0b010)
+INSTR_RS(i_bge , 0b0100, 0b011)
+INSTR_RS(i_ble , 0b0100, 0b100)
+INSTR_RS(i_bgg , 0b0100, 0b101)
+INSTR_RS(i_bll , 0b0100, 0b110)
+INSTR_RS(i_boo , 0b0100, 0b111)
+INSTR_RS(i_bbs , 0b0101, 0b000)
+INSTR_RS(i_bss , 0b0101, 0b001)
+INSTR_RS(i_bns , 0b0101, 0b010)
+INSTR_RS(i_bae , 0b0101, 0b011)
+INSTR_RS(i_bbe , 0b0101, 0b100)
+INSTR_RS(i_baa , 0b0101, 0b101)
+INSTR_RS(i_bbb , 0b0101, 0b110)
+INSTR_RS(i_bno , 0b0101, 0b111)
 
-INSTR_RL(mov)
-INSTR_RL(ldw)
-INSTR_RL(sdw)
-INSTR_RL(cmp)
+INSTR_RS(i_call, 0b1010, 0b000)
 
-INSTR_RL(add)
-INSTR_RL(sub)
-INSTR_RL(and)
-INSTR_RL(or)
-INSTR_RL(xor)
-INSTR_RL(not)
-INSTR_RL(lsr)
-INSTR_RL(lsl)
+INSTR_RS(i_push, 0b1100, 0b000)
 
+INSTR_RD(i_pull, 0b1101, 0b000)
+
+//funct-reg variants
+INSTR_FRD(i_in , 0b0110);
+INSTR_FRS(i_out, 0b0110);
+
+//reg-imm variants
+INSTR_RI(i_mov , 0b0001, 0b000)
+INSTR_RI(i_ldw , 0b1000, 0b000)
+INSTR_RI(i_stw , 0b1001, 0b000)
+
+INSTR_RI(i_add , 0b0010, 0b000)
+INSTR_RI(i_sub , 0b0010, 0b001)
+INSTR_RI(i_and , 0b0010, 0b010)
+INSTR_RI(i_or  , 0b0010, 0b011)
+INSTR_RI(i_xor , 0b0010, 0b100)
+INSTR_RI(i_not , 0b0010, 0b101)
+INSTR_RI(i_lsl , 0b0010, 0b110)
+INSTR_RI(i_lsr , 0b0010, 0b111)
+
+INSTR_RI(i_cmp , 0b0011, 0b000)
+INSTR_RI(i_test, 0b0011, 0b001)
+
+//imm variants
+
+INSTR_I(i_jmp , 0b0100, 0b000)
+INSTR_I(i_bee , 0b0100, 0b001)
+INSTR_I(i_bne , 0b0100, 0b010)
+INSTR_I(i_bge , 0b0100, 0b011)
+INSTR_I(i_ble , 0b0100, 0b100)
+INSTR_I(i_bgg , 0b0100, 0b101)
+INSTR_I(i_bll , 0b0100, 0b110)
+INSTR_I(i_boo , 0b0100, 0b111)
+INSTR_I(i_bbs , 0b0101, 0b000)
+INSTR_I(i_bss , 0b0101, 0b001)
+INSTR_I(i_bns , 0b0101, 0b010)
+INSTR_I(i_bae , 0b0101, 0b011)
+INSTR_I(i_bbe , 0b0101, 0b100)
+INSTR_I(i_baa , 0b0101, 0b101)
+INSTR_I(i_bbb , 0b0101, 0b110)
+INSTR_I(i_bno , 0b0101, 0b111)
+
+INSTR_I(i_call, 0b1010, 0b000)
+
+INSTR_I(i_push, 0b1100, 0b000)
+
+//funct-imm variants
+INSTR_FI(i_out, 0b0110);
+
+//all lab variants are just trampolines 
+//reg-lab variants
+void i_mov (t_reg const Rd, std::string_view const src) { i_mov (Rd, label_to_pos(src)); return; }
+void i_ldw (t_reg const Rd, std::string_view const src) { i_ldw (Rd, label_to_pos(src)); return; }
+void i_stw (t_reg const Rd, std::string_view const src) { i_stw (Rd, label_to_pos(src)); return; }
+
+void i_add (t_reg const Rd, std::string_view const src) { i_add (Rd, label_to_pos(src)); return; }
+void i_sub (t_reg const Rd, std::string_view const src) { i_sub (Rd, label_to_pos(src)); return; }
+void i_and (t_reg const Rd, std::string_view const src) { i_and (Rd, label_to_pos(src)); return; }
+void i_or  (t_reg const Rd, std::string_view const src) { i_or  (Rd, label_to_pos(src)); return; }
+void i_xor (t_reg const Rd, std::string_view const src) { i_xor (Rd, label_to_pos(src)); return; }
+void i_not (t_reg const Rd, std::string_view const src) { i_not (Rd, label_to_pos(src)); return; }
+void i_lsl (t_reg const Rd, std::string_view const src) { i_lsl (Rd, label_to_pos(src)); return; }
+void i_lsr (t_reg const Rd, std::string_view const src) { i_lsr (Rd, label_to_pos(src)); return; }
+void i_cmp (t_reg const Rd, std::string_view const src) { i_cmp (Rd, label_to_pos(src)); return; }
+void i_test(t_reg const Rd, std::string_view const src) { i_test(Rd, label_to_pos(src)); return; }
+
+//lab variants
+void i_jmp (std::string_view const src) { i_jmp (label_to_pos(src)); return; }
+void i_bee (std::string_view const src) { i_bee (label_to_pos(src)); return; }
+void i_bne (std::string_view const src) { i_bne (label_to_pos(src)); return; }
+void i_bge (std::string_view const src) { i_bge (label_to_pos(src)); return; }
+void i_ble (std::string_view const src) { i_ble (label_to_pos(src)); return; }
+void i_bgg (std::string_view const src) { i_bgg (label_to_pos(src)); return; }
+void i_bll (std::string_view const src) { i_bll (label_to_pos(src)); return; }
+void i_boo (std::string_view const src) { i_boo (label_to_pos(src)); return; }
+void i_bbs (std::string_view const src) { i_bbs (label_to_pos(src)); return; }
+void i_bss (std::string_view const src) { i_bss (label_to_pos(src)); return; }
+void i_bns (std::string_view const src) { i_bns (label_to_pos(src)); return; }
+void i_bae (std::string_view const src) { i_bae (label_to_pos(src)); return; }
+void i_bbe (std::string_view const src) { i_bbe (label_to_pos(src)); return; }
+void i_baa (std::string_view const src) { i_baa (label_to_pos(src)); return; }
+void i_bbb (std::string_view const src) { i_bbb (label_to_pos(src)); return; }
+void i_bno (std::string_view const src) { i_bno (label_to_pos(src)); return; }
+void i_call(std::string_view const src) { i_call(label_to_pos(src)); return; }
+
+void i_push(std::string_view const src) { i_push(label_to_pos(src)); return; }
 
 //pseudoinstructions
-void i_nand(reg::Type const dst, reg::Type const src)
+void i_nand(t_reg const dst, t_reg const src)
 {
 	i_and(dst, src);
 	i_not(dst, dst);
 	return;
 }
-void i_nand(reg::Type const dst, uint16_t imm)
+void i_nand(t_reg const dst, uint16_t const imm)
 {
 	i_and(dst, imm);
 	i_not(dst, dst);
 	return;
 }
-void i_nand(reg::Type const dst, std::string_view const lab)
+void i_nand(t_reg const dst, std::string_view const lab)
 {
-	i_and(dst, lab);
-	i_not(dst, dst);
+	i_nand(dst, label_to_pos(lab));
 	return;
 }
 
