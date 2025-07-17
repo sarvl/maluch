@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 
 enum aluoperand_t {
     ADD=0,
@@ -99,8 +100,9 @@ int main(int argc, char* argv[]) {
 
     VerilatedVcdC* tfp = new VerilatedVcdC;
     Verilated::traceEverOn(true);
-    top->trace(tfp, 2); // Trace 99 levels of hierarchy
-    tfp->open("waveform.vcd");
+    top->trace(tfp, 2); 
+    std::filesystem::create_directories("waveforms");
+    tfp->open("waveforms/alu.vcd");
     vluint64_t main_time = 0;
 
     // Simulate for 20 cycles
