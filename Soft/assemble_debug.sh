@@ -7,5 +7,5 @@ fi
 
 set -e 
 
-make --no-print-directory -C Tooling/ assemble FILE="$1" OPT="-fsanitize=undefined -fsanitize=address -Og"
-./Tooling/main
+make --no-print-directory -C Assembler/ assemble FILE="$1" OPT="-fsanitize=undefined -fsanitize=address -Og"
+./Assembler/main

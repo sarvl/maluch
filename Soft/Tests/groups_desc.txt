@@ -1,0 +1,71 @@
+individual tokens verified
+g00 T_IND
+
+common expressions, stuff that broke but shouldnt, usually taken from regular tests
+g01 T_COM
+
+invalid token streams that should be rejected
+g02 T_ERR
+
+randomly generated
+g03 T_RND
+
+
+g09 T_WAR
+
+all possible tokens for each instruction
+g10 V_CIN
+
+complement of CIN, tests invalid combinations
+g11 V_EIN
+
+correct expressions
+g12 V_CEX
+
+incorrect expressions
+g13 V_EEX
+
+CIN for directives
+g14 V_CDI
+
+EIN for directives
+g15 V_EDI
+
+
+g18 V_COM
+
+
+g19 V_WAR
+
+general correct tests of preprocessing
+g20 P_CGN
+
+general incorrect tests of preprocessing
+g21 P_EGN
+
+conditional preprocessing
+g22 P_CIF
+
+incorrect conditional preprocessing
+g23 P_EIF
+
+repeating preprocessing
+g24 P_CRE
+
+incorrect repeating preprocessing
+g25 P_ERE
+
+
+g28 P_COM
+
+
+g29 P_WAR
+
+test of codegen of all instruction
+g30 C_IND
+
+general errors in code gen
+g38 C_EGN
+
+code gen warnings
+g39 C_WAR

@@ -188,8 +188,8 @@ INSTR_RR(i_not , 0b0010, 0b101)
 INSTR_RR(i_lsl , 0b0010, 0b110)
 INSTR_RR(i_lsr , 0b0010, 0b111)
 
-INSTR_RR(i_cmp , 0b0011, 0b000)
-INSTR_RR(i_test, 0b0011, 0b001)
+INSTR_RR(i_cmp , 0b0011, 0b001)
+INSTR_RR(i_test, 0b0011, 0b010)
 
 //reg variants
 
@@ -218,7 +218,7 @@ INSTR_RD(i_pull, 0b1101, 0b000)
 
 //funct-reg variants
 INSTR_FRD(i_in , 0b0110);
-INSTR_FRS(i_out, 0b0110);
+INSTR_FRS(i_out, 0b0111);
 
 //reg-imm variants
 INSTR_RI(i_mov , 0b0001, 0b000)
@@ -234,8 +234,8 @@ INSTR_RI(i_not , 0b0010, 0b101)
 INSTR_RI(i_lsl , 0b0010, 0b110)
 INSTR_RI(i_lsr , 0b0010, 0b111)
 
-INSTR_RI(i_cmp , 0b0011, 0b000)
-INSTR_RI(i_test, 0b0011, 0b001)
+INSTR_RI(i_cmp , 0b0011, 0b001)
+INSTR_RI(i_test, 0b0011, 0b010)
 
 //imm variants
 
@@ -261,7 +261,7 @@ INSTR_I(i_call, 0b1010, 0b000)
 INSTR_I(i_push, 0b1100, 0b000)
 
 //funct-imm variants
-INSTR_FI(i_out, 0b0110);
+INSTR_FI(i_out, 0b0111);
 
 //all lab variants are just trampolines 
 //reg-lab variants
