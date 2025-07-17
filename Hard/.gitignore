@@ -1,5 +1,6 @@
 # Verilator build outputs
 obj_dir/
+obj_*/
 verilator*.log
 *.dat
 *.mk
@@ -23,6 +24,11 @@ coverage/
 *.gcda
 *.gcno
 *.gcov
+
+# Waveforms files and directories
+waveforms/
+*.vcd
+*.fst
 
 # IDE/editor files to ignore (add more if you use VSCode, Eclipse, etc.)
 .vscode/
