@@ -2,302 +2,553 @@
 
 ## Overview
 
-PISS16 is a custom instruction set architecture designed for educational purposes. It emphasizes easily decodable CPU instructions and simple hardware implementations while avoiding significant software limitations.
+PISS16 is a 16bit architecture designed for educational purposes. It focuses on easily decodable CPU instructions and simple hardware implementations while avoiding significant software limitations. 
+
+## TODO
+1. interrupts
+2. toc
+3. proofreading
 
 ### Key Features
-
-- *16-bit*
+- *16-bit Data and Address Width*
 - *Variable-length instructions* (16-bit or 32-bit)
+- *128kiB (64kiW) Word Addressable Memory*
 - *Simple instruction format* for decoding simplicity
 - *Educational focus* with clear, logical instruction organization
+- *LSBian machine*
 
-## Table of content
+## Table of contents
 
-<!-- TOC start (generated with https://github.com/derlin/bitdowntoc) -->
 
-- [Architecture Overview](#architecture-overview)
-   * [Word Size and Addressing](#word-size-and-addressing)
-- [Register Set](#register-set)
-   * [Register Usage Notes](#register-usage-notes)
-   * [Interrupt Register (x0) Details](#interrupt-register)
-- [Processor Flags](#processor-flags)
-- [Instruction Format](#instruction-format)
-   * [Field Definitions](#field-definitions)
-- [ALU Operations](#alu-operations)
-   * [Standalone ALU Instructions](#standalone-alu-instructions)
-- [Instruction Set](#instruction-set)
-   * [Operations Table](#operations-table)
-   * [Data Movement Instructions](#data-movement-instructions)
-      + [MOV - Move Data](#mov-move-data)
-      + [LDW - Load Word](#ldw-load-word)
-      + [SDW - Store Word](#sdw-store-word)
-   * [Control Flow Instructions](#control-flow-instructions)
-      + [JMP - Unconditional Jump](#jmp-unconditional-jump)
-      + [BRE - Branch if Equal](#bre-branch-if-equal)
-      + [BNE - Branch if Not Equal](#bne-branch-if-not-equal)
-      + [BGT - Branch if Greater Than](#bgt-branch-if-greater-than)
-      + [BLS - Branch if Less Than](#bls-branch-if-less-than)
-      + [CALL - Call Subroutine](#call-call-subroutine)
-      + [RET - Return from Subroutine](#ret-return-from-subroutine)
-   * [Stack Operations](#stack-operations)
-      + [PUSH - Push to Stack](#push-push-to-stack)
-      + [PULL - Pull from Stack](#pull-pull-from-stack)
-   * [System Instructions](#system-instructions)
-      + [INT - Software Interrupt](#int-software-interrupt)
+<a name="instructions"></a>
+## Instruction Overview
 
-<!-- TOC end -->
+|Instruction|Opcode|Funct|Behavior|
+|:---:|:---:|:---:|:---|
+|invalid | 0000 | XXX | will always be invalid |
+|    |     |     |     |
+|mov Rd src | 0001 | XXX | Rd <-- src|
+|    |     |     |     |
+|add Rd src | 0010 | 000 | Rd <-- Rd + src (sets flags)|
+|sub Rd src | 0010 | 001 | Rd <-- Rd - src (sets flags)|
+|and Rd src | 0010 | 010 | Rd <-- Rd & src (sets flags)|
+|or Rd src | 0010 | 011 | Rd <-- Rd \| src (sets flags)|
+|xor Rd src | 0010 | 100 | Rd <-- Rd ^ src (sets flags)|
+|not Rd src | 0010 | 101 | Rd <-- ~src (sets flags)|
+|lsl Rd src | 0010 | 110 | Rd <-- Rd << src (logical shift left)  (sets flags)|
+|lsr Rd src | 0010 | 111 | Rd <-- Rd >> src (logical shift right)  (sets flags)|
+|    |     |     |     |
+|           | 0011 | 001 | reserved |
+|cmp Rd src | 0011 | 001 | Rd <-- Rd - src (sets flags)|
+|test Rd src | 0011 | 010 | Rd & src (sets flags)|
+|          | 0011 | 011 | reserved |
+|           | 0011 | 100 | reserved |
+|           | 0011 | 101 | reserved |
+|           | 0011 | 110 | reserved |
+|           | 0011 | 111 | reserved |
+|    |     |     |     |
+|jmp src | 0100 | 000 | IP <-- src (unconditional jump)|
+|bee src | 0100 | 001 | if(FZ = 1) IP <-- src (branch if equal) |
+|bne src | 0100 | 010 | if(FZ = 0) IP <-- src (branch if not equal) |
+|bge src | 0100 | 011 | if(FS = FO) IP <-- src (branch if greater or equal (signed)) |
+|ble src | 0100 | 100 | if(FZ = 1 or FS /= FO) IP <-- src (branch if less or equal (signed)) |
+|bgg src | 0100 | 101 | if(FZ = 0 and FS = FO) IP <-- src (branch if greater (signed)) |
+|bll src | 0100 | 110 | if(FS /= FO) IP <-- src (branch if less (signed)) |
+|boo src | 0100 | 111 | if(FO = 1) IP <-- src (branch if overflow)
+|bbs src | 0101 | 000 | if(busy flags /= x0000) IP <-- src (branch if busy)|
+|bss src | 0101 | 001 | if(FS = 1) IP <-- src (branch if sign) |
+|bns src | 0101 | 010 | if(FS = 0) IP <-- src (branch if not sign) |
+|bae src | 0101 | 011 | if(FC = 0) IP <-- src (branch if above or equal (unsigned)) |
+|bbe src | 0101 | 100 | if(FC = 1 or ZF = 1) IP <-- src (branch if below or equal (unsigned)) |
+|baa src | 0101 | 101 | if(FC = 0 and FZ = 0) IP <-- src (branch if above (unsigned)) |
+|bbb src | 0101 | 110 | if(FC = 1) IP <-- src (branch if below (unsigned)) |
+|boo src | 0101 | 111 | if(FO = 0) IP <-- src (branch if no overflow)
+|    | |     |     |
+| in Rd | 0110 | fff  | Rd <-- IO[fff] |
+| out Rd | 0111 | fff  | IO[fff] <--- Rd |
+| ldw Rd src | 1000 | XXX | Rd <-- MEM[src] |
+| stw Rd src | 1001 | XXX | MEM[src] <-- Rd |
+| call src | 1010 | XXX | IP <-- src ; MEM[SP - 2] <-- IP ; SP <-- SP - 2|
+| ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 2|
+| iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 2 ; turns on interrupts |
+|      | 1011 | 010 | reserved |
+|      | 1011 | 011 | reserved |
+|      | 1011 | 100 | reserved |
+|      | 1011 | 101 | reserved |
+|      | 1011 | 110 | reserved |
+|      | 1011 | 111 | reserved |
+| push src | 1100 | XXX | MEM[SP - 2] <-- src ; SP <-- SP - 2  |   
+| pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 2  |   
+|    | 1110 |     | reserved |
+|  | 1111 |     | |
 
-<!-- TOC --><a name="architecture-overview"></a>
-## Architecture Overview
 
-<!-- TOC --><a name="word-size-and-addressing"></a>
-### Word Size and Addressing
+note: 
+- `src` may mean register or immediate, depending on the encoding, see [Encoding](encoding)
+- `XXX` should be set to 0 for future compatibility
 
-- *Data width*: 16 bits
-- *Address width*: 16 bits
-- *Addressable memory*: 64kiB (2^16 bytes)
-- *Instruction alignment*: 16-bit boundaries
+<a name="encoding"></a>
+## Encoding
 
-<!-- TOC --><a name="register-set"></a>
-## Register Set
+all instructions follow the same format   
+`OOOOJFFF'DDDDSSSS IIIIIIII'IIIIIIII`  
+    
+    O - main opcode  
+    J - is immediate  
+    F - funct field  
+    D - destination register  
+    S - source register  
+    I - immediate field  
+
+if J = 1 then second operand is immediate and S is ignored 
+ `OOOO1FFF'DDDD____ IIIIIIII'IIIIIIII`  
+
+if J = 0 then second operand is register and I field **is not present**  
+ `OOOO0FFF'DDDDSSSS`  
+
+
+<a name="memory"></a>
+## Memory
+
+<a name="general"></a>
+### General
+
+There are 128kiB of memory addressable, 64kiB are general purpose (see address map below).
+
+The memory is word addressable, it is not possible to access a single byte.
+
+<a name="address map"></a>
+### Address Map
+
+```
+0x0000 to 0x7FFF:
+    writes - video memory
+    reads  - instruction memory
+0x8000 to 0xFFFF:
+    general purpose memory
+```
+
+<a name="registers"></a>
+## Registers
 
 PISS16 provides 16 registers, each 16 bits wide:
 
 | Register | Name | Usage | Access |
-|:--------:|:----:|:------|:------:|
-| x0 | INT | Interrupt flags and mask | [Special](#interrupt-register) |
-| x1 | SP | Stack Pointer | [General](#stack-register) |
-| x2 | IO | I/O buffer | [General](#iobuffer) |
+|:--------:|:----:|:------:|:------:|
+| x0 | CR0 | Control Register 0 | [Special](#control-register-0) |
+| x1 | CR1 | Control Register 1 | [Special](#control-register-1) |
+| x2 | SP | Stack Pointer | [General](#stack-pointer) |
 | x3-x15 | - | General purpose registers | General |
 
-<!-- TOC --><a name="register-usage-notes"></a>
-### Register Usage Notes
-
+**General** means that a register can be used in any instruction requiring register, few are implicitly used by other instructions
 - *General Purpose Registers (GPRs)*: x1-x15 can be used in any instruction requiring a register.
-<!-- TOC --><a name="interrupt-register"></a>
-### Interrupt Register (x0) Details
 
-The interrupt register (x0) is divided into two 8-bit sections:
 
- 15    12 11     8 7      4 3      0
-┌───────┬────────┬────────┬────────┐
-│ Flags          │  Mask           │
-└───────┴────────┴────────┴────────┘
+<a name="control-register-0"></a>
+### Control Register 0 (x0) Details
 
-- *Bits 15-8*: Interrupt flags (read-only, set by hardware)
-- *Bits 7-0*: Interrupt mask (write-only, controls which interrupts are enabled)
+This register is divided into two 8-bit sections:
 
-Each flag corresponds to a specific interrupt source. The mask bits control whether the corresponding interrupt is enabled (1) or disabled (0).
+```
+ 15            8 7               0
+┌───────────────┬────────────────┐
+│   int flags   │   busy flags   │
+└───────────────┴────────────────┘
+```
+
+- *Bits 15-8*: int flags, read only, set by hardware, info which interrupt occured (from left to right)
+- *Bits 7-0*: busy flags, read only, set by hardware, info whether IO device is processing request
+
+Each flag corresponds to a specific interrupt source. The mask bits (CR1) control whether the corresponding interrupt is enabled (1) or disabled (0).
 Write to flags part is ignored
 
+see [IO](IO)
+
+<a name="control-register1"></a>
+### Control Register 1 (x1) Details
+
+This register is divided into two 8-bit sections:
+
+```
+ 15             8 7               0
+┌────────────────┬────────────────┐
+│    int mask    │    reserved    │
+└────────────────┴────────────────┘
+```
+
+- *Bits 15-8*: int mask, if a bit is `1` then corresponding bit in CR0 CAN cause interrupt, to disable an interrupt write `0`
+- *Bits 7-0*: reserved, leave at 0
+
+Each flag corresponds to a specific interrupt source. The mask bits (CR1) control whether the corresponding interrupt is enabled (1) or disabled (0).
+Write to flags part is ignored
+
+see [IO](IO)
+
 <!-- TOC --><a name="stack-pointer"></a>
-### Stack Pointer (x1) Details
-*Stack Pointer (x1)* is automatically managed by stack operations (PUSH/PULL). Can also be used by any instruction requiring GPR.
+### Stack Pointer (x2) Details
+*Stack Pointer (x1)* is automatically managed by stack operations (CALL/RET/PUSH/PULL). Can also be used by any instruction requiring GPR.
 
 
-<!-- TOC --><a name="io-buffer"></a>
-### IO Buffer (x2) Details
-*I/O Buffer (x2)*: Dedicated register for I/O operations - stores incoming data from I/O ports and holds outgoing data to be sent to I/O ports. Can be used by any instruction requiring GPR.
+<!-- TOC --><a name="io"></a>
+### IO
 
+IO is based on 2 mechanisms:
+- polling
+- interrupts 
+
+
+<!-- TOC --><a name="polling"></a>
+#### polling
+
+Communication is initiated by the CPU via `in` and `out` instructions, these instructions can only be executed when IO device has its busy flag set to 0, otherwise the behavior is undefined.
+Whenever processor issues `in` or `out` a device either writes a value to or reads a value from specified register.
+The exact behavior depends on the device and can be found in corresponding manual, but there is **no** delay induced by these instructions, any delay must happen *before* or *after* them via busy flag.
+
+<!-- TOC --><a name="interrupts"></a>
+#### Interrupts
+
+Interrupt happens ALWAYS AFTER the current instruction, NEVER during one, this means that IRET can NOT be followd be an interrupt.
+
+When a device signals readiness to a processor, it sets an interrupt, this interrupt appears as a flag in CR0 (the bit position from the left indicates the device id, count starts from 0).  
+
+IF `interrupt_flag[device_id] AND interrupt_mask[device_id] = 1` THEN an interrupt takes place, in case more than one interrupt were to occur, the leftmost one (lowest ID) takes priority.
+An interrupt starts by saving IP of instruction which would execute if there was no interrupt. to the stack, then the control is passed to proper subroutine.
+
+Switching to interrupt handler automatically surpresses further interrupts (does NOT clear them, only surpresses) until manually turned back on again.
+The interrupts can be turned back on by writing x0001 to IO 0 - `out 0 x0000`.
+
+<!-- TOC --><a name="interrupt-handler-table"></a>
+#### Interrupt Handler Table
+
+An 8 entry table is located in internal memory, each word stores a *pointer* into actual interrupt handling routines.
+to set n-th entry, use `out 0 n` followed by `out 0 handler_addres`, respecting usual rules of using `out`.
+An interrupt handling routine may be located anywhere in readable memory.
+
+<!-- TOC --><a name="interrupt-handler-routine"></a>
+#### Interrupt Handler Routine
+
+The Instruction Pointer is automatically handle by HW, all other registers are NOT SAVED, therefore it is the job of programmer to ensure proper register saving via PUSH and PULL.
+The interrupt information is received by using `in` with appropriate device id. Device stops signaling interrupt when **it** decides that it is handled, usually that means reading from it via `in`.
+
+Each IHR must end with IRET to turn interrupts back on.
+
+
+<!-- TOC --><a name="IO device id list"></a>
+#### IO device List
+
+| id | device |
+| :---: | :---: |
+| 000 | board (and timer) |
+| 001 | keyboard |
+| 010 | gpu |
+| 011 | persistent storage |
+| 100 | reserved |
+| 101 | reserved |
+| 110 | reserved |
+| 111 | reserved |
+
+
+For more detailed description of behavior see corresponding manual.
 
 <!-- TOC --><a name="processor-flags"></a>
 ## Processor Flags
 
 The processor maintains four condition flags that are automatically updated by arithmetic and logical operations:
 
-| Flag | Name | Description | Set When | Defined For |
-|:----:|:----:|:------------|:---------|:-----------|
-| FS | Sign | Most significant bit is set | Result bit 15 = 1 | All flag-modifying instructions |
-| FO | Overflow | Signed overflow occurred | Carry out of MSb ≠ carry into MSb | ADD, SUB, CMP, ADI |
-| FC | Carry | Unsigned overflow occurred | Carry out of MSb = 1 | ADD, SUB, CMP, ADI |
-| FZ | Zero | Result is zero | All result bits = 0 | All flag-modifying instructions |
+| Flag | Name | Set When | Defined For |
+|:----:|:----:|:---------|:-----------|
+| FS | Sign | Result bit 15 = 1 | All flag-modifying instructions |
+| FO | Overflow | Carry out of MSb ≠ carry into MSb | ADD, SUB, CMP |
+| FC | Carry | Carry out of MSb = 1 | ADD, SUB, CMP |
+| FZ | Zero | All result bits = 0 | All flag-modifying instructions |
 
-<!-- TOC --><a name="instruction-format"></a>
-## Instruction Format
+<!-- TOC --><a name="Detailed Instruction Description"></a>
+## Detailed Instruction Description
 
-All PISS16 instructions share a unified format for decoding simplicity:
+<!-- TOC --><a name="instruction mov"></a>
+### MOV
+- instruction: mov Rd src 
+- opcode: 0001 
+- funct: XXX 
+- flags: unmodified
+- description: copies src into Rd
 
-Core Instruction (16 bits):
- 15  12 11 10  9  8  7  4  3  0
-┌─────┬──┬────┬──┬─────┬─────┐
-│ OOO │a │AAA │i │XXXX │YYYY │
-└─────┴──┴────┴──┴─────┴─────┘
+<!-- TOC --><a name="instruction add"></a>
+### ADD
+- instruction: add Rd src 
+- opcode: 0010 
+- funct: 000 
+- flags: modified
+- description: adds src to Rd, stores result into Rd
 
-Optional Immediate (16 bits):
- 15                         0
-┌─────────────────────────────┐
-│ IIIIIIIIIIIIIIIIIIIIIIIIII  │
-└─────────────────────────────┘
+<!-- TOC --><a name="instruction sub"></a>
+### SUB
+- instruction: sub Rd src 
+- opcode: 0010 
+- funct: 001 
+- flags: modified
+- description: subs src from Rd, stores result into Rd
 
-<!-- TOC --><a name="field-definitions"></a>
-### Field Definitions
+<!-- TOC --><a name="instruction and"></a>
+### AND
+- instruction: and Rd src 
+- opcode: 0010 
+- funct: 010 
+- flags: modified
+- description: ands src with Rd, stores result into Rd
 
-| Field | Bits | Description |
-|:-----:|:----:|:------------|
-| OOO | 15-13 | Operation code (8 possible operations) |
-| a | 12 | ALU active flag (1 = use ALU result) |
-| AAA | 11-9 | ALU operation code (8 ALU operations) |
-| i | 8 | Immediate present flag (1 = 32-bit instruction) |
-| XXXX | 7-4 | Register 1 (source/destination) |
-| YYYY | 3-0 | Register 2 (source) |
-| I | 31-16 | 16-bit immediate value (optional) |
+<!-- TOC --><a name="instruction or"></a>
+### OR
+- instruction: or Rd src 
+- opcode: 0010 
+- funct: 011 
+- flags: modified
+- description: ors src with Rd, stores result into Rd
 
-<!-- TOC --><a name="alu-operations"></a>
-## ALU Operations
+<!-- TOC --><a name="instruction xor"></a>
+### XOR
+- instruction: xor Rd src 
+- opcode: 0010 
+- funct: 100 
+- flags: modified
+- description: xors src with Rd, stores result into Rd
 
-The ALU performs operations on two source operands and produces a 16-bit result. 
+<!-- TOC --><a name="instruction not"></a>
+### NOT
+- instruction: not Rd src 
+- opcode: 0010 
+- funct: 101 
+- flags: modified
+- description: nots src, stores result into Rd
 
-<!-- TOC --><a name="standalone-alu-instructions"></a>
-### Standalone ALU Instructions
+<!-- TOC --><a name="instruction lsl"></a>
+### XOR
+- instruction: lsl Rd src 
+- opcode: 0010 
+- funct: 110 
+- flags: modified
+- description: logically shifts Rd by src (lower 4 bits) to the left, stores result into Rd
 
-ALU operations can be used as standalone instructions by setting the ALU active flag (a = 1) with the MOV instruction format:
+<!-- TOC --><a name="instruction lsr"></a>
+### XOR
+- instruction: lsr Rd src 
+- opcode: 0010 
+- funct: 111 
+- flags: modified
+- description: logically shifts Rd by src (lower 4 bits) to the right, stores result into Rd
 
-MOV rX, rY    ; rX ← rY (a = 0)
-ADD rX, rY    ; rX ← rX + rY (a = 1, ALU = 000)
+<!-- TOC --><a name="instruction cmp"></a>
+### CMP
+- instruction: CMP Rd src 
+- opcode: 0010 
+- funct: 001 
+- flags: modified
+- description: subs src from Rd
 
-| Code | Mnemonic | Operation | Description |
-|:----:|:--------:|:---------:|:------------|
-| 000 | ADD | s₁ + s₂ | Addition |
-| 001 | SUB | s₁ - s₂ | Subtraction |
-| 010 | AND | s₁ ∧ s₂ | Bitwise AND |
-| 011 | OR | s₁ ∨ s₂ | Bitwise OR |
-| 100 | XOR | s₁ ⊕ s₂ | Bitwise XOR |
-| 101 | NOT | ~s₂ | Bitwise NOT (source 1 ignored) |
-| 110 | LSR | s₁ >> 1 | Logical shift right |
-| 111 | LSL | s₁ << 1 | Logical shift left |
+<!-- TOC --><a name="instruction test"></a>
+### TEST
+- instruction: test Rd src 
+- opcode: 0010 
+- funct: 010 
+- flags: modified
+- description: ands src with Rd
 
-Where s₁ = source 1, s₂ = source 2
+<!-- TOC --><a name="instruction jmp"></a>
+### JMP 
+- instruction: jmp src 
+- opcode: 0100 
+- funct: 000 
+- flags: unmodified
+- description: IP <-- src (unconditional jump)
 
-<!-- TOC --><a name="instruction-set"></a>
-## Instruction Set
+<!-- TOC --><a name="instruction bee"></a>
+### BEE 
+- instruction: bee src 
+- opcode 0100 
+- funct: 001 
+- flags: unmodified
+- description: if(FZ = 1) IP <-- src (branch if equal) 
 
-<!-- TOC --><a name="operations-table"></a>
-### Operations Table
+<!-- TOC --><a name="instruction bne"></a>
+### BNE 
+- instruction: bne src 
+- opcode 0100 
+- funct: 010 
+- flags: unmodified
+- description: if(FZ = 0) IP <-- src (branch if not equal) 
 
-|  | Operation | OP Code | ALU Code | Def | Def w/ Imm |
-| ---: | :---: | :---: | :---: | :--- | :--- |
-| 1 | MOV | 000 | X | $r_{1} \leftarrow r_{2}$ | $r_{1} \leftarrow I$ |
-| 2 | LDW | 001 | X | $r_{1} \leftarrow \text{mem}[r_{2}]$ | $r_{1} \leftarrow \text{mem}[I]$ |
-| 3 | SDW | 010 | X | $\text{mem}[r_{2}] \leftarrow r_{1}$ | $\text{mem}[I] \leftarrow r_{1}$ |
-| 4 | JMP | 011 | 001 | $PC \leftarrow r_{1}$ | $PC \leftarrow I$ |
-| 5 | BRE | 011 | 010 | $PC \leftarrow r_{1}$ | $PC \leftarrow I$ |
-| 4.3 | BNE | 011 | 011 | $PC \leftarrow r_{1}$ | $PC \leftarrow I$ |
-| 4.4 | BGT | 011 | 100 | $PC \leftarrow r_{1}$ | $PC \leftarrow I$ |
-| 4.5 | BLS | 011 | 101 | $PC \leftarrow r_{1}$ | $PC \leftarrow I$ |
-| 4.6 | CALL | 011 | 110 | $PC \leftarrow r_{1}; \text{stack} \leftarrow PC$ | $PC \leftarrow I; \text{stack} \leftarrow PC$ |
-| 4.7 | RET | 011 | 111 | $PC \leftarrow \text{stack}$ | X |
-| 5 | PUSH | 100 | X | $\text{stack} \leftarrow r_{1}$ | X |
-| 6 | PULL | 101 | X | $r_{1} \leftarrow \text{stack}$ | X |
-| 7 | INT | 110 | X |  |  |
+<!-- TOC --><a name="instruction bge"></a>
+### BGE 
+- instruction: bge src 
+- opcode 0100 
+- funct: 011 
+- flags: unmodified
+- description: if(FS = FO) IP <-- src (branch if greater or equal (signed)) 
 
-<!-- TOC --><a name="data-movement-instructions"></a>
-### Data Movement Instructions
+<!-- TOC --><a name="instruction ble"></a>
+### BLE 
+- instruction: ble src 
+- opcode 0100 
+- funct: 100 
+- flags: unmodified
+- description: if(FZ = 1 or FS /= FO) IP <-- src (branch if less or equal (signed)) 
 
-<!-- TOC --><a name="mov-move-data"></a>
-#### MOV - Move Data
-MOV rX, rY    ; rX ← rY
-MOV rX, #imm  ; rX ← immediate
-- *Opcode*: 000
-- *Flags*: Not affected
-- *Description*: Transfers data between registers or loads immediate value
+<!-- TOC --><a name="instruction bgg"></a>
+### BGG 
+- instruction: bgg src 
+- opcode 0100 
+- funct: 101 
+- flags: unmodified
+- description: if(FZ = 0 and FS = FO) IP <-- src (branch if greater (signed)) 
 
-<!-- TOC --><a name="ldw-load-word"></a>
-#### LDW - Load Word
-LDW rX, rY    ; rX ← memory[rY]
-LDW rX, #addr ; rX ← memory[addr]
-- *Opcode*: 001
-- *Flags*: Not affected
-- *Description*: Loads 16-bit word from memory
+<!-- TOC --><a name="instruction bll"></a>
+### BLL 
+- instruction: bll src 
+- opcode 0100 
+- funct: 110 
+- flags: unmodified
+- description: if(FS /= FO) IP <-- src (branch if less (signed)) 
 
-<!-- TOC --><a name="sdw-store-word"></a>
-#### SDW - Store Word
-SDW rX, rY    ; memory[rY] ← rX
-SDW rX, #addr ; memory[addr] ← rX
-- *Opcode*: 010
-- *Flags*: Not affected
-- *Description*: Stores 16-bit word to memory
+<!-- TOC --><a name="instruction boo"></a>
+### BOO 
+- instruction: boo src 
+- opcode 0100 
+- funct: 111 
+- flags: unmodified
+- description: if(FO = 1) IP <-- src (branch if overflow)
 
-<!-- TOC --><a name="control-flow-instructions"></a>
-### Control Flow Instructions
+<!-- TOC --><a name="instruction bbs"></a>
+### BBS 
+- instruction: bbs src 
+- opcode 0101 
+- funct: 000 
+- flags: unmodified
+- description: if(busy flags /= x0000) IP <-- src (branch if busy)
 
-<!-- TOC --><a name="jmp-unconditional-jump"></a>
-#### JMP - Unconditional Jump
-JMP rX        ; PC ← rX
-JMP #addr     ; PC ← addr
-- *Opcode*: 011, *ALU Code*: 001
-- *Flags*: Not affected
-- *Description*: Unconditional branch to target address
+<!-- TOC --><a name="instruction bss"></a>
+### BSS 
+- instruction: bss src 
+- opcode 0101 
+- funct: 001 
+- flags: unmodified
+- description: if(FS = 1) IP <-- src (branch if sign) 
 
-<!-- TOC --><a name="bre-branch-if-equal"></a>
-#### BRE - Branch if Equal
-BRE rX        ; if (FZ = 1) PC ← rX
-BRE #addr     ; if (FZ = 1) PC ← addr
-- *Opcode*: 011, *ALU Code*: 010
-- *Flags*: Not affected
-- *Description*: Branch if zero flag is set
+<!-- TOC --><a name="instruction bns"></a>
+### BNS 
+- instruction: bns src 
+- opcode 0101 
+- funct: 010 
+- flags: unmodified
+- description: if(FS = 0) IP <-- src (branch if not sign) 
 
-<!-- TOC --><a name="bne-branch-if-not-equal"></a>
-#### BNE - Branch if Not Equal
-BNE rX        ; if (FZ = 0) PC ← rX
-BNE #addr     ; if (FZ = 0) PC ← addr
-- *Opcode*: 011, *ALU Code*: 011
-- *Flags*: Not affected
-- *Description*: Branch if zero flag is clear
+<!-- TOC --><a name="instruction bae"></a>
+### BAE 
+- instruction: bae src 
+- opcode 0101 
+- funct: 011 
+- flags: unmodified
+- description: if(FC = 0) IP <-- src (branch if above or equal (unsigned)) 
 
-<!-- TOC --><a name="bgt-branch-if-greater-than"></a>
-#### BGT - Branch if Greater Than
-BGT rX        ; if (FZ = 0 AND FS = 0) PC ← rX
-BGT #addr     ; if (FZ = 0 AND FS = 0) PC ← addr
-- *Opcode*: 011, *ALU Code*: 100
-- *Flags*: Not affected
-- *Description*: Branch if result is positive and non-zero
+<!-- TOC --><a name="instruction bbe"></a>
+### BBE 
+- instruction: bbe src 
+- opcode 0101 
+- funct: 100 
+- flags: unmodified
+- description: if(FC = 1 or ZF = 1) IP <-- src (branch if below or equal (unsigned)) 
 
-<!-- TOC --><a name="bls-branch-if-less-than"></a>
-#### BLS - Branch if Less Than
-BLS rX        ; if (FS = 1) PC ← rX
-BLS #addr     ; if (FS = 1) PC ← addr
-- *Opcode*: 011, *ALU Code*: 101
-- *Flags*: Not affected
-- *Description*: Branch if sign flag is set
+<!-- TOC --><a name="instruction baa"></a>
+### BAA 
+- instruction: baa src 
+- opcode 0101 
+- funct: 101 
+- flags: unmodified
+- description: if(FC = 0 and FZ = 0) IP <-- src (branch if above (unsigned)) 
 
-<!-- TOC --><a name="call-call-subroutine"></a>
-#### CALL - Call Subroutine
-CALL rX       ; stack ← PC; PC ← rX
-CALL #addr    ; stack ← PC; PC ← addr
-- *Opcode*: 011, *ALU Code*: 110
-- *Flags*: Not affected
-- *Description*: Pushes return address and jumps to subroutine
+<!-- TOC --><a name="instruction bbb"></a>
+### BBB 
+- instruction: bbb src 
+- opcode 0101 
+- funct: 110 
+- flags: unmodified
+- description: if(FC = 1) IP <-- src (branch if below (unsigned)) 
 
-<!-- TOC --><a name="ret-return-from-subroutine"></a>
-#### RET - Return from Subroutine
-RET           ; PC ← stack
-- *Opcode*: 011, *ALU Code*: 111
-- *Flags*: Not affected
-- *Description*: Returns from subroutine by popping return address
+<!-- TOC --><a name="instruction boo"></a>
+### BOO 
+- instruction: boo src 
+- opcode 0101 
+- funct: 111 
+- flags: unmodified
+- description: if(FO = 0) IP <-- src (branch if no overflow)
 
-<!-- TOC --><a name="stack-operations"></a>
-### Stack Operations
+<!-- TOC --><a name="instruction in"></a>
+### IN 
+- instruction: in Rd 
+- opcode 0110 
+- funct: fff  
+- flags: unmodified
+- description: Rd <-- IO[fff] 
 
-<!-- TOC --><a name="push-push-to-stack"></a>
-#### PUSH - Push to Stack
-PUSH rX       ; stack ← rX; SP ← SP - 1
-- *Opcode*: 100
-- *Flags*: Not affected
-- *Description*: Pushes register value onto stack
+<!-- TOC --><a name="instruction out"></a>
+### OUT 
+- instruction: out Rd 
+- opcode 0111 
+- funct: fff  
+- flags: unmodified
+- description: IO[fff] <--- Rd 
 
-<!-- TOC --><a name="pull-pull-from-stack"></a>
-#### PULL - Pull from Stack
-PULL rX       ; rX ← stack; SP ← SP + 1
-- *Opcode*: 101
-- *Flags*: Not affected
-- *Description*: Pops value from stack into register
+<!-- TOC --><a name="instruction ldw"></a>
+### LDW 
+- instruction: ldw Rd src 
+- opcode 1000 
+- funct: XXX 
+- flags: unmodified
+- description: Rd <-- MEM[src] 
 
-<!-- TOC --><a name="system-instructions"></a>
-### System Instructions
+<!-- TOC --><a name="instruction stw"></a>
+### STW 
+- instruction: stw Rd src 
+- opcode 1001 
+- funct: XXX 
+- flags: unmodified
+- description: MEM[src] <-- Rd 
 
-<!-- TOC --><a name="int-software-interrupt"></a>
-#### INT - Software Interrupt
-INT           ; Trigger software interrupt
-- *Opcode*: 110
-- *Flags*: Not affected
-- *Description*: Triggers a software interrupt. The specific behavior is implementation-dependent but typically involves jumping to an interrupt service routine.
+<!-- TOC --><a name="instruction call"></a>
+### CALL 
+- instruction: call src 
+- opcode 1010 
+- funct: XXX 
+- flags: unmodified
+- description: IP <-- src ; MEM[SP - 2] <-- IP ; SP <-- SP - 2
+
+<!-- TOC --><a name="instruction ret"></a>
+### RET 
+- instruction: ret 
+- opcode 1011 
+- funct: XXX 
+- flags: unmodified
+- description: IP <-- MEM[SP] ; SP <-- SP + 2
+
+<!-- TOC --><a name="instruction iret"></a>
+### IRET 
+- instruction: ret 
+- opcode 1011 
+- funct: XXX 
+- flags: unmodified
+- description: IP <-- MEM[SP] ; SP <-- SP + 2 ; turns on interrupts
+
+<!-- TOC --><a name="instruction push"></a>
+### PUSH 
+- instruction: push src 
+- opcode 1100 
+- funct: XXX 
+- flags: unmodified
+- description: MEM[SP - 2] <-- src ; SP <-- SP - 2  
+
+<!-- TOC --><a name="instruction pull"></a>
+### PULL 
+- instruction: pull Rd 
+- opcode 1101 
+- funct: XXX 
+- flags: unmodified
+- description: Rd <-- MEM[SP] ; SP <-- SP + 2  
