@@ -1,5 +1,6 @@
 #include "Valu.h"
 #include "verilated.h"
+#include "verilated_vcd_c.h"
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -95,6 +96,13 @@ int main(int argc, char* argv[]) {
     int count[] = {0, 0};
     test_item.init();
 
+
+    VerilatedVcdC* tfp = new VerilatedVcdC;
+    Verilated::traceEverOn(true);
+    top->trace(tfp, 2); // Trace 99 levels of hierarchy
+    tfp->open("waveform.vcd");
+    vluint64_t main_time = 0;
+
     // Simulate for 20 cycles
     for (int i = 1; i <= runs; i++) {
 
@@ -125,6 +133,9 @@ int main(int argc, char* argv[]) {
                 test_item.getReference());
         }
         
+
+        tfp->dump(main_time);  
+        main_time++;
     }
     printf("--------------------------------------\n");
     printf("ALU test \n checks: %d \n succesful: %d (%3.2f %%)\n failed: %d \n", 
