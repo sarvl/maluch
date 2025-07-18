@@ -1,6 +1,6 @@
 #include "Valu.h"
 #include "verilated.h"
-#include "verilated_vcd_c.h"
+#include "verilated_fst_c.h"
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -81,7 +81,8 @@ class Item {
 
 int main(int argc, char* argv[]) {
     Verilated::commandArgs(argc, argv);
-    Valu* top = new Valu;
+    VerilatedContext* contextp = new VerilatedContext;
+    Valu* top = new Valu(contextp);
 
     int runs = 1000;
 
@@ -98,16 +99,15 @@ int main(int argc, char* argv[]) {
     test_item.init();
 
 
-    VerilatedVcdC* tfp = new VerilatedVcdC;
+    // VerilatedFstC* tfp = new VerilatedFstC;
     Verilated::traceEverOn(true);
-    top->trace(tfp, 2); 
-    std::filesystem::create_directories("waveforms");
-    tfp->open("waveforms/alu.vcd");
-    vluint64_t main_time = 0;
+    // top->trace(tfp, 99); 
+    // std::filesystem::create_directories("waveforms");
+    // tfp->open("waveforms/alu.fst");
 
     // Simulate for 20 cycles
     for (int i = 1; i <= runs; i++) {
-
+        contextp->timeInc(1);
         test_item.randomize();
 
         top->src1 = test_item.getSrc1();
@@ -135,9 +135,8 @@ int main(int argc, char* argv[]) {
                 test_item.getReference());
         }
         
-
-        tfp->dump(main_time);  
-        main_time++;
+        
+        // tfp->dump(contextp->time());
     }
     printf("--------------------------------------\n");
     printf("ALU test \n checks: %d \n succesful: %d (%3.2f %%)\n failed: %d \n", 
@@ -149,5 +148,6 @@ int main(int argc, char* argv[]) {
     top->final();
 
     delete top;
+    delete contextp;
     return 0;
 }

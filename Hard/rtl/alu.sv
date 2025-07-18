@@ -30,4 +30,9 @@ module alu(
         assign csr.Overflow = (src1[15] == src2[15]) && (result[15] != src1[15]);
     end
 
+    initial begin
+        $dumpfile("waveforms/alu.fst");
+        $dumpvars(0, alu);
+    end
+
 endmodule
