@@ -9,7 +9,7 @@ quiet=false
 while [[ $# -gt 0 ]]; do
   case $1 in
     -h|--help)
-      echo "Usage: $0 [-h] [-q | --quiet]"
+      echo "Usage: $0 [-h] [-q | --quiet] [-r | --runs <numb of runs>] [module names]"
       shift # past argument
       exit 0
       ;;
@@ -49,14 +49,14 @@ for module in "$@"; do
     ! $quiet && \
     verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp \
     -Irtl --build -Wwarn-lint \
-    --trace --trace-structs \
+    --trace-fst --trace-structs --trace-params \
     --timescale 1us/1ns \
     --Mdir obj_sim_${module} \
     -o ${module}-run \
     || \
     verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp \
     -Irtl --build -Wwarn-lint \
-    --trace --trace-structs \
+    --trace-fst --trace-structs --trace-params \
     --timescale 1us/1ns \
     --Mdir obj_sim_${module} \
     -o ${module}-run > /dev/null
