@@ -40,7 +40,7 @@ int label_to_pos(std::string_view const lab)
 void label(std::string_view const lab)
 {
 	if(label_only)
-		labels.emplace_back(lab, code_position + 1);
+		labels.emplace_back(lab, code_position);
 
 	return;
 }

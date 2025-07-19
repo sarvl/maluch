@@ -64,23 +64,23 @@ PISS16 is a 16bit architecture designed for educational purposes. It focuses on 
 |bbb src | 0101 | 110 | if(FC = 1) IP <-- src (branch if below (unsigned)) |
 |bno src | 0101 | 111 | if(FO = 0) IP <-- src (branch if no overflow)
 |    | |     |     |
-| in Rd | 0110 | fff  | Rd <-- IO[fff] |
-| out Rd | 0111 | fff  | IO[fff] <--- Rd |
+| in fff Rd | 0110 | fff  | Rd <-- IO[fff] |
+| out fff src | 0111 | fff  | IO[fff] <--- Rd |
 | ldw Rd src | 1000 | XXX | Rd <-- MEM[src] |
 | stw Rd src | 1001 | XXX | MEM[src] <-- Rd |
-| call src | 1010 | XXX | IP <-- src ; MEM[SP - 2] <-- IP ; SP <-- SP - 2|
-| ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 2|
-| iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 2 ; turns on interrupts |
+| call src | 1010 | XXX | MEM[SP - 1] <-- IP ; SP <-- SP - 1 ; IP <-- src |
+| ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 1|
+| iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 1 ; turns on interrupts |
 |      | 1011 | 010 | reserved |
 |      | 1011 | 011 | reserved |
 |      | 1011 | 100 | reserved |
 |      | 1011 | 101 | reserved |
 |      | 1011 | 110 | reserved |
 |      | 1011 | 111 | reserved |
-| push src | 1100 | XXX | MEM[SP - 2] <-- src ; SP <-- SP - 2  |   
-| pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 2  |   
+| push src | 1100 | XXX | MEM[SP - 1] <-- src ; SP <-- SP - 1  |   
+| pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 1  |   
 |    | 1110 |     | reserved |
-|  | 1111 |     | |
+| hlt | 1111 | XXX | stop the execution and wait for interrupt |
 
 
 note: 
@@ -136,7 +136,7 @@ PISS16 provides 16 registers, each 16 bits wide:
 | Register | Name | Usage | Access |
 |:--------:|:----:|:------:|:------:|
 | x0 | CR0 | Control Register 0 | [Special](#control-register-0) |
-| x1 | CR1 | Control Register 1 | [Special](#control-register-1) |
+| x1 | CR1 | Control Register 1 | [General](#control-register-1) |
 | x2 | SP | Stack Pointer | [General](#stack-pointer) |
 | x3-x15 | - | General purpose registers | General |
 
@@ -160,7 +160,7 @@ This register is divided into two 8-bit sections:
 - *Bits 7-0*: busy flags, read only, set by hardware, info whether IO device is processing request
 
 Each flag corresponds to a specific interrupt source. The mask bits (CR1) control whether the corresponding interrupt is enabled (1) or disabled (0).
-Write to flags part is ignored
+Write to is ignored.
 
 see [IO](IO)
 
@@ -180,7 +180,6 @@ This register is divided into two 8-bit sections:
 - *Bits 7-0*: reserved, leave at 0
 
 Each flag corresponds to a specific interrupt source. The mask bits (CR1) control whether the corresponding interrupt is enabled (1) or disabled (0).
-Write to flags part is ignored
 
 see [IO](IO)
 
