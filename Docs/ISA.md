@@ -62,25 +62,25 @@ PISS16 is a 16bit architecture designed for educational purposes. It focuses on 
 |bbe src | 0101 | 100 | if(FC = 1 or ZF = 1) IP <-- src (branch if below or equal (unsigned)) |
 |baa src | 0101 | 101 | if(FC = 0 and FZ = 0) IP <-- src (branch if above (unsigned)) |
 |bbb src | 0101 | 110 | if(FC = 1) IP <-- src (branch if below (unsigned)) |
-|boo src | 0101 | 111 | if(FO = 0) IP <-- src (branch if no overflow)
+|bno src | 0101 | 111 | if(FO = 0) IP <-- src (branch if no overflow)
 |    | |     |     |
-| in Rd | 0110 | fff  | Rd <-- IO[fff] |
-| out Rd | 0111 | fff  | IO[fff] <--- Rd |
+| in fff Rd | 0110 | fff  | Rd <-- IO[fff] |
+| out fff src | 0111 | fff  | IO[fff] <--- Rd |
 | ldw Rd src | 1000 | XXX | Rd <-- MEM[src] |
 | stw Rd src | 1001 | XXX | MEM[src] <-- Rd |
-| call src | 1010 | XXX | IP <-- src ; MEM[SP - 2] <-- IP ; SP <-- SP - 2|
-| ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 2|
-| iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 2 ; turns on interrupts |
+| call src | 1010 | XXX | MEM[SP - 1] <-- IP ; SP <-- SP - 1 ; IP <-- src |
+| ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 1|
+| iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 1 ; turns on interrupts |
 |      | 1011 | 010 | reserved |
 |      | 1011 | 011 | reserved |
 |      | 1011 | 100 | reserved |
 |      | 1011 | 101 | reserved |
 |      | 1011 | 110 | reserved |
 |      | 1011 | 111 | reserved |
-| push src | 1100 | XXX | MEM[SP - 2] <-- src ; SP <-- SP - 2  |   
-| pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 2  |   
+| push src | 1100 | XXX | MEM[SP - 1] <-- src ; SP <-- SP - 1  |   
+| pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 1  |   
 |    | 1110 |     | reserved |
-|  | 1111 |     | |
+| hlt | 1111 | XXX | stop the execution and wait for interrupt |
 
 
 note: 
@@ -136,7 +136,7 @@ PISS16 provides 16 registers, each 16 bits wide:
 | Register | Name | Usage | Access |
 |:--------:|:----:|:------:|:------:|
 | x0 | CR0 | Control Register 0 | [Special](#control-register-0) |
-| x1 | CR1 | Control Register 1 | [Special](#control-register-1) |
+| x1 | CR1 | Control Register 1 | [General](#control-register-1) |
 | x2 | SP | Stack Pointer | [General](#stack-pointer) |
 | x3-x15 | - | General purpose registers | General |
 
@@ -160,7 +160,7 @@ This register is divided into two 8-bit sections:
 - *Bits 7-0*: busy flags, read only, set by hardware, info whether IO device is processing request
 
 Each flag corresponds to a specific interrupt source. The mask bits (CR1) control whether the corresponding interrupt is enabled (1) or disabled (0).
-Write to flags part is ignored
+Write to is ignored.
 
 see [IO](IO)
 
@@ -180,7 +180,6 @@ This register is divided into two 8-bit sections:
 - *Bits 7-0*: reserved, leave at 0
 
 Each flag corresponds to a specific interrupt source. The mask bits (CR1) control whether the corresponding interrupt is enabled (1) or disabled (0).
-Write to flags part is ignored
 
 see [IO](IO)
 
@@ -207,7 +206,7 @@ The exact behavior depends on the device and can be found in corresponding manua
 <!-- TOC --><a name="interrupts"></a>
 #### Interrupts
 
-Interrupt happens ALWAYS AFTER the current instruction, NEVER during one, this means that IRET can NOT be followd be an interrupt.
+Interrupt happens ALWAYS AFTER the current instruction, IRET can be followed by the interrupt, the next IRET with no following interrupt will properly return to IP that first IRET was supposed to return to.
 
 When a device signals readiness to a processor, it sets an interrupt, this interrupt appears as a flag in CR0 (the bit position from the left indicates the device id, count starts from 0).  
 
@@ -215,7 +214,7 @@ IF `interrupt_flag[device_id] AND interrupt_mask[device_id] = 1` THEN an interru
 An interrupt starts by saving IP of instruction which would execute if there was no interrupt. to the stack, then the control is passed to proper subroutine.
 
 Switching to interrupt handler automatically surpresses further interrupts (does NOT clear them, only surpresses) until manually turned back on again.
-The interrupts can be turned back on by writing x0001 to IO 0 - `out 0 x0000`.
+The interrupts can be turned back on by IRET
 
 <!-- TOC --><a name="interrupt-handler-table"></a>
 #### Interrupt Handler Table
@@ -473,9 +472,9 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FC = 1) IP <-- src (branch if below (unsigned)) 
 
-<!-- TOC --><a name="instruction boo"></a>
+<!-- TOC --><a name="instruction bno"></a>
 ### BOO 
-- instruction: boo src 
+- instruction: bno src 
 - opcode 0101 
 - funct: 111 
 - flags: unmodified
@@ -525,7 +524,7 @@ The processor maintains four condition flags that are automatically updated by a
 ### RET 
 - instruction: ret 
 - opcode 1011 
-- funct: XXX 
+- funct: 000 
 - flags: unmodified
 - description: IP <-- MEM[SP] ; SP <-- SP + 2
 
@@ -533,9 +532,9 @@ The processor maintains four condition flags that are automatically updated by a
 ### IRET 
 - instruction: ret 
 - opcode 1011 
-- funct: XXX 
+- funct: 001 
 - flags: unmodified
-- description: IP <-- MEM[SP] ; SP <-- SP + 2 ; turns on interrupts
+- description: IP <-- MEM[SP] ; SP <-- SP + 2 ; restores int mask
 
 <!-- TOC --><a name="instruction push"></a>
 ### PUSH 

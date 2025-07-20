@@ -3,7 +3,6 @@
 #include <cstdint>
 
 #include "./assemble.h"
-#include "./simulate.h"
 
 int code_position = 0;
 bool label_only = false;
@@ -23,25 +22,12 @@ int main()
 	label_only = false;
 	code();
 
-#elif defined(SIMULATE)
-
-	//first pass only identifies labels
-
-	code_position = 0;
-	label_only = true;
-	code();
-
-	code_position = 0;
-	label_only = false;
-	code();
-
-
-	print_regs();
-
+	for(auto const i : instructions)
+		printf("%04X\n", i);
 
 #else
 
-	#error "No option specified, use through assembly.sh and simulate.sh"
+	#error "No option specified, use through assembly.sh"
 
 #endif 
 }
