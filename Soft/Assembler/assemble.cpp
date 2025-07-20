@@ -280,6 +280,8 @@ void i_lsr (t_reg const Rd, std::string_view const src) { i_lsr (Rd, label_to_po
 void i_cmp (t_reg const Rd, std::string_view const src) { i_cmp (Rd, label_to_pos(src)); return; }
 void i_test(t_reg const Rd, std::string_view const src) { i_test(Rd, label_to_pos(src)); return; }
 
+void i_out(uint8_t const funct, std::string_view const src) { i_out(funct, label_to_pos(src)); return; }
+
 //lab variants
 void i_jmp (std::string_view const src) { i_jmp (label_to_pos(src)); return; }
 void i_bee (std::string_view const src) { i_bee (label_to_pos(src)); return; }

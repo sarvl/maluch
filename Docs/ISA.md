@@ -206,7 +206,7 @@ The exact behavior depends on the device and can be found in corresponding manua
 <!-- TOC --><a name="interrupts"></a>
 #### Interrupts
 
-Interrupt happens ALWAYS AFTER the current instruction, NEVER during one, this means that IRET can NOT be followd be an interrupt.
+Interrupt happens ALWAYS AFTER the current instruction, IRET can be followed by the interrupt, the next IRET with no following interrupt will properly return to IP that first IRET was supposed to return to.
 
 When a device signals readiness to a processor, it sets an interrupt, this interrupt appears as a flag in CR0 (the bit position from the left indicates the device id, count starts from 0).  
 
@@ -214,7 +214,7 @@ IF `interrupt_flag[device_id] AND interrupt_mask[device_id] = 1` THEN an interru
 An interrupt starts by saving IP of instruction which would execute if there was no interrupt. to the stack, then the control is passed to proper subroutine.
 
 Switching to interrupt handler automatically surpresses further interrupts (does NOT clear them, only surpresses) until manually turned back on again.
-The interrupts can be turned back on by writing x0001 to IO 0 - `out 0 x0000`.
+The interrupts can be turned back on by IRET
 
 <!-- TOC --><a name="interrupt-handler-table"></a>
 #### Interrupt Handler Table
@@ -524,7 +524,7 @@ The processor maintains four condition flags that are automatically updated by a
 ### RET 
 - instruction: ret 
 - opcode 1011 
-- funct: XXX 
+- funct: 000 
 - flags: unmodified
 - description: IP <-- MEM[SP] ; SP <-- SP + 2
 
@@ -532,9 +532,9 @@ The processor maintains four condition flags that are automatically updated by a
 ### IRET 
 - instruction: ret 
 - opcode 1011 
-- funct: XXX 
+- funct: 001 
 - flags: unmodified
-- description: IP <-- MEM[SP] ; SP <-- SP + 2 ; turns on interrupts
+- description: IP <-- MEM[SP] ; SP <-- SP + 2 ; restores int mask
 
 <!-- TOC --><a name="instruction push"></a>
 ### PUSH 

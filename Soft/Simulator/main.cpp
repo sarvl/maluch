@@ -1,3 +1,5 @@
+#include <ncurses.h> //necessary for the keyboard management
+
 #include <iostream>
 
 #include <fcntl.h> //open, close
@@ -14,14 +16,22 @@
 #include <cstdio>
 #include <cstring> //strncmp, memcpy
 
+#include <chrono>
+
+#include <bit> //countl_zero
+
+
 #include "./../utility/src/log.h"
 #include "./../utility/src/file.h"
 
 using namespace std::literals;
+using namespace std::chrono;
 
 uint16_t memory[1 << 16];
 uint16_t registers[16];
+uint16_t iht[8];
 uint16_t ip;
+uint16_t int_mask_saved;
 bool flag_sign;
 bool flag_overflow;
 bool flag_carry;
@@ -43,6 +53,13 @@ constexpr int hexd_to_val(char const hexd)
 
 int main(int const argc, char const* const argv[])
 {
+	//init ncurser
+	initscr();
+	noecho();
+	cbreak();
+	nodelay(stdscr, true);
+	curs_set(0);
+	
 	std::string_view const file_name = (1 == argc ? "out.bin" : argv[1]);
 
 	File::t_File file;
@@ -62,6 +79,7 @@ int main(int const argc, char const* const argv[])
 		if(0 == strncmp(argv[i], "-p", 2))
 			print = true;
 	}
+
 
 	int line_num = 1;
 	int off = 0;
@@ -116,7 +134,6 @@ int main(int const argc, char const* const argv[])
 			return -4;
 		}
 
-
 		unsigned const instruction = 0
 			| (parts[0] << 12)
 			| (parts[1] <<  8)
@@ -132,8 +149,32 @@ int main(int const argc, char const* const argv[])
 	if(-1 == File::destroy_error_handled(file))
 		return -5;
 
+	uint16_t sys_management_iht_address = 0xFFFF;
+
+	auto timestamp = std::chrono::high_resolution_clock::now();	
+	char buf;
+
 	while(true)
 	{
+		//handle interrupts
+
+		//timer
+		auto const cur_time = std::chrono::high_resolution_clock::now();
+		if(cur_time - timestamp > 1s)
+		{
+			registers[0] |= (0b1 << (8 + 7));
+			timestamp = cur_time;
+		}
+		//keyboard
+		short const c = getch();
+		if(ERR != c)
+		{
+			registers[0] |= (0b1 << (8 + 6));
+			buf = c;
+		}
+		
+
+		
 		uint16_t instruction = memory[ip];
 		ip++;
 
@@ -151,7 +192,9 @@ int main(int const argc, char const* const argv[])
 		if(is_imm)
 			ip += 1;
 
-		uint16_t const reg0_saved = registers[0]; //instead of preventing write, restore at the end
+		uint16_t reg0_saved = registers[0]; //instead of preventing write, restore at the end, may be modified to clear interrupt
+
+
 		switch(opcode)
 		{
 		case 0b0000:
@@ -225,7 +268,7 @@ int main(int const argc, char const* const argv[])
 			case 0b0000: should_jump = true; break;
 			case 0b0001: should_jump = flag_zero; break;
 			case 0b0010: should_jump = not flag_zero; break;
-			case 0b0011: should_jump = flag_sign == flag_zero; break;
+			case 0b0011: should_jump = flag_sign == flag_overflow; break;
 			case 0b0100: should_jump = (flag_zero) or (flag_sign != flag_overflow); break;
 			case 0b0101: should_jump = (not flag_zero) and (flag_sign == flag_overflow); break;
 			case 0b0110: should_jump = flag_sign != flag_overflow; break;
@@ -247,11 +290,40 @@ int main(int const argc, char const* const argv[])
 		}
 
 		case 0b0110:
-			//not implemented yet
+			switch(funct)
+			{
+			case 0b000: reg0_saved &= 0x7FFF; break;
+			case 0b001: registers[rd] = buf; reg0_saved &= 0xBFFF; break;
+			case 0b010: reg0_saved &= 0xDFFF; break;
+			case 0b011: reg0_saved &= 0xEFFF; break;
+			case 0b100: reg0_saved &= 0xF7FF; break;
+			case 0b101: reg0_saved &= 0xFBFF; break;
+			case 0b110: reg0_saved &= 0xFDFF; break;
+			case 0b111: reg0_saved &= 0xFEFF; break;
+			}
 			goto next_instruction;
 
 		case 0b0111:
-			//not implemented yet
+			//busy flag is never set, there is no reason to
+			switch(funct)
+			{
+			case 0b000: //sys management
+				if(0xFFFF == sys_management_iht_address)
+					sys_management_iht_address = src & 0x7;
+				else
+				{
+					iht[sys_management_iht_address] = src;
+					sys_management_iht_address = 0xFFFF;
+				}
+				break;
+
+			default:
+				Log::error("undefined funct field for out");
+				break;
+
+			}
+
+
 			goto next_instruction;
 
 		case 0b1000:
@@ -266,7 +338,10 @@ int main(int const argc, char const* const argv[])
 			//upper part works as usual
 
 			if(src < 0x8000)
-				std::cout << static_cast<char>(registers[rd] & 0xFF);
+			{
+				printw("%c", static_cast<char>(registers[rd] & 0xFF));
+				refresh();
+			}
 			else
 				memory[src] = registers[rd]; 
 
@@ -276,7 +351,10 @@ int main(int const argc, char const* const argv[])
 			//be careful with storing
 
 			if(registers[2] < 0x8000)
-				std::cout << static_cast<char>(ip & 0xFF);
+			{
+				printw("%c", static_cast<char>(ip & 0xFF));
+				refresh();
+			}
 			else
 				memory[registers[2]] = ip;
 
@@ -290,8 +368,10 @@ int main(int const argc, char const* const argv[])
 		{
 			switch(funct)
 			{
-			case 0b000: ip = memory[registers[2]]; registers[2] = registers[2] + 1; break;
-			case 0b001: //not implemented yet 
+			case 0b000: ip = memory[registers[2]]; registers[2]++; break;
+			case 0b001: ip = memory[registers[2]]; registers[2]++; registers[1] = (int_mask_saved << 8) | (registers[1] & 0xFF); 
+//				printw("returned to 0x%04X", ip);
+				break;
 
 			case 0b010: case 0b011: case 0b100: case 0b101: case 0b110: case 0b111:
 				Log::error("Invalid funct for opcode=0b1011"); goto finish;
@@ -304,7 +384,10 @@ int main(int const argc, char const* const argv[])
 			//be careful with storing
 
 			if(registers[2] - 1 < 0x8000)
-				std::cout << static_cast<char>(src & 0xFF);
+			{
+				printw("%c", static_cast<char>(src & 0xFF));
+				refresh();
+			}
 			else
 				memory[registers[2] - 1] = src;
 
@@ -328,11 +411,31 @@ int main(int const argc, char const* const argv[])
 
 	next_instruction:
 		registers[0] = reg0_saved;
+
+		uint16_t const int_occured = (registers[0] & registers[1]) >> 8;
+
+		if(0x0000 == int_occured)
+			continue;
+
+		//save the mask
+		int_mask_saved = registers[1] >> 8;
+
+		//turn off the mask
+		registers[1] = registers[1] & 0xFF;
+
+		//save the ip
+		memory[(registers[2] - 1) & 0xFFFF] = ip;
+		registers[2]--;
+
+		//switch the ip
+		ip = iht[std::countl_zero(static_cast<uint8_t>(int_occured))];
 		continue;
 		
  	}
 
 finish:
+	endwin();
+
 	if(print)
 	{
 		std::cout << "registers:\n";
