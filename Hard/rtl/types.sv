@@ -1,3 +1,4 @@
+/* verilator lint_off MODDUP */
 package Types;
 
     typedef struct packed {
