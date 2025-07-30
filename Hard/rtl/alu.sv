@@ -1,6 +1,6 @@
 `include "types.sv"
 
-import Types::*;
+import Types::csr_t;
 
 module alu(
     input logic [15:0] src1, src2,
@@ -13,7 +13,7 @@ module alu(
     pulldown(carry);
 
     always_comb begin
-        case (aopcode)
+        unique case (aopcode)
             3'b000: {carry, result} = src1 + src2;
             3'b001: {carry, result} = src1 - src2;
             3'b010: result = src1 & src2;
