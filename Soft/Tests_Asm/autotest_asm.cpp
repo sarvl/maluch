@@ -31,7 +31,7 @@ int main(int const argc, char const* const* const argv)
 	File::t_File file_undertest;
 	File::t_File file_correct;
 
-	if(-1 == File::create_error_handled(&file_list, "./Tests/test_groups.txt"))
+	if(-1 == File::create_error_handled(&file_list, "./Tests_Asm/test_groups.txt"))
 		return -1;
 
 	char const* const data = file_list.data;
@@ -41,8 +41,8 @@ int main(int const argc, char const* const* const argv)
 	while(off < file_list.size)
 	{
 		int passed = 0;
-		std::string command = "./assemble.sh Tests/asm/g00t00.cpp out.out > /dev/null";
-		std::string correct = "Tests/out/g00t00.txt";
+		std::string command = "./assemble.sh Tests_Asm/asm/g00t00.cpp out.out > /dev/null";
+		std::string correct = "Tests_Asm/out/g00t00.txt";
 
 		//read all args
 		while('\n' != data[off])
@@ -64,10 +64,10 @@ int main(int const argc, char const* const* const argv)
 		int const limit = (data[beg + 7] - '0') * 10
 		                + (data[beg + 8] - '0');
 
-		command[25] = data[beg + 1];
-		command[26] = data[beg + 2];
-		correct[11] = data[beg + 1];
-		correct[12] = data[beg + 2];
+		command[29] = data[beg + 1];
+		command[30] = data[beg + 2];
+		correct[15] = data[beg + 1];
+		correct[16] = data[beg + 2];
 
 		int test_num = 0;
 
@@ -75,10 +75,10 @@ int main(int const argc, char const* const* const argv)
 
 		while(test_num < limit)
 		{
-			command[28] = test_num / 10 + '0';
-			command[29] = test_num % 10 + '0';
-			correct[14] = test_num / 10 + '0';
-			correct[15] = test_num % 10 + '0';
+			command[32] = test_num / 10 + '0';
+			command[33] = test_num % 10 + '0';
+			correct[18] = test_num / 10 + '0';
+			correct[19] = test_num % 10 + '0';
 
 			//make sure no stale file
 			system("rm -f out.out");
