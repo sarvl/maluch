@@ -5,22 +5,22 @@
 
 #include <vector>
 
-extern int code_position;
+extern uint16_t code_position;
 extern bool label_only;
 
-struct t_Label{
-	std::string_view name;
-	uint16_t pos;
-
-	t_Label(){}
-	t_Label(std::string_view const n_name, uint16_t const n_pos)
+t_Label::t_Label(){}
+t_Label::t_Label(std::string_view const n_name, uint16_t const n_pos)
 		: name(n_name), pos(n_pos) {}
-};
 
 std::vector<t_Label> labels;
-std::vector<uint16_t> instructions;
+std::vector<t_Instr> instructions;
 
-int label_to_pos(std::string_view const lab)
+t_Instr::t_Instr(uint16_t const n_cp, uint16_t const n_d)
+	: code_pos(n_cp), data(n_d)
+{}
+
+
+[[nodiscard]] int label_to_pos(std::string_view const lab)
 {
 	//necessary for simplicity of trampolines
 	//they WILL call this function but the result does nott matter
@@ -37,12 +37,12 @@ int label_to_pos(std::string_view const lab)
 }
 
 //assembler stuff
-void label(std::string_view const lab)
+uint16_t label(std::string_view const lab)
 {
 	if(label_only)
 		labels.emplace_back(lab, code_position);
 
-	return;
+	return code_position;
 }
 
 //no operand
@@ -55,7 +55,7 @@ void name ()\
 	uint16_t const instr = (opcode << 12)\
 	                     | (funct  <<  8);\
 	\
-	instructions.emplace_back(instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), instr);\
 	return;\
 }
 #define INSTR_RR(name, opcode, funct)\
@@ -69,7 +69,7 @@ void name (t_reg const Rd, t_reg const src)\
 	                     | (Rd  << 4)\
 	                     | (src << 0);\
 	\
-	instructions.emplace_back(instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), instr);\
 	return;\
 }
 #define INSTR_RS(name, opcode, funct)\
@@ -82,7 +82,7 @@ void name (t_reg const src)\
 	                     | (funct  <<  8)\
 	                     | (src << 0);\
 	\
-	instructions.emplace_back(instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), instr);\
 	return;\
 }
 #define INSTR_RD(name, opcode, funct)\
@@ -95,7 +95,7 @@ void name (t_reg const Rd)\
 	                     | (funct  <<  8)\
 	                     | (Rd << 4);\
 	\
-	instructions.emplace_back(instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), instr);\
 	return;\
 }
 
@@ -109,7 +109,7 @@ void name (uint8_t const funct, t_reg const src)\
 	                     | (funct  <<  8)\
 	                     | (src << 0);\
 	\
-	instructions.emplace_back(instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), instr);\
 	return;\
 }
 #define INSTR_FRD(name, opcode)\
@@ -122,7 +122,7 @@ void name (uint8_t const funct, t_reg const Rd)\
 	                     | (funct  <<  8)\
 	                     | (Rd << 4);\
 	\
-	instructions.emplace_back(instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), instr);\
 	return;\
 }
 
@@ -137,8 +137,8 @@ void name (t_reg const Rd, uint16_t const src)\
 	                     | (funct << 8)\
 	                     | (Rd  << 4);\
 	\
-	instructions.emplace_back(instr);\
-	instructions.emplace_back(src);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 2), instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), src);\
 	return;\
 }
 #define INSTR_I(name, opcode, funct)\
@@ -151,8 +151,8 @@ void name (uint16_t const src)\
 	                     | (0b1 << 11)\
 	                     | (funct  <<  8);\
 	\
-	instructions.emplace_back(instr);\
-	instructions.emplace_back(src);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 2), instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), src);\
 	return;\
 }
 
@@ -166,8 +166,8 @@ void name (uint8_t const funct, uint16_t const src)\
 	                     | (0b1 << 11)\
 	                     | (funct  <<  8);\
 	\
-	instructions.emplace_back(instr);\
-	instructions.emplace_back(src);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 2), instr);\
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), src);\
 	return;\
 }
 
@@ -319,6 +319,18 @@ void i_nand(t_reg const dst, uint16_t const imm)
 void i_nand(t_reg const dst, std::string_view const lab)
 {
 	i_nand(dst, label_to_pos(lab));
+	return;
+}
+
+
+void word(uint16_t const data)
+{
+	code_position++;
+
+	if(label_only)
+		return;
+
+	instructions.emplace_back(static_cast<uint16_t>(code_position - 1), data);
 	return;
 }
 

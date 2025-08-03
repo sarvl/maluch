@@ -1,3 +1,5 @@
+#pragma once
+
 #include <string_view>
 
 #include <cstdint>
@@ -26,7 +28,7 @@ namespace reg {
 using t_reg = reg::Type;
 
 //assembler stuff
-void label(std::string_view const lab);
+uint16_t label(std::string_view const lab);
 
 //no operand
 void i_ret ();
@@ -165,3 +167,5 @@ void i_out (uint8_t const funct, std::string_view const src);
 void i_nand(t_reg const dst, t_reg const src);
 void i_nand(t_reg const dst, uint16_t const imm);
 void i_nand(t_reg const dst, std::string_view const lab);
+
+void word(uint16_t const data);
