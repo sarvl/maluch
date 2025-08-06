@@ -47,19 +47,21 @@ for module in "$@"; do
     printf "Compiling %s.sv under %s_tb.cpp: ..." $module $module
 
     ! $quiet && \
-    verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp \
+    verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp tb/src/progmem.cpp \
     -Irtl --build -Wwarn-lint \
     --trace-fst --trace-structs --trace-params \
     --timescale 1us/1ns \
     --Mdir obj_sim_${module} \
     -o ${module}-run \
+    -CFLAGS -Itb/src \
     || \
-    verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp \
+    verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp tb/src/progmem.cpp \
     -Irtl --build -Wwarn-lint \
     --trace-fst --trace-structs --trace-params \
     --timescale 1us/1ns \
     --Mdir obj_sim_${module} \
-    -o ${module}-run > /dev/null
+    -o ${module}-run > /dev/null \
+    -CFLAGS -Itb/src
 
     if [ $? -eq 0 ]; then
         printf "\b\b\b\b Succes\n"

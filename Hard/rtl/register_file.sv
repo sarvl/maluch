@@ -1,29 +1,22 @@
+`include "core.sv"
+
 module register_file #(
     parameter DataWidth = 16,
-    parameter NumRegs = 16,
-    parameter IndexWidth = $clog2(NumRegs)
+    parameter NumRegs = 16
 )(
-    input logic clk,
-    input logic writeEn,
-    input logic [IndexWidth-1:0] writeAddr,
-    input logic [ DataWidth-1:0] writeData,
-    input logic [IndexWidth-1:0] readAddr1,
-    input logic [IndexWidth-1:0] readAddr2,
-    output logic [ DataWidth-1:0] readData1,
-    output logic [ DataWidth-1:0] readData2
+    core.RegFile CoreBus
 );
 
     logic [DataWidth-1:0] regs[NumRegs];
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge CoreBus.clk) begin
 
-        if (writeEn) begin
-            regs[writeAddr] <= writeData;
+        if (CoreBus.reg_w_en) begin
+            regs[CoreBus.addr_in] <= CoreBus.reg_in;
         end
-
     end
 
-    assign readData1 = regs[readAddr1];
-    assign readData2 = regs[readAddr2];
+    assign CoreBus.reg_out1 = regs[CoreBus.addr_out1];
+    assign CoreBus.reg_out2 = regs[CoreBus.addr_out2];
 
 endmodule

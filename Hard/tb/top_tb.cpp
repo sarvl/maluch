@@ -8,64 +8,22 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "src/progmem.h"
 
 
 class Item {
 private:
-    std::vector<uint32_t> instructions;
-    size_t pc = 0;
+    FlashMemmory16* Memmory = new FlashMemmory16;
     bool clk = false;
     uint64_t cycle_count = 0;
     
 public:
     bool loadInstructions(const std::string& filename) {
-        std::ifstream file(filename);
-        if (!file.is_open()) {
-            std::cerr << "Error: Cannot open file " << filename << std::endl;
-            return false;
-        }
-        
-        std::string line;
-        instructions.clear();
-        
-        while (std::getline(file, line)) {
-            // Skip empty lines and comments
-            if (line.empty() || line[0] == '#' || line[0] == '/') {
-                continue;
-            }
-            
-            // Remove whitespace
-            line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
-            
-            try {
-                // Convert binary string to integer
-                uint32_t instr = std::stoul(line, nullptr, 2);
-                instructions.push_back(instr);
-                std::cout << "Loaded instruction " << instructions.size() 
-                          << ": 0x" << std::hex << instr << " (binary: " << line << ")" << std::dec << std::endl;
-            } catch (const std::exception& e) {
-                std::cerr << "Error parsing instruction: " << line << " - " << e.what() << std::endl;
-                return false;
-            }
-        }
-        
-        std::cout << "Loaded " << instructions.size() << " instructions" << std::endl;
-        return !instructions.empty();
+        return Memmory->program(filename);
     }
     
-    uint32_t getCurrentInstruction() {
-        if (pc >= instructions.size()) {
-            return 0; // End of program
-        }
-        return instructions[pc];
-    }
-    
-    void nextInstruction() {
-        pc++;
-    }
-    
-    bool hasMoreInstructions() {
-        return pc < instructions.size();
+    uint16_t getInstruction(uint16_t pc) {
+        return Memmory->read(pc);
     }
     
     bool toggleClock() {
@@ -81,14 +39,16 @@ public:
     }
     
     void reset() {
-        pc = 0;
         clk = false;
         cycle_count = 0;
     }
     
     void printStatus() {
-        std::cout << "Cycle: " << cycle_count << ", PC: " << pc 
-                  << ", Current Instr: 0x" << std::hex << getCurrentInstruction() << std::dec << std::endl;
+        std::cout << "Cycle: " << cycle_count << std::dec << std::endl;
+    }
+
+    ~Item() {
+        delete Memmory;
     }
 };
 
@@ -96,7 +56,7 @@ public:
 int main(int argc, char* argv[]) {
 
     std::string code_file = "tb/code.txt";
-    uint64_t max_cycles = 10000;
+    uint64_t max_cycles = 100;
     bool enable_trace = true;
     bool verbose = true;
 
@@ -155,20 +115,15 @@ int main(int argc, char* argv[]) {
         
         // On rising edge, feed new instruction
         if (cpu->clk) {
-            if (tb.hasMoreInstructions()) {
-                cpu->instr_in = tb.getCurrentInstruction();
-                if (verbose) {
-                    std::cout << "Cycle " << tb.getCycleCount() 
-                              << ": Feeding instruction 0x" << std::hex << cpu->instr_in << std::dec << std::endl;
-                }
-                tb.nextInstruction();
-                instructions_executed++;
-            } else {
-                cpu->instr_in = 0; // NOP or halt
-                if (verbose) {
-                    std::cout << "Cycle " << tb.getCycleCount() << ": No more instructions (NOP)" << std::endl;
-                }
+            uint16_t finstr = tb.getInstruction(static_cast<uint16_t>(cpu->pointer >> 16));
+            uint16_t sinstr = tb.getInstruction(static_cast<uint16_t>(cpu->pointer & 0x0000FFFF));
+            cpu->instr_in = (static_cast<uint32_t>(finstr) << 16) + static_cast<uint32_t>(sinstr);
+            if (verbose) {
+                std::cout << "Cycle " << tb.getCycleCount() 
+                            << ": Pointer " << std::hex << cpu->pointer
+                            << " instruction 0x" << std::hex << cpu->instr_in << std::dec << std::endl;
             }
+            instructions_executed++;
         }
         
         // Evaluate the CPU
@@ -177,17 +132,6 @@ int main(int argc, char* argv[]) {
         // Dump waveform if tracing
         if (tfp) {
             tfp->dump(contextp->time());
-        }
-        
-        // Check for simulation end conditions
-        if (!tb.hasMoreInstructions()) {
-            // Run a few more cycles after last instruction to let CPU finish
-            static uint32_t post_instruction_cycles = 0;
-            post_instruction_cycles++;
-            if (post_instruction_cycles > 10) {
-                simulation_complete = true;
-                std::cout << "All instructions processed, ending simulation." << std::endl;
-            }
         }
         
         // Print periodic status
