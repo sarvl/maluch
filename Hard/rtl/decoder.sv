@@ -1,25 +1,42 @@
 `include "types.sv"
+`include "core.sv"
 
-import Types::*;
+import types::instr_t;
 
 module decoder (
-    input logic clk,
-    input logic _reset,
-    input logic [31:0] instr_in,
-
-    output instr_t code_bus,
-    output logic [15:0] imm,
-    output logic [3:0] dest_reg, src_reg
+    core.Decoder CoreBus
 );
 
-    logic [31:0] instr;
-    always_comb instr = _reset ? 0 : instr_in;
-    always_ff @(posedge clk) code_bus.opcode <= instr[15+16:12+16];
-    always_ff @(posedge clk) code_bus.funct <= instr[10+16:8+16];
-    always_ff @(posedge clk) code_bus.imm_present <= instr[11+16];
-    always_ff @(posedge clk) dest_reg <= instr[7+16:4+16];
-    always_ff @(posedge clk) src_reg <= instr[3+16:16];
-    always_ff @(posedge clk) imm <= instr[15:0];
+    instr_t i;
+    assign i = CoreBus.instruction;
+
+    // registers driver
+    always_comb begin
+        CoreBus.addr_out1 = i.dest_reg;
+        CoreBus.addr_out2 = i.src_reg;
+
+        CoreBus.addr_in = i.dest_reg;
+        CoreBus.reg_w_en = i.opcode inside {4'b0001, 4'b0010} ? 1 : 0;
+    end
+
+
+    // ALU driver
+    always_comb begin
+        CoreBus.alu_ctrl = i.funct;
+        CoreBus.src1 = CoreBus.reg_out1;
+        CoreBus.src2 = i.imm_valid ? i.imm : CoreBus.reg_out2;
+    end
+
+    logic [15:0]    _output;
+
+    // outcome driver
+    always_comb begin
+        case (i.opcode)
+            default: _output = CoreBus.alu_ret;
+        endcase
+    end
+
+    assign CoreBus.reg_in = _output;
 
     initial begin
         $dumpvars(0, decoder);
