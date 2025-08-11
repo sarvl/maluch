@@ -1,6 +1,9 @@
-`include "types.sv"
+`ifndef TYPES
+    `include "types.sv"
+    `define TYPES
+`endif
 
-import types::csr_t;
+
 
 /* verilator lint_off MODDUP */
 interface core(
@@ -8,6 +11,7 @@ interface core(
     input logic reset
 );
 
+import types::csr_t;
 
 logic [31:0]    instruction;
 logic [31:0]    instr_pointer;
