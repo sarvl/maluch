@@ -1,4 +1,7 @@
-`include "core.sv"
+`ifndef CORE
+    `include "core.sv"
+    `define CORE
+`endif
 
 module register_file #(
     parameter DataWidth = 16,
