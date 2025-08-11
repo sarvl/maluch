@@ -1,22 +1,59 @@
-`include "types.sv"
-`include "core.sv"
+`ifndef TYPES
+    `include "types.sv"
+    `define TYPES
+`endif
+`ifndef CORE
+    `include "core.sv"
+    `define CORE
+`endif
 
 import types::csr_t;
-import types::instr_t;
 
 module counter (
-    core.IP CoreBus
+    `ifndef PRECISE_SIM
+        core.IP CoreBus
+    `else
+        input logic [31:0]  instr_pointer,
+        input csr_t         csr,
+        input logic [31:0]  instruction,
+        input logic [15:0]  src2,
+        output logic [31:0] _next_pointer
+    `endif
 );
 
+    import types::instr_t;
+
     logic branch_valid;
-    csr_t csr;
-    assign csr = CoreBus.csr;
+    `ifndef PRECISE_SIM
+        csr_t csr;
+        assign csr = CoreBus.csr;
+    `endif
 
     logic [3:0] _code;
-    assign _code = {CoreBus.instruction[28], CoreBus.instruction[26:24]};
+    `ifndef PRECISE_SIM 
+        assign _code = {CoreBus.instruction[28], CoreBus.instruction[26:24]};
+    `else
+        assign _code = {instruction[28], instruction[26:24]};
+    `endif
 
     logic branching;
-    assign branching = (CoreBus.instruction[31:28] ==? 4'b010x) ? 1 : 0;
+    `ifndef PRECISE_SIM
+        assign branching = (CoreBus.instruction[31:28] ==? 4'b010x) ? 1 : 0;
+    `else
+        assign branching = (instruction[31:28] ==? 4'b010x) ? 1 : 0;
+    `endif
+
+    `ifndef PRECISE_SIM
+        logic [31:0] instr_pointer;
+        assign instr_pointer = CoreBus.instr_pointer;
+    `endif
+
+    `ifndef PRECISE_SIM
+        logic [15:0] src2;
+        assign src2 = CoreBus.src2;
+    `endif
+
+
 
     always_comb begin
 
@@ -43,20 +80,29 @@ module counter (
 
 
     instr_t i;
-    assign i = CoreBus.instruction;
+    `ifndef PRECISE_SIM
+        assign i = CoreBus.instruction;
+    `else
+        assign i = instruction;
+    `endif
 
     logic [15:0]    _pointer0;
     logic [15:0]    _pointer1;
 
-    always_comb _pointer0 = branching && branch_valid ? CoreBus.src2 :
-                            i.imm_valid ? CoreBus.instr_pointer[15:0] + 1 :
-                            CoreBus.instr_pointer[15:0];
+    always_comb _pointer0 = branching && branch_valid ? src2 :
+                            i.imm_valid ? instr_pointer[15:0] + 1 :
+                            instr_pointer[15:0];
 
-    always_comb _pointer1 = branching && branch_valid ? CoreBus.src2 + 1 :
-                            i.imm_valid ? CoreBus.instr_pointer[15:0] + 2 :
-                            CoreBus.instr_pointer[15:0] + 1;
+    always_comb _pointer1 = branching && branch_valid ? src2 + 1 :
+                            i.imm_valid ? instr_pointer[15:0] + 2 :
+                            instr_pointer[15:0] + 1;
 
-    assign CoreBus._next_pointer[31:16] = _pointer0;
-    assign CoreBus._next_pointer[15:0] = _pointer1;
+
+    `ifndef PRECISE_SIM
+        assign CoreBus._next_pointer[31:16] = _pointer0;
+        assign CoreBus._next_pointer[15:0] = _pointer1;
+    `else
+        assign _next_pointer = {_pointer0, _pointer1};
+    `endif
 
 endmodule
