@@ -1,9 +1,15 @@
+`ifndef TYPES
+    `include "types.sv"
+    `define TYPES
+`endif
+`ifndef CORE
+    `include "core.sv"
+    `define CORE
+`endif
 `include "alu.sv"
 `include "decoder.sv"
-`include "types.sv"
 `include "register_file.sv"
 `include "counter.sv"
-`include "core.sv"
 
 
 module top (

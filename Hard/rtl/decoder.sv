@@ -1,12 +1,18 @@
-`include "types.sv"
-`include "core.sv"
+`ifndef TYPES
+    `include "types.sv"
+    `define TYPES
+`endif
+`ifndef CORE
+    `include "core.sv"
+    `define CORE
+`endif
 
-import types::instr_t;
+
 
 module decoder (
     core.Decoder CoreBus
 );
-
+    import types::instr_t;
     instr_t i;
     assign i = CoreBus.instruction;
 
@@ -37,9 +43,5 @@ module decoder (
     end
 
     assign CoreBus.reg_in = _output;
-
-    initial begin
-        $dumpvars(0, decoder);
-    end
 
 endmodule
