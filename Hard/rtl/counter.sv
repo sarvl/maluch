@@ -3,7 +3,7 @@
     `define TYPES
 `endif
 `ifndef CORE
-    `include "core.sv"
+    `include "core_i.sv"
     `define CORE
 `endif
 
@@ -11,7 +11,7 @@ import types::csr_t;
 
 module counter (
     `ifndef PRECISE_SIM
-        core.IP CoreBus
+        core_i.IP CoreBus
     `else
         input logic [31:0]  instr_pointer,
         input csr_t         csr,

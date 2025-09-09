@@ -2,15 +2,7 @@
     `include "types.sv"
     `define TYPES
 `endif
-`ifndef CORE
-    `include "core.sv"
-    `define CORE
-`endif
-`include "alu.sv"
-`include "decoder.sv"
-`include "register_file.sv"
-`include "counter.sv"
-
+//`include "core.sv"
 
 module top (
     input logic clk,
@@ -20,18 +12,22 @@ module top (
     output logic [31:0] pointer
 );
 
-    core CoreBus(.clk, .reset(_reset));
-    counter IP(.CoreBus(CoreBus.IP));
-    decoder Decoder(.CoreBus(CoreBus.Decoder));
-    alu ALU(.CoreBus(CoreBus.ALU));
-    register_file register(.CoreBus(CoreBus.RegFile));
+    // -----------------------------------
+    //  Clocking
+    // -----------------------------------
+    logic clk_counter = 0;
+    always_ff@(posedge clk) begin
+        clk_counter <= clk_counter + 1;
+        if (clk_counter == 1) begin
+            core_clk <= ~core_clk;
+        end
+    end
+    logic core_clk=0;
 
-    assign pointer = CoreBus.instr_pointer;
-    assign CoreBus.instruction = instr_in;
 
 
     initial begin
-        $dumpfile("waveforms/core.fst");
+        $dumpfile("waveforms/top.fst");
         $dumpvars(0, top);
     end
 
