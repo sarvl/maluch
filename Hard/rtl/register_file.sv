@@ -1,5 +1,5 @@
 `ifndef CORE
-    `include "core.sv"
+    `include "core_i.sv"
     `define CORE
 `endif
 
@@ -7,7 +7,7 @@ module register_file #(
     parameter DataWidth = 16,
     parameter NumRegs = 16
 )(
-    core.RegFile CoreBus
+    core_i.RegFile CoreBus
 );
 
     logic [DataWidth-1:0] regs[NumRegs];

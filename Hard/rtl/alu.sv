@@ -4,14 +4,14 @@
 `endif
 
 `ifndef CORE
-    `include "core.sv"
+    `include "core_i.sv"
     `define CORE
 `endif
 
 
 
 module alu(
-    core.ALU CoreBus
+    core_i.ALU CoreBus
 );
 
     import types::csr_t;
