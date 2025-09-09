@@ -49,16 +49,16 @@ for module in "$@"; do
     ! $quiet && \
     verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp tb/src/progmem.cpp \
     -Irtl --build -Wwarn-lint \
-    --trace-fst --trace-structs --trace-params \
-    --timescale 1us/1ns \
+    --trace-fst --trace-structs --trace-params --trace-max-array 2048 --trace-max-width 1024 --trace-underscore \
+    --timescale 1us/1ns --timing \
     --Mdir obj_sim_${module} \
     -o ${module}-run \
     -CFLAGS -Itb/src \
     || \
     verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp tb/src/progmem.cpp \
     -Irtl --build -Wwarn-lint \
-    --trace-fst --trace-structs --trace-params \
-    --timescale 1us/1ns \
+    --trace-fst --trace-structs --trace-params --trace-max-array 2048 --trace-max-width 1024 --trace-underscore \
+    --timescale 1us/1ns --timing \
     --Mdir obj_sim_${module} \
     -o ${module}-run > /dev/null \
     -CFLAGS -Itb/src
