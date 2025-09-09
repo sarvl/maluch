@@ -18,4 +18,13 @@ package types;
         logic [15:0]    imm;
     } instr_t;
 
+    typedef struct packed {
+        logic [15:0]    addr;
+        logic [15:0]    data2mem;
+        logic           write;
+        logic [31:0]    ptr;
+        logic           ptr_valid;
+        logic           addr_valid;
+    } cpu_mem_bus_t;
+
 endpackage
