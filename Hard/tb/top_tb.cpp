@@ -138,6 +138,8 @@ int main(int argc, char* argv[]) {
         if (verbose && tb.getCycleCount() % 100 == 0) {
             tb.printStatus();
         }
+
+        if (tb.getCycleCount() %20 == 0 ) tfp->flush();
         
         contextp->timeInc(1);
     }
