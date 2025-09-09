@@ -3,14 +3,14 @@
     `define TYPES
 `endif
 `ifndef CORE
-    `include "core.sv"
+    `include "core_i.sv"
     `define CORE
 `endif
 
 
 
 module decoder (
-    core.Decoder CoreBus
+    core_i.Decoder CoreBus
 );
     import types::instr_t;
     instr_t i;
