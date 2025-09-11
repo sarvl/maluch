@@ -15,14 +15,10 @@ module top (
     // -----------------------------------
     //  Clocking
     // -----------------------------------
-    logic clk_counter = 0;
+    logic clk_core = 0;
     always_ff@(posedge clk) begin
-        clk_counter <= clk_counter + 1;
-        if (clk_counter == 1) begin
-            core_clk <= ~core_clk;
-        end
+        clk_core <= clk_core + 1;
     end
-    logic core_clk=0;
 
 
 
