@@ -1,0 +1,146 @@
+                                                              
+ ┌──────────────┐      ┌─────────────────┐                    
+ │              │      │                 │                    
+ │   RAM//ROM   │      │      ALU        │                    
+ │              │      │                 │                    
+ └──────────────┘      └─────────────────┘                    
+        ▲▲                     ▲▲                             
+        ││                     ││                             
+        ││                     ││                             
+        ││                     ││                             
+        ▼▼                     ▼▼                             
+ ┌──────────────┐      ┌─────────────────┐      ┌───────────┐ 
+ │              │      │                 │      │           │ 
+ │              │      │                 │      │           │ 
+ │    MEMORY    │◄────►│     CONTROL     │◄────►│  REGFILE  │ 
+ │    CONTROL   │◄────►│      UNIT       │◄────►│           │ 
+ │              │      │                 │      │           │ 
+ │              │      │                 │      │           │ 
+ └──────────────┘      └─────────────────┘      └───────────┘ 
+        ▲▲                     ▲▲                     ▲▲        
+        ││                     ││                     ││        
+        ││                     ││                     ││        
+        ││                     ││                     ││        
+        ▼▼                     ▼▼                     ▼▼        
+ ┌──────────────┐      ┌────────────────────────────────────┐                    
+ │              │      │                                    │                    
+ │              │◄────►│                                    │                    
+ │     GPU      │◄────►│       IO                           │                    
+ │              │      │                                    │                    
+ │              │      │                                    │                    
+ └──────────────┘      └────────────────────────────────────┘                    
+
+
+
+
+power is obviously needed for each module but during digital design stage it can be safely(ish) ignored
+
+1. ALU
+needs:
+	arithmetic operations:
+		ADD
+		SUB
+		AND
+		OR
+		XOR
+		NOT
+		LSL
+		LSR
+	and SOCZ flags 
+
+interface:
+	clock
+	bus (16b)
+		behavior depends on op
+	flags 
+		always outputs flags
+	op
+		1000 - load register A via bus
+		1001 - load register B via bus
+		0xxx - return A op B
+			operation determined by ISA "funct" field
+
+2. reg file
+needs:
+	14 GPR
+	2 special ones (stack pointer will be managed by control unit)
+	 R0 - read only, direct connection to IO board and not be actual register
+	 R1 - read/write, 
+
+	reg file should perform int_flags AND int_mask to determine whether some interrupt is on, if so it should announce the interrupt on INT port
+	reg file should perform collapse AND on busy flags and output that on busy port
+	^ above 2 contradict the name of the module but this simplifies hardware drastically
+	  this is naming issue, not functionality issue
+
+
+interface to control:
+	clock
+
+	bus (16b)
+	int
+	intid (3b)
+	busy
+	write
+	regid (4b)
+	
+interface to IO
+	int_asserted (8b)
+	busy flags (8b)
+
+
+3. IO board
+needs:
+	must provide unified interface to all IO devices 
+	mostly unspecified for now
+
+	currenty: 
+		timer 
+		keyboard (to be discussed)
+		gpu (to be discussed, only config)
+	
+interface to control:
+	clock
+	bus (16b)
+	address (3b)
+	write?
+
+interface to reg file
+	int_asserted (8b)
+	busy flags (8b)
+
+interface to GPU:
+	currently unspecified but probably only forwards stuff from cpu 
+	
+4. memory controller
+needs:
+	send requests to GPU or RAM/ROM depending on specified address and read/write 
+
+	depending on layout needs, interface can be changed to exclude separate address bus 
+
+interface to control:
+	clock
+	address (16b)
+	data bus (16b) 
+	mode (3b)
+		000 - idle
+		001 - unused
+		010 - addres load
+		011 - address increment
+		100 - data store
+		101 - data read
+		110 - unused
+		111 - unused
+
+interface to RAM/ROM
+	clock
+
+	address (16b)
+	data bus (16b)
+	write?
+	
+interface to GPU
+	clock
+
+	address (15b) (not a mistake)
+	data bus (16b)
+	write? (still needed to prevent overwrite)
