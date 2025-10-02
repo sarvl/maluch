@@ -44,7 +44,7 @@ module ascii_controller #(
   assign pixel_x = address[9:0];
   assign pixel_y = address[19:10];
 
-  logic [11:0] char_address;  // TODO: Check if size is properly calculated
+  logic [11:0] char_address;
   logic [ 7:0] data_rom;
 
   char_rom char_rom (
@@ -62,13 +62,13 @@ module ascii_controller #(
 endmodule
 
 module char_rom (
-    input  logic [11:0] char_address,  // TODO: Check if size is properly calculated
+    input  logic [11:0] char_address,
     output logic [ 7:0] data_rom
 );
-  // 256 characters × 16 rows = 3584 bytes
+  // 256 characters × 16 rows = 4096 bytes
   logic [7:0] font_mem[4096];
 
-  // Load IBM VGA 8x16 font from hex file
+  // Load font from hex file
   initial begin
     $readmemh("tests/inputs/char_font.hex", font_mem);
   end

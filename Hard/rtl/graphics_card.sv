@@ -8,7 +8,7 @@ module graphics_card (
     output logic [1:0] blue,
     output logic h_sync,
     output logic v_sync,
-    output logic video_enable  //only for testbench
+    output logic video_enable
 );
   logic [ 7:0] data_in;
   logic [19:0] address;
@@ -39,7 +39,7 @@ module graphics_card (
   vram vram (
       .rst(rst),
       .clk(clk),
-      .vram_address(vram_address),  // TODO: Calculate address properly
+      .vram_address(vram_address),
       .w_enable(0),
       .w_data(0),
       .r_data(data_in)
