@@ -1,17 +1,18 @@
 `timescale 1ns / 10ps
 module vga_controller #(
-    // Configuration for the 800x600 resolution 56Hz refresh rate and 36MHz clock
+    // Configuration for the 640x480 resolution 60Hz refresh rate and 25.175MHz clock
+    // Period of 39.72 nanoseconds (ns)
     // Horizontal timings [pixels]
-    parameter H_VISIBLE_AREA = 800,
-    parameter H_FRONT_PORCH  = 24,
-    parameter H_SYNC_PULSE   = 72,
-    parameter H_BACK_PORCH   = 128,
+    parameter H_VISIBLE_AREA = 640,
+    parameter H_FRONT_PORCH  = 16,
+    parameter H_SYNC_PULSE   = 96,
+    parameter H_BACK_PORCH   = 48,
     parameter H_WHOLE_LINE   = H_SYNC_PULSE + H_BACK_PORCH + H_VISIBLE_AREA + H_FRONT_PORCH,  //1024
     // Vertical timings [lines]
-    parameter V_VISIBLE_AREA = 600,
-    parameter V_FRONT_PORCH  = 1,
+    parameter V_VISIBLE_AREA = 480,
+    parameter V_FRONT_PORCH  = 10,
     parameter V_SYNC_PULSE   = 2,
-    parameter V_BACK_PORCH   = 22,
+    parameter V_BACK_PORCH   = 33,
     parameter V_WHOLE_FRAME  = V_SYNC_PULSE + V_BACK_PORCH + V_VISIBLE_AREA + V_FRONT_PORCH   // 625
 ) (
     input logic clk,
@@ -24,9 +25,10 @@ module vga_controller #(
     output logic [2:0] green,
     output logic [1:0] blue,
     //Pixel address, 10 lower bits is x-axis and 10 upper bits is y-axis
-    output logic [19:0] addr
+    output logic [19:0] address,
+    output logic video_enable
 );
-  logic video_enable;
+  //logic video_enable;
   logic done_line;
   logic done_frame;
 
@@ -66,11 +68,11 @@ module vga_controller #(
   assign pixel_x = x - (H_SYNC_PULSE + H_FRONT_PORCH);  //Max 10 bits needed for addressing
   assign pixel_y = y - (V_SYNC_PULSE + V_FRONT_PORCH);  //Max 10 bits needed for addressing
 
-  assign addr = {pixel_y, pixel_x[9:0]};
+  assign address = {pixel_y, pixel_x[9:0]};
 
   // RGB data registers
   always_ff @(posedge clk or posedge rst) begin : rgb_register
-    if (rst || !video_enable) begin
+    if (rst || !video_enable || data[0] === 1'bx) begin
       red   <= 3'b0;
       green <= 3'b0;
       blue  <= 2'b0;

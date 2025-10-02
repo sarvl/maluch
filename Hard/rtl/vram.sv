@@ -1,0 +1,36 @@
+`timescale 1ns / 10ps
+module vram #(
+    parameter MEMORY_BYTES = 1048576
+) (
+    input logic rst,
+    input logic clk,
+    input logic [19:0] vram_address,
+    input logic w_enable,
+    input logic [7:0] w_data,
+    output logic [7:0] r_data
+);
+  logic [7:0] mem[MEMORY_BYTES];
+
+  // Testbench only
+  initial begin
+    for (int i = 0; i < 256; i++) begin
+      mem[i] = i[7:0];
+    end
+  end
+
+  always_ff @(negedge clk) begin : memory_read
+    r_data <= mem[vram_address];
+  end
+
+  always_ff @(posedge clk) begin : memory_write
+    if (w_enable) mem[vram_address] <= w_data;
+  end
+
+  always_ff @(posedge clk) begin : memory_rst
+    if (rst) begin
+      for (int i = 0; i < MEMORY_BYTES; i++) begin
+        mem[i] = 8'b0;
+      end
+    end
+  end
+endmodule
