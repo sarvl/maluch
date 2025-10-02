@@ -70,7 +70,7 @@ module char_rom (
 
   // Load font from hex file
   initial begin
-    $readmemh("tests/inputs/char_font.hex", font_mem);
+    $readmemh("../tb/char_font.hex", font_mem);
   end
 
   always_comb begin
