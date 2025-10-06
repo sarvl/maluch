@@ -1,4 +1,3 @@
-`timescale 1ns / 10ps
 module vga_controller #(
     // Configuration for the 640x480 resolution 60Hz refresh rate and 25.175MHz clock
     // Period of 39.72 nanoseconds (ns)
@@ -7,13 +6,13 @@ module vga_controller #(
     parameter H_FRONT_PORCH  = 16,
     parameter H_SYNC_PULSE   = 96,
     parameter H_BACK_PORCH   = 48,
-    parameter H_WHOLE_LINE   = H_SYNC_PULSE + H_BACK_PORCH + H_VISIBLE_AREA + H_FRONT_PORCH,  //1024
+    parameter H_WHOLE_LINE   = H_SYNC_PULSE + H_BACK_PORCH + H_VISIBLE_AREA + H_FRONT_PORCH,  //800
     // Vertical timings [lines]
     parameter V_VISIBLE_AREA = 480,
     parameter V_FRONT_PORCH  = 10,
     parameter V_SYNC_PULSE   = 2,
     parameter V_BACK_PORCH   = 33,
-    parameter V_WHOLE_FRAME  = V_SYNC_PULSE + V_BACK_PORCH + V_VISIBLE_AREA + V_FRONT_PORCH   // 625
+    parameter V_WHOLE_FRAME  = V_SYNC_PULSE + V_BACK_PORCH + V_VISIBLE_AREA + V_FRONT_PORCH   //525
 ) (
     input logic clk,
     input logic rst,
@@ -44,12 +43,12 @@ module vga_controller #(
   always_ff @(posedge clk or posedge rst) begin : h_counter
     if (rst || done_line) x <= 11'b0;
     else x <= x + 1;
-  end
+  end : h_counter
 
   always_ff @(posedge clk or posedge rst) begin : v_counter
     if (rst || done_frame) y <= 10'b0;
     else if (done_line) y <= y + 1;
-  end
+  end : v_counter
 
   // Comparators
   assign h_sync = ~(x < H_SYNC_PULSE);
@@ -81,5 +80,5 @@ module vga_controller #(
       green <= data[4:2];
       blue  <= data[1:0];
     end
-  end
+  end : rgb_register
 endmodule  //vga

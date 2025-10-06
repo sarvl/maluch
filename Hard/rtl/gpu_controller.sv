@@ -1,4 +1,3 @@
-`timescale 1ns / 10ps
 module gpu_controller #(
     parameter CHAR_WIDTH = 4'd8,
     parameter CHAR_HEIGHT = 5'd16,
@@ -70,7 +69,7 @@ module char_rom (
 
   // Load font from hex file
   initial begin
-    $readmemh("../tb/char_font.hex", font_mem);
+    $readmemh("tb/char_font.hex", font_mem);
   end
 
   always_comb begin

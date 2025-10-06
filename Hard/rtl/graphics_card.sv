@@ -1,4 +1,7 @@
-`timescale 1ns / 10ps
+`include "gpu_controller.sv"
+`include "vga_controller.sv"
+`include "vram.sv"
+
 module graphics_card (
     input logic clk,
     input logic rst,

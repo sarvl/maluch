@@ -1,4 +1,3 @@
-`timescale 1ns / 10ps
 module vram #(
     parameter MEMORY_BYTES = 1048576
 ) (
@@ -20,11 +19,11 @@ module vram #(
 
   always_ff @(negedge clk) begin : memory_read
     r_data <= mem[vram_address];
-  end
+  end : memory_read
 
   always_ff @(posedge clk) begin : memory_write
     if (w_enable) mem[vram_address] <= w_data;
-  end
+  end : memory_write
 
   always_ff @(posedge clk) begin : memory_rst
     if (rst) begin
@@ -32,5 +31,5 @@ module vram #(
         mem[i] = 8'b0;
       end
     end
-  end
+  end : memory_rst
 endmodule

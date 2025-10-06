@@ -1,4 +1,5 @@
 `timescale 1ns / 10ps
+`include "graphics_card.sv"
 
 module graphics_card_tb ();
   int fd;
@@ -22,11 +23,11 @@ module graphics_card_tb ();
       .red(red),
       .green(green),
       .blue(blue),
-      .video_enable(video_enable)  //only for testbenches?
+      .video_enable(video_enable)
   );
 
   initial begin
-    fd   = $fopen("../tb/trial", "w");
+    fd   = $fopen("build/trial", "w");
     mode = 0;  //ascii mode
     clk  = 0;
     rst  = 0;
@@ -34,30 +35,20 @@ module graphics_card_tb ();
     rst = 1;
     #1;
     rst = 0;
-    #20ms;
+    #20000000;
     mode = 1;  //color mode
-    #20ms;
+    #20000000;
     $fclose(fd);
     $finish;
   end
   always #14 clk = ~clk;
 
-
   always_ff @(posedge clk) begin : vga_out
-    if (video_enable)
-      $fdisplay(fd, "%0b", red[0]);  // TODO: add color (rgb) handling in trial2png.py file
-  end
-
-  // Optional simple monitor to confirm DUT is alive
-  initial begin
-    $timeformat(-9, 1, " ns", 8);
-    #150;
-    $display("[%0t] monitor: v_sync=%b h_sync=%b red=%0h green=%0h blue=%0h", $time, v_sync,
-             h_sync, red, green, blue);
-  end
+    if (video_enable) $fdisplay(fd, "%0b", {red, green, blue});
+  end : vga_out
 
   initial begin
-    $dumpfile("../tb/graphics_card_tb.vcd");
+    $dumpfile("waveforms/graphics_card_tb.fst");
     $dumpvars(0, graphics_card_tb);
   end
-endmodule  //vga_tb
+endmodule
