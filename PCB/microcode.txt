@@ -1,0 +1,394 @@
+if a signal is not specified, it is set to 0
+
+mov: (total cycles: 5)
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	regds = dest (b0)
+	alumode = set reg (b01) 
+
+	alusrc = const 0 (b10)
+
+	;
+
+	memmode = data read (b101)
+
+	regds = src (b1)
+
+	alumode = set reg (b01) 
+
+	alusrc = srcbus (b01)
+	
+	;
+
+	regds = dest (b0) 
+
+	alumode = const 0 (b10)
+
+	regbus = alubus (b0)
+
+	reg_we = 1
+
+	next_instruction = 1
+	
+
+arithmetic: (total cycles: 5)
+	memmode = addres load (b010)
+	membus  = IP
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	regds = dest (b0)
+	alumode = set reg (b01) 
+
+	alusrc = regbus (b00)
+
+	;
+
+	memmode = data read (b101)
+
+	regds = src (b1)
+
+	alumode = set reg (b01) 
+
+	alusrc = srcbus (b01)
+	
+	;
+
+	regds = dest (b0) 
+
+	alumode = funct (b00)
+
+	regbus = alubus (b0)
+
+	reg_we = 1 (0 for cmp and test)
+
+	next_instruction = 1
+	
+
+jumps: (total cycles: 3)
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	memmode = data read (b101)
+
+	regds = src (b1)
+
+	isjmp = 1
+
+	next_instruction = 1
+	
+in:
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+
+	;
+
+	ioop = read (b11)
+	regds = dest (0)
+	reg_we = 1
+
+	next_instruction = 1
+
+out: (total cycles: 3)
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+
+	;
+
+	memmode = data read (b101)
+
+	regds = src (1)
+
+	ioop = write (b11)
+
+	next_instruction = 1
+
+
+
+ldw (total cycles 5);
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	memmode = data read (b101)
+
+	tempregwe = 1 
+
+	;
+
+	memmode = addres load (b010)
+	memsrc = srctempbus (b11)
+
+	regds = src (1)
+
+	;
+
+	memmode = data read (b101)
+
+	regds = dest (0)
+
+	regsrc = membus (1)
+	reg_we = 1
+
+	next_instruction = 1
+
+stw (total cycles 5);
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	memmode = data read (b101)
+
+	tempregwe = 1 
+
+	;
+
+	memmode = addres load (b010)
+	memsrc = srctempbus (b11)
+
+	regds = src (1)
+
+	;
+
+	memmode = data store (b100)
+
+	memsrc = regbus (b00)
+
+	regds = dest (0)
+
+	next_instruction = 1
+
+call (total cycles 9);
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	is_stack = 1 (regid = x2)
+	alusrc = regbus (b00)
+	alumode = regds (b01)
+	regds = dest / alu reg A (0b0)
+
+	;
+
+	memmode = data read (b101)
+	tempregwe = 1 
+
+	alusrc = const x0001 (b11)
+	alumode = regds (b01)
+	regds = src / alu reg B (0b1)
+
+	;
+
+	alumode = sub (b11)
+	regsrc = alubus (0)
+	is_stack = 1 (regid = x2)
+	reg_we = 1 
+
+	//by chance the bus actually contains what we need now, no need to read register later
+	memmode = addres load (b010)
+	memsrc = regbus (b00)
+
+	;
+
+	memmode = data store (b100)
+
+	memsrc = IP (b10)
+
+	is_jmp = 1  //will work due to to funct = 0 and luckily placed opcode, here needed to use modified IP
+
+	;
+
+	memmode = addres load (b010)
+
+	memsrc = IP (b10)
+
+	;
+
+	memmode = addr inc (b011)
+
+	;
+
+	memmode = data read (b101)
+
+	regds = src (1)
+
+	is_jmp = 1
+
+	next_instruction = 1
+
+ret (total cycles 5);
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	memmode = addres load (b010)
+	memsrc = regbus (00)
+
+	is_stack = 1 (regid = x2)
+	alusrc = regbus (b00)
+	alumode = regds (b01)
+	regds = dest / alu reg A (0b0)
+
+	;
+
+	alusrc = const x0001 (b11)
+	alumode = regds (b01)
+	regds = src / alu reg B (0b1)
+
+	;
+
+	memmode = data read (b101)
+	is_ret = 1 
+
+	alumode = add (b10)
+	regsrc = alubus (0)
+	is_stack = 1 (regid = x2)
+	reg_we = 1 
+
+	next_instruction = 1
+
+
+
+
+
+push (total cycles 6);
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	is_stack = 1 (regid = x2)
+	alusrc = regbus (b00)
+	alumode = regds (b01)
+	regds = dest / alu reg A (0b0)
+
+	;
+
+	memmode = data read (b101)
+	tempregwe = 1 
+
+	alusrc = const x0001 (b11)
+	alumode = regds (b01)
+	regds = src / alu reg B (0b1)
+
+	;
+
+	alumode = sub (b11)
+	regsrc = alubus (0)
+	is_stack = 1 (regid = x2)
+	reg_we = 1 
+
+	//by chance the bus actually contains what we need now, no need to read register later
+	memmode = addres load (b010)
+	memsrc = regbus (b00)
+
+	;
+
+	memmode = data store (b100)
+
+	memsrc = srctempbus (b11)
+	regds = src (1)
+
+	next_instruction = 1
+
+
+pull (total cycles 6);
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	memmode = addres load (b010)
+	memsrc = regbus (00)
+
+	is_stack = 1 (regid = x2)
+	alusrc = regbus (b00)
+	alumode = regds (b01)
+	regds = dest / alu reg A (0b0)
+
+	;
+
+	alusrc = const x0001 (b11)
+	alumode = regds (b01)
+	regds = src / alu reg B (0b1)
+
+	;
+
+	alumode = add (b10)
+	regsrc = alubus (0)
+	is_stack = 1 (regid = x2)
+	reg_we = 1 
+
+	;
+
+	memmode = data read (b101)
+	regsrc = membus (1)
+
+	reg_we = 1
+	regds = dest (0)
+
+	next_instruction = 1
