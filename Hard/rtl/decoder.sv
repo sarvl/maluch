@@ -2,10 +2,6 @@
     `include "types.sv"
     `define TYPES
 `endif
-`ifndef CORE
-    `include "core_i.sv"
-    `define CORE
-`endif
 
 
 
