@@ -37,7 +37,7 @@ module core(
     csr_t _csr_next;
 
     // Driving outputs
-    always_ff @(posedge clk) instr_pointer <= reset ? 1 : _next_pointer;
+    always_ff @(posedge clk) instr_pointer <= _reset ? 1 : _next_pointer;
 
     // Driving csr
     always_ff @(posedge clk) csr <= _csr_next;
