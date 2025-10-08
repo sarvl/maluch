@@ -17,23 +17,31 @@ module alu(
     logic [15:0] result;
 
     logic carry;
+    logic carry_msb;
 
     always_comb begin
         unique case (alu_ctrl)
-            3'b000: {carry, result} = src1 + src2;
-            3'b001: {carry, result} = src1 - src2;
-            3'b010: begin result = src1 & src2; carry = 0; end
-            3'b011: begin result = src1 | src2; carry = 0; end
-            3'b100: begin result = src1 ^ src2; carry = 0; end
-            3'b101: begin result = ~src2; carry = 0; end
-            3'b110: begin result = src2 >> 1; carry = 0; end
-            3'b111: begin result = src2 << 1; carry = 0; end
+            3'b000: begin
+                {carry_msb, result[14:0]} = src1[14:0] + src2[14:0];
+                {carry, result[15]} = src1[15] + src2[15] + carry_msb;
+            end
+            3'b001: begin
+                logic [15:0] _nsrc2 = ~src2;
+                {carry_msb, result[14:0]} = src1[14:0] + _nsrc2[14:0] + 1;
+                {carry, result[15]} = src1[15] + _nsrc2[15] + carry_msb;
+            end
+            3'b010: result = src1 & src2;
+            3'b011: result = src1 | src2;
+            3'b100: result = src1 ^ src2;
+            3'b101: result = ~src2;
+            3'b110: result = src2 >> 1;
+            3'b111: result = src2 << 1;
         endcase
 
         assign _csr_next.Sign = result[15];
-        assign _csr_next.Zero = (result == 16'h0000);
+        assign _csr_next.Zero = (result == '0);
         assign _csr_next.Carry = carry;
-        assign _csr_next.Overflow = (src1[15] == src2[15]) && (result[15] != src1[15]);
+        assign _csr_next.Overflow = (carry_msb != carry);
     end
 
     assign alu_ret = result;
