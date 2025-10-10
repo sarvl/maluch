@@ -435,6 +435,7 @@ int main(int const argc, char const * const argv[])
 					cmd_window_buffer.emplace_back("nobreak XXXX   - removes breakpoint from address XXXX");
 					cmd_window_buffer.emplace_back("monitor XXXX   - monitors address XXXX, when accessed sets breakpoint");
 					cmd_window_buffer.emplace_back("nomonitor XXXX - stops monitoring address XXXX");
+					cmd_window_buffer.emplace_back("show XXXX      - shows contents of memory at address XXXX");
 					cmd_window_buffer.emplace_back("run            - continue from breakpoint");
 					cmd_window_buffer.emplace_back("step           - steps to next instruction");
 //					cmd_window_buffer.emplace_back("next           - like step but does NOT descend into call");
@@ -469,6 +470,30 @@ int main(int const argc, char const * const argv[])
 						else
 						{
 							breakpoints[addr] = -1;
+						}
+					}	
+				}
+				else if(0 == strncmp(cmd.c_str(), "show ", 5))
+				{
+					if(cmd.size() != 10)
+					{
+						cmd_window_buffer.emplace_back("ERROR: show expects 4 digit hexadecimal number");
+						cmd_window_buffer.emplace_back("");
+					}
+					else
+					{
+						int const addr = read_hexd(cmd.c_str() + 5);
+
+						if(-1 == addr)
+						{
+							cmd_window_buffer.emplace_back("ERROR: invalid hexadecimal character");
+							cmd_window_buffer.emplace_back("");
+						}
+						else
+						{
+							char data[32];
+							snprintf(data, 32, "M[x%04X] = x%04X = %d", addr, memory[addr], memory[addr]);
+							cmd_window_buffer.emplace_back(data);
 						}
 					}	
 				}

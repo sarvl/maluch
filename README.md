@@ -2,6 +2,28 @@
 
 mALUch is a simple 16 bit cpu, created mostly as a design exercise 
 
+## Running Simulation and Compiling Tools
+All that is necessary to compile existing tooling is
+```
+make init
+```
+
+then assemble test program as 
+```
+./assemble.sh Progs/os_test.cpp out.bin
+```
+
+and finally run it as 
+```
+./simulate out.bin
+```
+
+to get list of commands type
+```
+help
+```
+to switch between windows use TAB
+
 ## Assembler  
 in Soft/  
 Created as sort of an experiment as a `.cpp` file, to create an assembly see for example in `Progs/` that includes `asm.h`.  

@@ -1,5 +1,5 @@
-#include "./Assembler/asm.h"
-#include "./Assembler/asm_helper.h"
+#include "../Assembler/asm.h"
+#include "../Assembler/asm_helper.h"
 
 #include <cstring>
 
