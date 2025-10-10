@@ -1,5 +1,51 @@
 if a signal is not specified, it is set to 0
 
+int: (opcode 0, secret opcode)
+	memmode = addres load (b010)
+	memsrc  = IP (b10)
+
+	;
+
+	memmode = data read addr inc (b111)
+	instruction_load = 1 
+	
+	;
+
+	is_stack = 1 (regid = x2)
+	alusrc = regbus (b00)
+	alumode = regds (b01)
+	regds = dest / alu reg A (0b0)
+
+	;
+
+	memmode = data read (b101)
+	tempregwe = 1 
+
+	alusrc = const x0001 (b11)
+	alumode = regds (b01)
+	regds = src / alu reg B (0b1)
+
+	;
+
+	alumode = sub (b11)
+	regsrc = alubus (0)
+	is_stack = 1 (regid = x2)
+	reg_we = 1 
+
+	//by chance the bus actually contains what we need now, no need to read register later
+	memmode = addres load (b010)
+	memsrc = regbus (b00)
+
+	;
+
+	memmode = data store (b100)
+
+	memsrc = IP (b10)
+	regds = src (1)
+
+	//this will not actually change the IP, it is already correct
+	next_instruction = 1
+
 mov: (total cycles: 5)
 	memmode = addres load (b010)
 	memsrc  = IP (b10)
