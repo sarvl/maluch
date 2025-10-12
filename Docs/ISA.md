@@ -4,11 +4,6 @@
 
 PISS16 is a 16bit architecture designed for educational purposes. It focuses on easily decodable CPU instructions and simple hardware implementations while avoiding significant software limitations. 
 
-## TODO
-1. interrupts
-2. toc
-3. proofreading
-
 ### Key Features
 - *16-bit Data and Address Width*
 - *Variable-length instructions* (16-bit or 32-bit)
@@ -19,25 +14,32 @@ PISS16 is a 16bit architecture designed for educational purposes. It focuses on 
 
 ## Table of contents
 
+1. [Terminology](#terminology)
+2. [Instructions Overview](#instructions-overview)
+3. [Encoding](#encoding)
+4. [Memory](#memory)
+5. [Registers](#registers)
+6. [IO](#io)
+7. [Flags](#flags)
+8. [Detailed Instruction Description](#detailed-instruction-description)
 
-<a name="instructions"></a>
-## Instruction Overview
+## Terminology
+word - 16bit, base length on which ISA operates
+
+## Instructions Overview
 
 |Instruction|Opcode|Funct|Behavior|
 |:---:|:---:|:---:|:---|
 |invalid | 0000 | XXX | will always be invalid |
-|    |     |     |     |
 |mov Rd src | 0001 | XXX | Rd <-- src|
-|    |     |     |     |
 |add Rd src | 0010 | 000 | Rd <-- Rd + src (sets flags)|
 |sub Rd src | 0010 | 001 | Rd <-- Rd - src (sets flags)|
 |and Rd src | 0010 | 010 | Rd <-- Rd & src (sets flags)|
 |or Rd src | 0010 | 011 | Rd <-- Rd \| src (sets flags)|
 |xor Rd src | 0010 | 100 | Rd <-- Rd ^ src (sets flags)|
 |not Rd src | 0010 | 101 | Rd <-- ~src (sets flags)|
-|lsl Rd src | 0010 | 110 | Rd <-- Rd << src (logical shift left)  (sets flags)|
-|lsr Rd src | 0010 | 111 | Rd <-- Rd >> src (logical shift right)  (sets flags)|
-|    |     |     |     |
+|lsl Rd src | 0010 | 110 | Rd <-- logical\_shift\_left(Rd, src mod 16) (sets flags)|
+|lsr Rd src | 0010 | 111 | Rd <-- logical\_shift\_right(Rd, src mod 16) (sets flags)|
 |           | 0011 | 001 | reserved |
 |cmp Rd src | 0011 | 001 | Rd <-- Rd - src (sets flags)|
 |test Rd src | 0011 | 010 | Rd & src (sets flags)|
@@ -46,7 +48,6 @@ PISS16 is a 16bit architecture designed for educational purposes. It focuses on 
 |           | 0011 | 101 | reserved |
 |           | 0011 | 110 | reserved |
 |           | 0011 | 111 | reserved |
-|    |     |     |     |
 |jmp src | 0100 | 000 | IP <-- src (unconditional jump)|
 |bee src | 0100 | 001 | if(FZ = 1) IP <-- src (branch if equal) |
 |bne src | 0100 | 010 | if(FZ = 0) IP <-- src (branch if not equal) |
@@ -63,31 +64,29 @@ PISS16 is a 16bit architecture designed for educational purposes. It focuses on 
 |baa src | 0101 | 101 | if(FC = 0 and FZ = 0) IP <-- src (branch if above (unsigned)) |
 |bbb src | 0101 | 110 | if(FC = 1) IP <-- src (branch if below (unsigned)) |
 |bno src | 0101 | 111 | if(FO = 0) IP <-- src (branch if no overflow)
-|    | |     |     |
-| in fff Rd | 0110 | fff  | Rd <-- IO[fff] |
-| out fff src | 0111 | fff  | IO[fff] <--- Rd |
-| ldw Rd src | 1000 | XXX | Rd <-- MEM[src] |
-| stw Rd src | 1001 | XXX | MEM[src] <-- Rd |
-| call src | 1010 | XXX | MEM[SP - 1] <-- IP ; SP <-- SP - 1 ; IP <-- src |
-| ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 1|
-| iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 1 ; turns on interrupts |
-|      | 1011 | 010 | reserved |
-|      | 1011 | 011 | reserved |
-|      | 1011 | 100 | reserved |
-|      | 1011 | 101 | reserved |
-|      | 1011 | 110 | reserved |
-|      | 1011 | 111 | reserved |
-| push src | 1100 | XXX | MEM[SP - 1] <-- src ; SP <-- SP - 1  |   
-| pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 1  |   
-|    | 1110 |     | reserved |
-| hlt | 1111 | XXX | stop the execution and wait for interrupt |
+|in fff Rd | 0110 | fff  | Rd <-- IO[fff] |
+|out fff src | 0111 | fff  | IO[fff] <-- src |
+|ldw Rd src | 1000 | XXX | Rd <-- MEM[src] |
+|stw Rd src | 1001 | XXX | MEM[src] <-- Rd |
+|call src | 1010 | XXX | MEM[SP - 1] <-- IP ; SP <-- SP - 1 ; IP <-- src |
+|ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 1|
+|iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 1 ; turns on interrupts |
+|     | 1011 | 010 | reserved |
+|     | 1011 | 011 | reserved |
+|     | 1011 | 100 | reserved |
+|     | 1011 | 101 | reserved |
+|     | 1011 | 110 | reserved |
+|     | 1011 | 111 | reserved |
+|push src | 1100 | XXX | MEM[SP - 1] <-- src ; SP <-- SP - 1  |   
+|pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 1  |   
+|   | 1110 |     | reserved |
+|   | 1111 |     | reserved |
 
 
 note: 
 - `src` may mean register or immediate, depending on the encoding, see [Encoding](encoding)
 - `XXX` should be set to 0 for future compatibility
 
-<a name="encoding"></a>
 ## Encoding
 
 all instructions follow the same format   
@@ -100,24 +99,21 @@ all instructions follow the same format
     S - source register  
     I - immediate field  
 
-if J = 1 then second operand is immediate and S is ignored 
+if J = 1 then second operand is immediate and S is ignored, the instruction length is two words  
  `OOOO1FFF'DDDD____ IIIIIIII'IIIIIIII`  
 
-if J = 0 then second operand is register and I field **is not present**  
+if J = 0 then second operand is register and I field **is not present**, the instruction length is one word  
  `OOOO0FFF'DDDDSSSS`  
 
 
-<a name="memory"></a>
 ## Memory
 
-<a name="general"></a>
 ### General
 
 There are 128kiB of memory addressable, 64kiB are general purpose (see address map below).
 
-The memory is word addressable, it is not possible to access a single byte.
+The memory is word addressable, it is not possible to access only a single byte.
 
-<a name="address map"></a>
 ### Address Map
 
 ```
@@ -128,7 +124,11 @@ The memory is word addressable, it is not possible to access a single byte.
     general purpose memory
 ```
 
-<a name="registers"></a>
+instruction memory is dedicated to hold some basic procedures used by the processor, however instructions can be located anywhere in readable memory
+
+video memory is write only memory from which video card reads data to be displayed
+the exact data that video card expects depends on that video card and is therefore not specified here
+
 ## Registers
 
 PISS16 provides 16 registers, each 16 bits wide:
@@ -136,16 +136,15 @@ PISS16 provides 16 registers, each 16 bits wide:
 | Register | Name | Usage | Access |
 |:--------:|:----:|:------:|:------:|
 | x0 | CR0 | Control Register 0 | [Special](#control-register-0) |
-| x1 | CR1 | Control Register 1 | [General](#control-register-1) |
+| x1 | CR1 | Control Register 1 | [Special](#control-register-1) |
 | x2 | SP | Stack Pointer | [General](#stack-pointer) |
 | x3-x15 | - | General purpose registers | General |
 
-**General** means that a register can be used in any instruction requiring register, few are implicitly used by other instructions
-- *General Purpose Registers (GPRs)*: x1-x15 can be used in any instruction requiring a register.
+**General** means that a register can be used in any instruction requiring register and will behave as expected
+stack pointer (x2) is implicitly used by `push` `pull` `call` `ret` 
 
 
-<a name="control-register-0"></a>
-### Control Register 0 (x0) Details
+### Control Register 0 
 
 This register is divided into two 8-bit sections:
 
@@ -159,13 +158,12 @@ This register is divided into two 8-bit sections:
 - *Bits 15-8*: int flags, read only, set by hardware, info which interrupt occured (from left to right)
 - *Bits 7-0*: busy flags, read only, set by hardware, info whether IO device is processing request
 
-Each flag corresponds to a specific interrupt source. The mask bits (CR1) control whether the corresponding interrupt is enabled (1) or disabled (0).
-Write to is ignored.
+Each flag corresponds to a specific interrupt source. The mask bits (in CR1) control whether the corresponding interrupt is enabled (1) or disabled (0).
+Write is ignored.
 
 see [IO](IO)
 
-<a name="control-register1"></a>
-### Control Register 1 (x1) Details
+### Control Register 1 
 
 This register is divided into two 8-bit sections:
 
@@ -183,56 +181,59 @@ Each flag corresponds to a specific interrupt source. The mask bits (CR1) contro
 
 see [IO](IO)
 
-<!-- TOC --><a name="stack-pointer"></a>
-### Stack Pointer (x2) Details
+### Stack Pointer 
 *Stack Pointer (x1)* is automatically managed by stack operations (CALL/RET/PUSH/PULL). Can also be used by any instruction requiring GPR.
 
 
-<!-- TOC --><a name="io"></a>
 ### IO
 
 IO is based on 2 mechanisms:
 - polling
 - interrupts 
 
-
-<!-- TOC --><a name="polling"></a>
 #### polling
 
-Communication is initiated by the CPU via `in` and `out` instructions, these instructions can only be executed when IO device has its busy flag set to 0, otherwise the behavior is undefined.
-Whenever processor issues `in` or `out` a device either writes a value to or reads a value from specified register.
-The exact behavior depends on the device and can be found in corresponding manual, but there is **no** delay induced by these instructions, any delay must happen *before* or *after* them via busy flag.
+Communication is initiated by the processor via `in` and `out` instructions, these instructions can only be executed when IO device has its busy flag set to 0, otherwise the behavior is undefined.  
+Whenever processor executes `in` or `out` a device writes a value to or reads a value from specified register (respectively).  
+The exact behavior depends on the device but there is **no** delay from these instructions, any delay must happen *before* or *after* them via busy flag.  
 
-<!-- TOC --><a name="interrupts"></a>
 #### Interrupts
 
-Interrupt happens ALWAYS AFTER the current instruction, IRET can be followed by the interrupt, the next IRET with no following interrupt will properly return to IP that first IRET was supposed to return to.
+Interrupt happens ALWAYS AFTER the current instruction, IRET can be followed by the interrupt, the next IRET with no following interrupt will properly return to IP that first IRET was supposed to return to.  
 
-When a device signals readiness to a processor, it sets an interrupt, this interrupt appears as a flag in CR0 (the bit position from the left indicates the device id, count starts from 0).  
+When a device signals readiness to a processor, it sets an interrupt, this interrupt appears as a flag in CR0 (the bit position from the left indicates the device id, count starts from 0).    
 
-IF `interrupt_flag[device_id] AND interrupt_mask[device_id] = 1` THEN an interrupt takes place, in case more than one interrupt were to occur, the leftmost one (lowest ID) takes priority.
-An interrupt starts by saving IP of instruction which would execute if there was no interrupt. to the stack, then the control is passed to proper subroutine.
+IF `interrupt_flag[device_id] AND interrupt_mask[device_id] = 1` THEN an interrupt takes place, in case more than one interrupt were to occur, the leftmost one (lowest ID) takes priority.  
 
-Switching to interrupt handler automatically surpresses further interrupts (does NOT clear them, only surpresses) until manually turned back on again.
-The interrupts can be turned back on by IRET
+On interrupt:
+- IP is pushed to the stack, THEN it is changed to the corresponding entry from IHT (see below)
+- int mask is saved internally, THEN it is changed to x00
+- flags are saved internally
 
-<!-- TOC --><a name="interrupt-handler-table"></a>
+On IRET:
+- IP is pulled from the stack
+- int mask is restored 
+- flags are restored
+
+importantly, only int MASK is affected, to disable interrupt service the IO that caused the interrupt
+
+If flags are not a concern then it is not necessary to execute IRET to return from interrupt, altough it is usually not a correct action due to flag behavior.  
+
+
 #### Interrupt Handler Table
 
-An 8 entry table is located in internal memory, each word stores a *pointer* into actual interrupt handling routines.
+An 8 entry table is located in internal memory, each word stores a *pointer* into actual interrupt handling routine which is stored in memory.
 to set n-th entry, use `out 0 n` followed by `out 0 handler_addres`, respecting usual rules of using `out`.
+Write to `n` larger than 7 is undefined.
 An interrupt handling routine may be located anywhere in readable memory.
 
-<!-- TOC --><a name="interrupt-handler-routine"></a>
 #### Interrupt Handler Routine
 
-The Instruction Pointer is automatically handle by HW, all other registers are NOT SAVED, therefore it is the job of programmer to ensure proper register saving via PUSH and PULL.
+The Instruction Pointer is automatically handled by HW, all other registers are NOT SAVED, therefore it is the job of programmer to ensure proper register saving via PUSH and PULL.
 The interrupt information is received by using `in` with appropriate device id. Device stops signaling interrupt when **it** decides that it is handled, usually that means reading from it via `in`.
 
-Each IHR must end with IRET to turn interrupts back on.
+Generally IHR should end with IRET
 
-
-<!-- TOC --><a name="IO device id list"></a>
 #### IO device List
 
 | id | device |
@@ -249,8 +250,7 @@ Each IHR must end with IRET to turn interrupts back on.
 
 For more detailed description of behavior see corresponding manual.
 
-<!-- TOC --><a name="processor-flags"></a>
-## Processor Flags
+## Flags
 
 The processor maintains four condition flags that are automatically updated by arithmetic and logical operations:
 
@@ -261,10 +261,10 @@ The processor maintains four condition flags that are automatically updated by a
 | FC | Carry | Carry out of MSb = 1 | ADD, SUB, CMP |
 | FZ | Zero | All result bits = 0 | All flag-modifying instructions |
 
-<!-- TOC --><a name="Detailed Instruction Description"></a>
+even though a flag may be undefined for given instruction, it is always modified.  
+
 ## Detailed Instruction Description
 
-<!-- TOC --><a name="instruction mov"></a>
 ### MOV
 - instruction: mov Rd src 
 - opcode: 0001 
@@ -272,7 +272,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: copies src into Rd
 
-<!-- TOC --><a name="instruction add"></a>
 ### ADD
 - instruction: add Rd src 
 - opcode: 0010 
@@ -280,79 +279,69 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: modified
 - description: adds src to Rd, stores result into Rd
 
-<!-- TOC --><a name="instruction sub"></a>
 ### SUB
 - instruction: sub Rd src 
 - opcode: 0010 
 - funct: 001 
 - flags: modified
-- description: subs src from Rd, stores result into Rd
+- description: subtracts src from Rd, stores result into Rd
 
-<!-- TOC --><a name="instruction and"></a>
 ### AND
 - instruction: and Rd src 
 - opcode: 0010 
 - funct: 010 
 - flags: modified
-- description: ands src with Rd, stores result into Rd
+- description: performs bitwise logical AND on src with Rd, stores result into Rd
 
-<!-- TOC --><a name="instruction or"></a>
 ### OR
 - instruction: or Rd src 
 - opcode: 0010 
 - funct: 011 
 - flags: modified
-- description: ors src with Rd, stores result into Rd
+- description: performs bitwise logical OR on src with Rd, stores result into Rd
 
-<!-- TOC --><a name="instruction xor"></a>
 ### XOR
 - instruction: xor Rd src 
 - opcode: 0010 
 - funct: 100 
 - flags: modified
-- description: xors src with Rd, stores result into Rd
+- description: performs bitwise logical XOR on src with Rd, stores result into Rd
 
-<!-- TOC --><a name="instruction not"></a>
 ### NOT
 - instruction: not Rd src 
 - opcode: 0010 
 - funct: 101 
 - flags: modified
-- description: nots src, stores result into Rd
+- description: performs bitwise logical NOT on src, stores result into Rd
 
-<!-- TOC --><a name="instruction lsl"></a>
-### XOR
+### LSL
 - instruction: lsl Rd src 
 - opcode: 0010 
 - funct: 110 
 - flags: modified
-- description: logically shifts Rd by src (lower 4 bits) to the left, stores result into Rd
+- description: logically shifts Rd by src (lower 4 bits, upper 12 bits are ignored) to the left, stores result into Rd
 
-<!-- TOC --><a name="instruction lsr"></a>
-### XOR
+### LSR
 - instruction: lsr Rd src 
 - opcode: 0010 
 - funct: 111 
 - flags: modified
-- description: logically shifts Rd by src (lower 4 bits) to the right, stores result into Rd
+- description: logically shifts Rd by src (lower 4 bits, upper 12 bits are ignored) to the right, stores result into Rd
 
-<!-- TOC --><a name="instruction cmp"></a>
 ### CMP
 - instruction: CMP Rd src 
 - opcode: 0010 
 - funct: 001 
 - flags: modified
-- description: subs src from Rd
+- description: exactly like SUB, but does not affect Rd
 
-<!-- TOC --><a name="instruction test"></a>
 ### TEST
 - instruction: test Rd src 
 - opcode: 0010 
 - funct: 010 
 - flags: modified
-- description: ands src with Rd
+- description: exactly like AND, but does not affect Rd
 
-<!-- TOC --><a name="instruction jmp"></a>
 ### JMP 
 - instruction: jmp src 
 - opcode: 0100 
@@ -360,7 +349,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: IP <-- src (unconditional jump)
 
-<!-- TOC --><a name="instruction bee"></a>
 ### BEE 
 - instruction: bee src 
 - opcode 0100 
@@ -368,7 +356,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FZ = 1) IP <-- src (branch if equal) 
 
-<!-- TOC --><a name="instruction bne"></a>
 ### BNE 
 - instruction: bne src 
 - opcode 0100 
@@ -376,7 +363,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FZ = 0) IP <-- src (branch if not equal) 
 
-<!-- TOC --><a name="instruction bge"></a>
 ### BGE 
 - instruction: bge src 
 - opcode 0100 
@@ -384,7 +370,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FS = FO) IP <-- src (branch if greater or equal (signed)) 
 
-<!-- TOC --><a name="instruction ble"></a>
 ### BLE 
 - instruction: ble src 
 - opcode 0100 
@@ -392,7 +377,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FZ = 1 or FS /= FO) IP <-- src (branch if less or equal (signed)) 
 
-<!-- TOC --><a name="instruction bgg"></a>
 ### BGG 
 - instruction: bgg src 
 - opcode 0100 
@@ -400,7 +384,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FZ = 0 and FS = FO) IP <-- src (branch if greater (signed)) 
 
-<!-- TOC --><a name="instruction bll"></a>
 ### BLL 
 - instruction: bll src 
 - opcode 0100 
@@ -408,7 +391,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FS /= FO) IP <-- src (branch if less (signed)) 
 
-<!-- TOC --><a name="instruction boo"></a>
 ### BOO 
 - instruction: boo src 
 - opcode 0100 
@@ -416,7 +398,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FO = 1) IP <-- src (branch if overflow)
 
-<!-- TOC --><a name="instruction bbs"></a>
 ### BBS 
 - instruction: bbs src 
 - opcode 0101 
@@ -424,7 +405,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(busy flags /= x0000) IP <-- src (branch if busy)
 
-<!-- TOC --><a name="instruction bss"></a>
 ### BSS 
 - instruction: bss src 
 - opcode 0101 
@@ -432,7 +412,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FS = 1) IP <-- src (branch if sign) 
 
-<!-- TOC --><a name="instruction bns"></a>
 ### BNS 
 - instruction: bns src 
 - opcode 0101 
@@ -440,7 +419,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FS = 0) IP <-- src (branch if not sign) 
 
-<!-- TOC --><a name="instruction bae"></a>
 ### BAE 
 - instruction: bae src 
 - opcode 0101 
@@ -448,7 +426,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FC = 0) IP <-- src (branch if above or equal (unsigned)) 
 
-<!-- TOC --><a name="instruction bbe"></a>
 ### BBE 
 - instruction: bbe src 
 - opcode 0101 
@@ -456,7 +433,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FC = 1 or ZF = 1) IP <-- src (branch if below or equal (unsigned)) 
 
-<!-- TOC --><a name="instruction baa"></a>
 ### BAA 
 - instruction: baa src 
 - opcode 0101 
@@ -464,7 +440,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FC = 0 and FZ = 0) IP <-- src (branch if above (unsigned)) 
 
-<!-- TOC --><a name="instruction bbb"></a>
 ### BBB 
 - instruction: bbb src 
 - opcode 0101 
@@ -472,7 +447,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FC = 1) IP <-- src (branch if below (unsigned)) 
 
-<!-- TOC --><a name="instruction bno"></a>
 ### BOO 
 - instruction: bno src 
 - opcode 0101 
@@ -480,7 +454,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: if(FO = 0) IP <-- src (branch if no overflow)
 
-<!-- TOC --><a name="instruction in"></a>
 ### IN 
 - instruction: in Rd 
 - opcode 0110 
@@ -488,7 +461,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: Rd <-- IO[fff] 
 
-<!-- TOC --><a name="instruction out"></a>
 ### OUT 
 - instruction: out Rd 
 - opcode 0111 
@@ -496,7 +468,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: IO[fff] <--- Rd 
 
-<!-- TOC --><a name="instruction ldw"></a>
 ### LDW 
 - instruction: ldw Rd src 
 - opcode 1000 
@@ -504,7 +475,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: Rd <-- MEM[src] 
 
-<!-- TOC --><a name="instruction stw"></a>
 ### STW 
 - instruction: stw Rd src 
 - opcode 1001 
@@ -512,7 +482,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: MEM[src] <-- Rd 
 
-<!-- TOC --><a name="instruction call"></a>
 ### CALL 
 - instruction: call src 
 - opcode 1010 
@@ -520,7 +489,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: IP <-- src ; MEM[SP - 2] <-- IP ; SP <-- SP - 2
 
-<!-- TOC --><a name="instruction ret"></a>
 ### RET 
 - instruction: ret 
 - opcode 1011 
@@ -528,7 +496,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: IP <-- MEM[SP] ; SP <-- SP + 2
 
-<!-- TOC --><a name="instruction iret"></a>
 ### IRET 
 - instruction: ret 
 - opcode 1011 
@@ -536,7 +503,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: IP <-- MEM[SP] ; SP <-- SP + 2 ; restores int mask
 
-<!-- TOC --><a name="instruction push"></a>
 ### PUSH 
 - instruction: push src 
 - opcode 1100 
@@ -544,7 +510,6 @@ The processor maintains four condition flags that are automatically updated by a
 - flags: unmodified
 - description: MEM[SP - 2] <-- src ; SP <-- SP - 2  
 
-<!-- TOC --><a name="instruction pull"></a>
 ### PULL 
 - instruction: pull Rd 
 - opcode 1101 
