@@ -3,6 +3,8 @@
 mALUch is a simple 16 bit cpu, created mostly as a design exercise 
 
 ## Running Simulation and Compiling Tools
+To compile simulator it is necessary to have ncurses installed  
+
 All that is necessary to compile existing tooling is
 ```
 make init
