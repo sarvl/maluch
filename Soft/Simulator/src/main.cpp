@@ -27,7 +27,6 @@ using namespace std::chrono;
 extern uint16_t memory[1 << 16];
 extern uint16_t memory_monitor[1 << 16];
 extern uint16_t registers[16];
-extern uint16_t iht[8];
 extern uint16_t ip;
 extern uint16_t int_mask_saved;
 extern bool flag_sign;
