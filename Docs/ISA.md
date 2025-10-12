@@ -80,7 +80,7 @@ word - 16bit, base length on which ISA operates
 |push src | 1100 | XXX | MEM[SP - 1] <-- src ; SP <-- SP - 1  |   
 |pull Rd | 1101 | XXX | Rd <-- MEM[SP] ; SP <-- SP + 1  |   
 |   | 1110 |     | reserved |
-|hlt | 1111 | XXX | stop the execution and wait for interrupt |
+|   | 1111 |     | reserved |
 
 
 note: 
@@ -224,6 +224,7 @@ If flags are not a concern then it is not necessary to execute IRET to return fr
 
 An 8 entry table is located in internal memory, each word stores a *pointer* into actual interrupt handling routine which is stored in memory.
 to set n-th entry, use `out 0 n` followed by `out 0 handler_addres`, respecting usual rules of using `out`.
+Write to `n` larger than 7 is undefined.
 An interrupt handling routine may be located anywhere in readable memory.
 
 #### Interrupt Handler Routine
