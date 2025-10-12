@@ -13,9 +13,9 @@ module graphics_card (
     output logic v_sync,
     output logic video_enable
 );
-  logic [15:0] data_in;  //Lower byte for data and upper for background/font color
+  logic [ 7:0] data_in;
   logic [19:0] address;
-  logic [15:0] data_out;
+  logic [ 7:0] data_out;
   logic [19:0] vram_address;
 
   gpu_controller gpu_controller (
