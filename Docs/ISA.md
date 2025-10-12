@@ -201,12 +201,12 @@ The exact behavior depends on the device but there is **no** delay from these in
 
 Interrupt happens ALWAYS AFTER the current instruction, IRET can be followed by the interrupt, the next IRET with no following interrupt will properly return to IP that first IRET was supposed to return to.  
 
-When a device signals readiness to a processor, it sets an interrupt, this interrupt appears as a flag in CR0 (the bit position from the left indicates the device id, count starts from 0).    
+When a device signals readiness to a processor, it sets an interrupt, this interrupt appears as a flag in CR0 (the bit position from the left - most significant one - indicates the device id, count starts from 0). 
 
 IF `interrupt_flag[device_id] AND interrupt_mask[device_id] = 1` THEN an interrupt takes place, in case more than one interrupt were to occur, the leftmost one (lowest ID) takes priority.  
 
 On interrupt:
-- IP is pushed to the stack, THEN it is changed to the corresponding entry from IHT (see below)
+- IP is pushed to the stack, THEN it is changed to the proper address (see IHT below)
 - int mask is saved internally, THEN it is changed to x00
 - flags are saved internally
 
@@ -222,9 +222,8 @@ If flags are not a concern then it is not necessary to execute IRET to return fr
 
 #### Interrupt Handler Table
 
-An 8 entry table is located in internal memory, each word stores a *pointer* into actual interrupt handling routine which is stored in memory.
-to set n-th entry, use `out 0 n` followed by `out 0 handler_addres`, respecting usual rules of using `out`.
-Write to `n` larger than 7 is undefined.
+An 8 entry table is located in RAM at addresses xFFF0 to xFFFF, each entry is 2 Words - enough to store `JMP immediate`. 
+On interrupt with id N, IP switches to address `xFFF0 + N * 2`, this address then contains jump to actual Interrupt Handler Routine.
 An interrupt handling routine may be located anywhere in readable memory.
 
 #### Interrupt Handler Routine
@@ -232,7 +231,7 @@ An interrupt handling routine may be located anywhere in readable memory.
 The Instruction Pointer is automatically handled by HW, all other registers are NOT SAVED, therefore it is the job of programmer to ensure proper register saving via PUSH and PULL.
 The interrupt information is received by using `in` with appropriate device id. Device stops signaling interrupt when **it** decides that it is handled, usually that means reading from it via `in`.
 
-Generally IHR should end with IRET
+Generally IHR should end with IRET.
 
 #### IO device List
 

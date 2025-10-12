@@ -48,7 +48,6 @@ void mem_allocate(uint16_t const addr, T const val)
 
 void mem_allocate(uint16_t const addr, std::string_view const data);
 
-
 void var_inc(uint16_t const addr, t_reg const reg = reg::R8);
 void var_dec(uint16_t const addr, t_reg const reg = reg::R8);
 
@@ -58,13 +57,9 @@ void busy_wait();
 template<typename T>
 void set_iht(int const n, T const addr)
 {
-	//set command to initialize 0th entry in IHT
-	busy_wait();
-	i_out(0, n);
-	
-	//send an address
-	busy_wait();
-	i_out(0, addr);
-
+	int const temp = code_position;
+	code_position = 0xFFF0 + n * 2;
+	i_jmp(addr);
+	code_position = temp;
 	return;
 }

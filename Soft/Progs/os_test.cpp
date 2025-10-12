@@ -150,8 +150,10 @@ int code()
 			i_stw(character, buffer_pos);
 
 			i_add(buffer_pos, 1);
-
-			i_or(buffer_pos, 0xFF00);
+			i_cmp(buffer_pos, 0xFFF0);
+			i_bll("IHR_1_skip_0");
+			i_mov(buffer_pos, 0xFF00);
+			label("IHR_1_skip_0");
 			i_stw(buffer_pos, addr_buffer_pos);
 
 			i_pull(temp0);
@@ -417,7 +419,7 @@ int code()
 
 		//clear the buffer
 		i_mov(temp0, ' ');
-		for(int i = 0; i < 0x100; i++)
+		for(int i = 0; i < 0x100 - 16; i++)
 			i_stw(temp0, addr_buffer + i);
 
 		label("shell_cmd_wait");

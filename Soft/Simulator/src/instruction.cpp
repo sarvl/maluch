@@ -9,7 +9,6 @@
 uint16_t memory[1 << 16];
 uint16_t memory_monitor[1 << 16];
 uint16_t registers[16];
-uint16_t iht[8];
 uint16_t ip;
 uint16_t int_mask_saved;
 uint16_t flags_saved;
@@ -72,11 +71,9 @@ void mem_write(uint16_t const addr, uint16_t const data)
 	return;
 }
 
-uint16_t sys_management_iht_address = 0xFFFF;
-
 int process_instruction(int const keyboard_char)
 {
-	uint16_t instruction = memory[ip];
+	uint16_t instruction = mem_read(ip);
 	ip++;
 
 	uint16_t const opcode = (instruction >> 12) & 0xF;
@@ -85,7 +82,7 @@ int process_instruction(int const keyboard_char)
 	uint16_t const rd     = (instruction >>  4) & 0xF;
 	uint16_t const rs     = (instruction >>  0) & 0xF;
 
-	uint16_t const imm = memory[ip & 0xFFFF]; //may not actually be needed
+	uint16_t const imm = mem_read(ip & 0xFFFF); //may not actually be needed
 	bool const is_imm = (instruction >> 11) & 0x1;
 
 	uint16_t const src = (is_imm ? imm : registers[rs]);
@@ -205,25 +202,8 @@ int process_instruction(int const keyboard_char)
 		goto next_instruction;
 
 	case 0b0111:
-		//busy flag is never set, there is no reason to
-		switch(funct)
-		{
-		case 0b000: //sys management
-			if(0xFFFF == sys_management_iht_address)
-				sys_management_iht_address = src & 0x7;
-			else
-			{
-				iht[sys_management_iht_address] = src;
-				sys_management_iht_address = 0xFFFF;
-			}
-			break;
-
-		default:
-			Log::error("undefined funct field for out");
-			break;
-
-		}
-
+		//busy flag is never set, there is no reason to check it
+		Log::error("out is currently not needed");
 
 		goto next_instruction;
 
@@ -306,11 +286,11 @@ next_instruction:
 	registers[1] = registers[1] & 0xFF;
 
 	//save the ip
-	memory[(registers[2] - 1) & 0xFFFF] = ip;
+	mem_write((registers[2] - 1) & 0xFFFF, ip);
 	registers[2]--;
 
 	//switch the ip
-	ip = iht[std::countl_zero(static_cast<uint8_t>(int_occured))];
+	ip = 0xFFF0 + 2 * std::countl_zero(static_cast<uint8_t>(int_occured));
 
 return 0;
 }
