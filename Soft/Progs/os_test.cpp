@@ -1,5 +1,5 @@
-#include "./Assembler/asm.h"
-#include "./Assembler/asm_helper.h"
+#include "../Assembler/asm.h"
+#include "../Assembler/asm_helper.h"
 
 #include <cstring>
 
@@ -144,6 +144,9 @@ int code()
 			i_cmp(character, '\n');
 			i_bee("IHR_1_new_cmd");
 
+			i_cmp(character, '\b');
+			i_bee("IHR_1_buffer_reduce");
+
 			i_stw(character, buffer_pos);
 
 			i_add(buffer_pos, 1);
@@ -165,6 +168,23 @@ int code()
 			label("check");
 			i_stw(temp0, addr_cmd_ready);
 
+			i_pull(temp0);
+			i_pull(saved1);
+			i_pull(saved0);
+			i_iret();
+
+			label("IHR_1_buffer_reduce");
+
+			i_cmp(buffer_pos, 0xFF00);
+			i_bee("IHR_1_ret");
+
+			i_sub(buffer_pos, 1);
+			i_mov(character, ' ');
+			i_stw(character, buffer_pos);
+
+			i_stw(buffer_pos, addr_buffer_pos);
+
+			label("IHR_1_ret");
 			i_pull(temp0);
 			i_pull(saved1);
 			i_pull(saved0);
