@@ -11,7 +11,7 @@ clean:
 
 elaborate:
 ifdef module
-	verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp \
+	verilator -cc rtl/${module}.sv --exe tb/${module}_tb.cpp tb/src/*.cpp\
     -Irtl --build -Wwarn-lint \
     --trace-fst --trace-structs --trace-params --trace-max-array 2048 --trace-max-width 1024 --trace-underscore \
     --timescale 1us/1ns --timing \

@@ -20,14 +20,14 @@ enum aluoperand_t {
 class Item {
     private:
         int16_t src1, src2, ref_result = 0, mod_result;
-        aluoperand_t aopcode = ADD;
+        aluoperand_t alu_ctrl = ADD;
     
 
     public:
         int16_t getSrc1() { return src1; }
         int16_t getSrc2() { return src2; }
-        aluoperand_t getACode() { return aopcode; }
-        int8_t getACodeValue() { return aopcode; }
+        aluoperand_t getACode() { return alu_ctrl; }
+        int8_t getACodeValue() { return alu_ctrl; }
         int16_t getReference() { return ref_result; }
 
         void setResult(int16_t val) {
@@ -40,9 +40,9 @@ class Item {
         void randomize() {
             src1 = rand();
             src2 = rand();
-            aopcode = aluoperand_t(rand() % 8);
+            alu_ctrl = aluoperand_t(rand() % 8);
 
-            switch (aopcode) {
+            switch (alu_ctrl) {
                 case ADD:
                     ref_result = src1 + src2;
                     break;
@@ -73,8 +73,8 @@ class Item {
         bool Verfiy() {
             return mod_result == ref_result;
         }
-        bool Verfiy(int16_t result) {
-            return result == ref_result;
+        bool Verfiy(int16_t alu_ret) {
+            return alu_ret == ref_result;
         }
 };
 
@@ -112,26 +112,26 @@ int main(int argc, char* argv[]) {
 
         top->src1 = test_item.getSrc1();
         top->src2 = test_item.getSrc2();
-        top->aopcode = test_item.getACodeValue();
+        top->alu_ctrl = test_item.getACodeValue();
 
         top->eval();  // evaluate model for current state
 
-        successful = test_item.Verfiy(top->result);
+        successful = test_item.Verfiy(top->alu_ret);
         count[successful]++;
 
         // Optionally, print output signals at clock posedge
         if (successful) {
-            printf("[PASS] %7d: opcode %1d; src1: %6d | src2: %6d | result: %6d \n",
+            printf("[PASS] %7d: opcode %1d; src1: %6d | src2: %6d | alu_ret: %6d \n",
                 i, test_item.getACodeValue(),
                 test_item.getSrc1(), 
                 test_item.getSrc2(), 
-                top->result);
+                top->alu_ret);
         } else {
-            printf("[FAIL] %7d: opcode %1d; src1: %6d | src2: %6d | result: %6d | expected: %6d \n",
+            printf("[FAIL] %7d: opcode %1d; src1: %6d | src2: %6d | alu_ret: %6d | expected: %6d \n",
                 i, test_item.getACodeValue(),
                 test_item.getSrc1(),
                 test_item.getSrc2(),
-                top->result, 
+                top->alu_ret, 
                 test_item.getReference());
         }
         
