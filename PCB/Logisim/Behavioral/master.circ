@@ -175,13 +175,8 @@
     <wire from="(770,240)" to="(770,260)"/>
     <wire from="(770,260)" to="(790,260)"/>
     <wire from="(770,300)" to="(770,340)"/>
-    <wire from="(770,530)" to="(770,570)"/>
-    <wire from="(770,570)" to="(840,570)"/>
     <wire from="(780,280)" to="(780,340)"/>
     <wire from="(790,260)" to="(790,340)"/>
-    <wire from="(790,530)" to="(790,590)"/>
-    <wire from="(790,590)" to="(800,590)"/>
-    <wire from="(800,590)" to="(800,600)"/>
     <wire from="(810,890)" to="(830,890)"/>
     <wire from="(820,390)" to="(830,390)"/>
     <wire from="(820,400)" to="(830,400)"/>
@@ -197,7 +192,6 @@
     <wire from="(820,920)" to="(840,920)"/>
     <wire from="(830,390)" to="(830,400)"/>
     <wire from="(830,390)" to="(930,390)"/>
-    <wire from="(840,570)" to="(840,600)"/>
     <wire from="(840,900)" to="(840,920)"/>
     <wire from="(850,900)" to="(850,930)"/>
     <wire from="(890,780)" to="(890,830)"/>
@@ -657,7 +651,7 @@ c3 4800 f2 60621*0 74 72 75 65
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="224" y="179">int</text>
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="220" y="192">intid</text>
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="211" y="201">iobusy</text>
-      <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="189" y="230">we iid int</text>
+      <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="170" y="229">we</text>
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="86" y="226">iobus</text>
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="137" y="228">addr</text>
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="207" y="217">mask </text>
@@ -679,8 +673,6 @@ c3 4800 f2 60621*0 74 72 75 65
       <circ-port dir="out" pin="720,700" x="240" y="150"/>
       <circ-port dir="out" pin="740,430" x="50" y="130"/>
       <circ-port dir="out" pin="750,1010" x="140" y="240"/>
-      <circ-port dir="out" pin="750,1040" x="190" y="240"/>
-      <circ-port dir="out" pin="750,1070" x="210" y="240"/>
       <circ-port dir="out" pin="750,270" x="140" y="50"/>
       <circ-port dir="out" pin="750,350" x="100" y="50"/>
       <circ-port dir="out" pin="750,620" x="50" y="110"/>
@@ -1412,15 +1404,6 @@ c3 4800 f2 60621*0 74 72 75 65
       <a name="label" val="funct"/>
       <a name="width" val="3"/>
     </comp>
-    <comp lib="0" loc="(680,1040)" name="Tunnel">
-      <a name="facing" val="east"/>
-      <a name="label" val="intid"/>
-      <a name="width" val="3"/>
-    </comp>
-    <comp lib="0" loc="(680,1070)" name="Tunnel">
-      <a name="facing" val="east"/>
-      <a name="label" val="enter_int"/>
-    </comp>
     <comp lib="0" loc="(680,270)" name="Tunnel">
       <a name="facing" val="east"/>
       <a name="label" val="aluop"/>
@@ -1538,19 +1521,6 @@ c3 4800 f2 60621*0 74 72 75 65
       <a name="label" val="oioaddr"/>
       <a name="type" val="output"/>
       <a name="width" val="3"/>
-    </comp>
-    <comp lib="0" loc="(750,1040)" name="Pin">
-      <a name="appearance" val="NewPins"/>
-      <a name="facing" val="west"/>
-      <a name="label" val="ointid"/>
-      <a name="type" val="output"/>
-      <a name="width" val="3"/>
-    </comp>
-    <comp lib="0" loc="(750,1070)" name="Pin">
-      <a name="appearance" val="NewPins"/>
-      <a name="facing" val="west"/>
-      <a name="label" val="oint"/>
-      <a name="type" val="output"/>
     </comp>
     <comp lib="0" loc="(750,270)" name="Pin">
       <a name="appearance" val="NewPins"/>
@@ -2223,8 +2193,6 @@ c3 4800 f2 60621*0 74 72 75 65
     <wire from="(660,1670)" to="(660,1700)"/>
     <wire from="(670,430)" to="(680,430)"/>
     <wire from="(680,1010)" to="(750,1010)"/>
-    <wire from="(680,1040)" to="(750,1040)"/>
-    <wire from="(680,1070)" to="(750,1070)"/>
     <wire from="(680,1310)" to="(700,1310)"/>
     <wire from="(680,270)" to="(730,270)"/>
     <wire from="(680,350)" to="(700,350)"/>
@@ -3614,8 +3582,6 @@ c3 4800 f2 60621*0 74 72 75 65
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="325" y="218">read aval</text>
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="393" y="219">data</text>
       <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="388" y="181">led</text>
-      <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="251" y="65">intid</text>
-      <text dominant-baseline="central" font-family="SansSerif" font-size="12" text-anchor="middle" x="218" y="66">isint</text>
       <circ-anchor facing="east" x="230" y="150"/>
       <circ-port dir="in" pin="160,450" x="400" y="230"/>
       <circ-port dir="in" pin="160,490" x="340" y="230"/>
@@ -3623,8 +3589,6 @@ c3 4800 f2 60621*0 74 72 75 65
       <circ-port dir="in" pin="220,120" x="130" y="50"/>
       <circ-port dir="in" pin="220,160" x="170" y="50"/>
       <circ-port dir="in" pin="220,80" x="80" y="50"/>
-      <circ-port dir="in" pin="900,20" x="220" y="50"/>
-      <circ-port dir="in" pin="900,50" x="260" y="50"/>
       <circ-port dir="out" pin="1260,150" x="370" y="50"/>
       <circ-port dir="out" pin="280,320" x="50" y="120"/>
       <circ-port dir="out" pin="380,450" x="310" y="230"/>
@@ -3984,10 +3948,6 @@ c3 4800 f2 60621*0 74 72 75 65
       <a name="label" val="keychar"/>
       <a name="width" val="7"/>
     </comp>
-    <comp lib="0" loc="(900,20)" name="Pin">
-      <a name="appearance" val="NewPins"/>
-      <a name="label" val="iint"/>
-    </comp>
     <comp lib="0" loc="(900,210)" name="Constant">
       <a name="value" val="0x0"/>
     </comp>
@@ -4005,12 +3965,6 @@ c3 4800 f2 60621*0 74 72 75 65
     </comp>
     <comp lib="0" loc="(900,360)" name="Constant">
       <a name="value" val="0x0"/>
-    </comp>
-    <comp lib="0" loc="(900,50)" name="Pin">
-      <a name="appearance" val="NewPins"/>
-      <a name="label" val="iintid"/>
-      <a name="radix" val="16"/>
-      <a name="width" val="3"/>
     </comp>
     <comp lib="0" loc="(920,140)" name="Splitter">
       <a name="bit0" val="7"/>
@@ -4034,13 +3988,6 @@ c3 4800 f2 60621*0 74 72 75 65
       <a name="radix" val="16"/>
       <a name="type" val="output"/>
       <a name="width" val="8"/>
-    </comp>
-    <comp lib="0" loc="(930,20)" name="Tunnel">
-      <a name="label" val="int"/>
-    </comp>
-    <comp lib="0" loc="(930,50)" name="Tunnel">
-      <a name="label" val="intind"/>
-      <a name="width" val="3"/>
     </comp>
     <comp lib="0" loc="(940,500)" name="Tunnel">
       <a name="label" val="isclock"/>
@@ -4242,8 +4189,6 @@ c3 4800 f2 60621*0 74 72 75 65
     <wire from="(890,150)" to="(900,150)"/>
     <wire from="(890,180)" to="(900,180)"/>
     <wire from="(890,610)" to="(890,630)"/>
-    <wire from="(900,20)" to="(930,20)"/>
-    <wire from="(900,50)" to="(930,50)"/>
     <wire from="(910,530)" to="(920,530)"/>
     <wire from="(910,540)" to="(930,540)"/>
     <wire from="(910,550)" to="(930,550)"/>
