@@ -19,6 +19,7 @@ module alu(
     logic carry;
     logic carry_msb;
 
+    /* verilator lint_off LATCH */
     always_comb begin
         unique case (alu_ctrl)
             3'b000: begin
