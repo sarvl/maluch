@@ -44,7 +44,7 @@ module graphics_card_tb ();
   always #14 clk = ~clk;
 
   always_ff @(posedge clk) begin : vga_out
-    if (video_enable) $fdisplay(fd, "%0b", {red, green, blue});
+    if (video_enable) $fdisplay(fd, "%08b", {red, green, blue});
   end : vga_out
 
   initial begin

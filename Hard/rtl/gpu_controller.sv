@@ -1,7 +1,7 @@
 module gpu_controller #(
     parameter CHAR_WIDTH = 4'd8,
     parameter CHAR_HEIGHT = 5'd16,
-    parameter FONT_COLOR = 8'hFF,
+    parameter FONT_COLOR = 8'h1C,
     parameter BACKGROUND_COLOR = 8'h00
 ) (
     input  logic [19:0] address,
@@ -28,7 +28,7 @@ endmodule
 module ascii_controller #(
     parameter CHAR_WIDTH = 4'd8,
     parameter CHAR_HEIGHT = 5'd16,
-    parameter FONT_COLOR = 8'hFF,
+    parameter FONT_COLOR = 8'h1C,
     parameter BACKGROUND_COLOR = 8'h00,
     parameter DISPLAY_CHAR_WIDTH = 80,
     parameter DISPLAY_CHAR_HEIGHT = 30
@@ -54,7 +54,7 @@ module ascii_controller #(
   logic [2:0] index;
   always_comb begin
     index = CHAR_WIDTH - (pixel_x % CHAR_WIDTH) - 1;
-    data_ascii = data_rom[index] ? FONT_COLOR : BACKGROUND_COLOR;
+    data_ascii = (data_rom[index] === 1'b1) ? FONT_COLOR : BACKGROUND_COLOR;
     char_address = data_in * CHAR_HEIGHT + pixel_y % CHAR_HEIGHT;
     ascii_address = pixel_y[9:4] * DISPLAY_CHAR_WIDTH + pixel_x[9:3];
   end
