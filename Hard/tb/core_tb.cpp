@@ -1,4 +1,4 @@
-#include "Vtop.h"
+#include "Vcore.h"
 #include "verilated.h"
 #include "verilated_fst_c.h"
 #include <iostream>
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
 
     Verilated::commandArgs(argc, argv);
     VerilatedContext* contextp = new VerilatedContext;
-    Vtop* cpu = new Vtop(contextp);
+    Vcore* cpu = new Vcore(contextp);
 
 
     VerilatedFstC* tfp = nullptr;
