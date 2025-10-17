@@ -119,6 +119,8 @@ arithmetic: (total cycles: 5)
 
 	regbus = alubus (b0)
 
+	fl_we = 1
+
 	reg_we = 1 (0 for cmp and test)
 
 	next_instruction = 1
