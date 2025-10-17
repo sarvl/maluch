@@ -3046,7 +3046,6 @@ c3 4800 f2 60621*0 74 72 75 65
       <a name="label" val="reg_num"/>
       <a name="width" val="4"/>
     </comp>
-    <comp lib="0" loc="(280,150)" name="NoConnect"/>
     <comp lib="0" loc="(320,680)" name="Tunnel">
       <a name="label" val="mask_saved"/>
       <a name="width" val="16"/>
@@ -3061,7 +3060,8 @@ c3 4800 f2 60621*0 74 72 75 65
       <a name="label" val="data_tunnel"/>
       <a name="width" val="16"/>
     </comp>
-    <comp lib="0" loc="(570,110)" name="Tunnel">
+    <comp lib="0" loc="(710,280)" name="Tunnel">
+      <a name="facing" val="east"/>
       <a name="label" val="r1we"/>
     </comp>
     <comp lib="0" loc="(770,140)" name="Tunnel">
@@ -3487,8 +3487,8 @@ c3 4800 f2 60621*0 74 72 75 65
     <wire from="(230,680)" to="(240,680)"/>
     <wire from="(230,720)" to="(230,730)"/>
     <wire from="(230,720)" to="(240,720)"/>
-    <wire from="(240,150)" to="(280,150)"/>
-    <wire from="(240,160)" to="(560,160)"/>
+    <wire from="(240,150)" to="(650,150)"/>
+    <wire from="(240,160)" to="(650,160)"/>
     <wire from="(240,170)" to="(640,170)"/>
     <wire from="(240,180)" to="(630,180)"/>
     <wire from="(240,190)" to="(620,190)"/>
@@ -3515,10 +3515,7 @@ c3 4800 f2 60621*0 74 72 75 65
     <wire from="(540,270)" to="(540,1520)"/>
     <wire from="(550,1400)" to="(970,1400)"/>
     <wire from="(550,260)" to="(550,1400)"/>
-    <wire from="(560,110)" to="(560,160)"/>
-    <wire from="(560,110)" to="(570,110)"/>
     <wire from="(560,1280)" to="(970,1280)"/>
-    <wire from="(560,160)" to="(650,160)"/>
     <wire from="(560,250)" to="(560,1280)"/>
     <wire from="(570,1160)" to="(970,1160)"/>
     <wire from="(570,240)" to="(570,1160)"/>
@@ -3537,7 +3534,10 @@ c3 4800 f2 60621*0 74 72 75 65
     <wire from="(640,170)" to="(640,320)"/>
     <wire from="(640,320)" to="(970,320)"/>
     <wire from="(650,160)" to="(650,190)"/>
-    <wire from="(650,190)" to="(850,190)"/>
+    <wire from="(650,190)" to="(740,190)"/>
+    <wire from="(710,280)" to="(740,280)"/>
+    <wire from="(740,190)" to="(740,280)"/>
+    <wire from="(740,190)" to="(850,190)"/>
     <wire from="(770,140)" to="(790,140)"/>
     <wire from="(770,170)" to="(800,170)"/>
     <wire from="(780,110)" to="(810,110)"/>
