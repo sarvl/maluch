@@ -8,7 +8,6 @@ module graphics_card_tb ();
   logic v_sync;
   logic h_sync;
   logic [7:0] ascii_code;
-  logic mode;
   logic [2:0] red;
   logic [2:0] green;
   logic [1:0] blue;
@@ -17,7 +16,6 @@ module graphics_card_tb ();
   graphics_card graphics_card (
       .clk(clk),
       .rst(rst),
-      .mode(mode),
       .h_sync(h_sync),
       .v_sync(v_sync),
       .red(red),
@@ -27,16 +25,13 @@ module graphics_card_tb ();
   );
 
   initial begin
-    fd   = $fopen("build/trial", "w");
-    mode = 0;  //ascii mode
-    clk  = 0;
-    rst  = 0;
+    fd  = $fopen("build/trial", "w");
+    clk = 0;
+    rst = 0;
     #1;
     rst = 1;
     #1;
     rst = 0;
-    #20000000;
-    mode = 1;  //color mode
     #20000000;
     $fclose(fd);
     $finish;

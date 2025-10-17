@@ -1,16 +1,14 @@
 module gpu_controller #(
     parameter CHAR_WIDTH = 4'd8,
     parameter CHAR_HEIGHT = 5'd16,
-    parameter FONT_COLOR = 8'h1C,
+    parameter FONT_COLOR = 8'hFF,
     parameter BACKGROUND_COLOR = 8'h00
 ) (
     input  logic [19:0] address,
-    input  logic        mode,          //1 for color, 0 for ascii
-    input  logic [ 7:0] data_in,       //ascii code or pixel color (depends on mode control bit)
+    input  logic [ 7:0] data_in,       //ascii code
     output logic [19:0] vram_address,
     output logic [ 7:0] data_out
 );
-  logic [ 7:0] data_color;
   logic [ 7:0] data_ascii;
   logic [11:0] ascii_address;
 
@@ -20,15 +18,14 @@ module gpu_controller #(
       .ascii_address(ascii_address),
       .data_ascii(data_ascii)
   );
-  assign data_color = data_in;
-  assign data_out = mode ? data_color : data_ascii;
-  assign vram_address = mode ? address : {8'b0, ascii_address};
-endmodule
+  assign data_out = data_ascii;
+  assign vram_address = {8'b0, ascii_address};
+endmodule  //gpu_controller
 
 module ascii_controller #(
     parameter CHAR_WIDTH = 4'd8,
     parameter CHAR_HEIGHT = 5'd16,
-    parameter FONT_COLOR = 8'h1C,
+    parameter FONT_COLOR = 8'hFF,
     parameter BACKGROUND_COLOR = 8'h00,
     parameter DISPLAY_CHAR_WIDTH = 80,
     parameter DISPLAY_CHAR_HEIGHT = 30
@@ -58,7 +55,7 @@ module ascii_controller #(
     char_address = data_in * CHAR_HEIGHT + pixel_y % CHAR_HEIGHT;
     ascii_address = pixel_y[9:4] * DISPLAY_CHAR_WIDTH + pixel_x[9:3];
   end
-endmodule
+endmodule  //ascii_controller
 
 module char_rom (
     input  logic [11:0] char_address,
@@ -75,4 +72,4 @@ module char_rom (
   always_comb begin
     data_rom = font_mem[char_address];
   end
-endmodule
+endmodule  //char_rom

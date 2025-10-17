@@ -5,7 +5,6 @@
 module graphics_card (
     input logic clk,
     input logic rst,
-    input logic mode,
     output logic [2:0] red,
     output logic [2:0] green,
     output logic [1:0] blue,
@@ -21,7 +20,6 @@ module graphics_card (
   gpu_controller gpu_controller (
       .address(address),
       .vram_address(vram_address),
-      .mode(mode),
       .data_in(data_in),
       .data_out(data_out)
   );
