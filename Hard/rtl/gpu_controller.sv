@@ -6,7 +6,7 @@ module gpu_controller #(
 ) (
     input  logic [19:0] address,
     input  logic [ 7:0] data_in,       //ascii code
-    output logic [19:0] vram_address,
+    output logic [11:0] vram_address,
     output logic [ 7:0] data_out
 );
   logic [ 7:0] data_ascii;
@@ -19,7 +19,7 @@ module gpu_controller #(
       .data_ascii(data_ascii)
   );
   assign data_out = data_ascii;
-  assign vram_address = {8'b0, ascii_address};
+  assign vram_address = ascii_address;
 endmodule  //gpu_controller
 
 module ascii_controller #(

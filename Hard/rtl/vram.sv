@@ -1,9 +1,9 @@
 module vram #(
-    parameter MEMORY_BYTES = 1048576
+    parameter MEMORY_BYTES = 2400
 ) (
     input logic rst,
     input logic clk,
-    input logic [19:0] vram_address,
+    input logic [11:0] vram_address,
     input logic w_enable,
     input logic [7:0] w_data,
     output logic [7:0] r_data
@@ -12,7 +12,7 @@ module vram #(
 
   // Testbench only
   initial begin
-    for (int i = 0; i < 256; i++) begin
+    for (int i = 0; i < 2400; i++) begin
       mem[i] = i[7:0];
     end
   end
