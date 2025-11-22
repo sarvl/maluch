@@ -237,7 +237,7 @@ Generally IHR should end with IRET.
 
 | id | device |
 | :---: | :---: |
-| 000 | board (and timer) |
+| 000 | timer |
 | 001 | keyboard |
 | 010 | gpu |
 | 011 | persistent storage |
