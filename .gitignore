@@ -1,0 +1,44 @@
+# Verilator build outputs
+obj_dir/
+obj_*/
+verilator*.log
+*.dat
+*.mk
+
+# Build artifacts from C++ testbenches
+*.o
+*.d
+*.exe
+/bin/
+/build/
+/out/
+
+# Temporary and backup files
+*~
+*.bak
+*.swp
+*.tmp
+
+# Coverage Reports (if generated)
+coverage/
+*.gcda
+*.gcno
+*.gcov
+
+# Waveforms files and directories
+waveforms/
+*.vcd
+*.fst
+
+# IDE/editor files to ignore (add more if you use VSCode, Eclipse, etc.)
+.vscode/
+*.user
+*.project
+*.cproject
+
+#DVT output files (build logs, config files, etc.)
+.dvt/
+dvt_build.log
+
+# Miscellaneous
+.DS_Store
