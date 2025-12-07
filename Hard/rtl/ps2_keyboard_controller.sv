@@ -1,42 +1,51 @@
 
 
-module keyboard_controller(
+module ps2_keyboard_controller(
 input logic clk,
+input logic rstn,
 
 inout logic kclk,
 input logic kdata,
-input logic [2:0] io_addr;
+input logic [2:0] io_addr,
 
 output logic[7:0] data_out,
 output logic busy_flag,
 output logic int_flag
 );
 
-assign int_flag = data_rdy;
-assign busy_flag = ~data_rdy;
-assign data_out = (io_addr == 3'b001) ? data_buffer : 8'hz;
-assign buffer_clr = (io_addr == 3'b001) & ~busy_flag;
-assign kclk = kclk_en ? 1'bz : 1'b0;
+logic kclk_test;
 
 logic kclkf, kdataf;
+logic data_request;
 logic [7:0]datacur;
-logic [7:0]dataprev;
+logic [7:0]dataprev, dataprev_nxt;
 logic [3:0]cnt;
 logic cflag;
 
-logic [15:0] scancode_pair;
-logic sc_flag;
-logic pflag;
+logic [15:0] scancode_pair, scancode_pair_nxt;
+logic pflag, pflag_nxt;
 
 logic shifting, shifting_nxt;
-logic kclk_en;
-logic set_sig, rst_sig;
-logic write_en;
+logic write_en, write_en_nxt;
 
 logic [7:0] ascii;
-logic data_rdy;
-logic buffer_clr;
-logic[7:0] data_buffer;
+logic [7:0] data_buffer, data_buffer_nxt;
+
+typedef enum {
+    RECEIVE,
+    PROCESSING,
+    READY
+} state_t;
+
+state_t state, state_nxt;
+
+assign int_flag = (state == READY);
+assign busy_flag = ~(state == READY);
+assign data_out = (io_addr == 3'b001) ? data_buffer : 8'hz;
+assign kclk = (state == RECEIVE) ? 1'bz : 1'b0;
+assign kclk_test = (state == RECEIVE) ? 1'b1 : 1'b0;
+
+assign data_request = (io_addr == 3'b001) & ~busy_flag;
     
 debouncer #(
     .COUNT_MAX(19),
@@ -55,8 +64,75 @@ debouncer #(
     .O(kdataf)
 );
 
+// FSM
+always_ff @(posedge clk or negedge rstn) begin
+    if(!rstn) begin
+        state <= RECEIVE;
+        pflag <= 0;
+        dataprev <= 0;
+        scancode_pair <= 0;
+        shifting = 0;
+        write_en = 0;
+    end else begin
+        state <= state_nxt;
+
+        pflag <= pflag_nxt;
+        dataprev <= dataprev_nxt;
+        scancode_pair <= scancode_pair_nxt;
+
+        shifting <= shifting_nxt;
+        write_en <= write_en_nxt;
+        data_buffer <= data_buffer_nxt;
+    end
+end
+
+always_comb begin
+    state_nxt = state;
+
+    pflag_nxt = pflag;
+    dataprev_nxt = dataprev;
+    scancode_pair_nxt = scancode_pair;
+
+    shifting_nxt = shifting;
+
+    data_buffer_nxt = data_buffer;
+
+    case (state)
+        RECEIVE: begin
+            if (cflag == 1'b1 && pflag == 1'b0) begin
+                scancode_pair_nxt = {dataprev, datacur};
+                dataprev_nxt = datacur;
+
+                state_nxt = PROCESSING;
+            end
+
+            pflag_nxt = cflag;
+        end
+        PROCESSING: begin
+            priority casez(scancode_pair)
+                16'hF012: begin
+                    shifting_nxt = 0;
+                    state_nxt = RECEIVE;
+                end
+                16'h??12: begin
+                    shifting_nxt = 1;
+                    state_nxt = RECEIVE;
+                end
+                16'hF0??: begin
+                    data_buffer_nxt = ascii;
+                    state_nxt = READY;
+                end
+                default: state_nxt = RECEIVE;
+            endcase
+        end
+        READY: begin
+            state_nxt = (data_request) ? RECEIVE : READY;
+        end
+    endcase
+end
+
 // Receiving scancodes
-always@(negedge(kclkf))begin
+always_ff @(negedge kclkf) begin
     case(cnt)
         0:;//Start bit
         1:datacur[0]<=kdataf;
@@ -75,45 +151,6 @@ always@(negedge(kclkf))begin
         cnt<=cnt+1;
     else if(cnt==10)
         cnt<=0;
-end
-
-// Storing scancodes
-always_ff @(posedge clk) begin
-    if (cflag == 1'b1 && pflag == 1'b0) begin
-        scancode_pair <= {dataprev, datacur};
-        sc_flag <= 1'b1;
-        dataprev <= datacur;
-    end else
-        sc_flag <= 'b0;
-
-    pflag <= cflag;
-end
-
-// Managing ps2 clk
-always_ff @(posedge clk) begin
-    if(set_sig)
-        kclk_en <= 1;
-    else if(rst_sig)
-        kclk_en <= 0;
-end
-
-// Handling shift key
-always_ff @(posedge clk) begin
-    shifting = shifting_nxt;
-end
-
-always_comb begin
-    shifting_nxt = shifting;
-    write_en_nxt = 0;
-    set_sig = 0;
-
-    if(sc_flag)
-        unique case(scancode_pair)
-            16'h0F12: shifting_nxt = 0;
-            16'hxx12: shifting_nxt = 1;
-            16'h0Fxx: write_en_nxt = 1;
-            default:  set_sig = 1;
-        endcase
 end
 
 //Translating scancodes to ASCII
@@ -176,19 +213,6 @@ always_comb begin
 
         default: ascii = 8'h00;
     endcase
-end
-
-
-//Output buffer
-always_ff @(posedge clk) begin
-    rst_sig <= 0;
-    if(write_en) begin
-        data_buffer <= ascii;
-        data_rdy <= 1;
-    end else if (buffer_clr) begin
-        data_rdy <= 0;
-        rst_sig <= 1;
-    end
 end
 
 endmodule
