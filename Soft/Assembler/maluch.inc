@@ -19,6 +19,25 @@ macro mov? dst,src
             dw src bswap 2
         end match
     else
-        err "Incorrect MOV Target."
+        err "Incorrect MOV target."
+    end match
+end macro
+
+macro add? dst, src
+    match [:dst_idx:], dst
+        if dst_idx = 0
+            err "Cannot ADD into R0."
+        end if
+
+        match [:src_idx:], src
+            db 00100000b
+            db (dst_idx shl 4) or src_idx
+        else
+            db 00101000b
+            db dst_idx shl 4
+            dw src bswap 2
+        end match
+    else
+        err "Incorrect ADD target."
     end match
 end macro
