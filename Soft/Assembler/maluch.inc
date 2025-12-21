@@ -12,8 +12,8 @@ pstor? equ 011b
 ; DYADIC
 irp <name,op>, mov,10h, add,20h, sub,21h, \
   and,22h, or,23h, xor,24h, not,25h, lsl,26h, \
-  lsr,27h, cmp,31h, test,32h, ldw,80h, stw,90h
-    macro name? dst,src
+  lsr,27h, cmp,31h, ldw,80h, stw,90h
+    macro name? dst, src
         match [:dst_idx:], dst
             if dst_idx = 0
                 err "Cannot modify R0."
@@ -32,6 +32,21 @@ irp <name,op>, mov,10h, add,20h, sub,21h, \
         end match
     end macro
 end irp
+
+macro test? dst, src
+    match [:dst_idx:], dst
+        match [:src_idx:], src
+            db 32h
+            db (dst_idx shl 4) or src_idx
+        else
+            db 32h or 1000b
+            db dst_idx shl 4
+            dw src bswap 2
+        end match
+    else
+        err "Invalid destination."
+    end match
+end macro
 
 ; JUMPS
 irp <name,op>, jmp,40h, bee,41h, bne,42h, \
