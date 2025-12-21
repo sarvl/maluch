@@ -121,3 +121,14 @@ macro out? dev, src
         dw src bswap 2
     end match
 end macro
+
+; RETURNS
+macro ret?
+    db $B0
+    db 0
+end macro
+
+macro iret?
+    db $B1
+    db 0
+end macro
