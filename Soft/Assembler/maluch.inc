@@ -4,7 +4,7 @@ repeat 16, i:0
   r#i? equ [:i:]
 end repeat
 
-board? equ 000b
+timer? equ 000b
 kb?    equ 001b
 gpu?   equ 010b
 pstor? equ 011b
