@@ -9,12 +9,13 @@ kb?    equ 001b
 gpu?   equ 010b
 pstor? equ 011b
 
+
 ; LABEL INTERCEPTING
 struc ? tail&
     match :, tail
         ; CASE: LABEL:
         label . at $ shr 1
-    else match : instruction tail
+    else match : instruction, tail
         ; CASE: LABEL: MNEMONIC
         label . at $ shr 1
         instruction
@@ -26,38 +27,52 @@ end struc
 
 ; DB AND DW REPLACEMENTS
 calminstruction db? data&
-    local value, cmd
-
+    local value, char, len, i, tmp
 loop:
-    ; split first argument if there are more than one
     match value =, data, data
-    jyes check_value
-
-    ; handle the last (or only) argument
-    match =?, data
-    jyes reserve_last ; jump if literal is "?"
-
-    emit 1, 0
-    emit 1, data
-    exit
-
-reserve_last:
-    arrange cmd, =rb 2
-    assemble cmd
-    exit
-
-check_value:
+    jyes process_value
+    
+    ; Handle the last argument (no comma left)
+    arrange value, data
+    arrange data, 
+    
+process_value:
+    ; 2. Check for Reserve (?)
     match =?, value
-    jyes reserve_value
-
-    emit 1, 0
+    jyes reserve
+    
+    ; 3. Check for String Literal ('...')
+    ; The :quoted modifier matches only quoted strings
+    match tmp:quoted, value, :
+    jyes is_string
+    
+    ; 4. Default: Number or Label
     emit 1, value
-    jump loop
-
-reserve_value:
-    arrange cmd, =rb 2
-    assemble cmd
-    jump loop
+    jump next_item
+    
+is_string:
+    ; Iterate over string characters
+    compute len, lengthof value
+    compute i, 0
+str_loop:
+    check i < len
+    jno next_item
+    ; Extract byte: (string >> (i*8)) & 0xFF
+    compute char, (value shr (i * 8)) and 0FFh
+    emit 1, 0
+    emit 1, char
+    compute i, i + 1
+    jump str_loop
+    
+reserve:
+    ; emit with 1 argument reserves uninitialized space (like rb)
+    emit 1
+    
+next_item:
+    ; Continue if there are more arguments
+    match , data
+    jno loop
+    exit
 end calminstruction
 
 calminstruction dw? data&
