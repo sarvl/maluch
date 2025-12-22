@@ -9,6 +9,21 @@ kb?    equ 001b
 gpu?   equ 010b
 pstor? equ 011b
 
+; LABEL INTERCEPTING
+struc ? tail&
+    match :, tail
+        ; CASE: LABEL:
+        label . at $ shr 1
+    else match : instruction tail
+        ; CASE: LABEL: MNEMONIC
+        label . at $ shr 1
+        instruction
+    else
+        ; CASE: NO LABEL
+        . tail
+    end match
+end struc
+
 ; DB AND DW REPLACEMENTS
 calminstruction db? data&
     local value, cmd
@@ -156,18 +171,9 @@ irp <name,op>, jmp,40h, bee,41h, bne,42h, \
         match [:src_idx:], src
         jyes short_jump
 
+        ; CASE: NUMBER
         emit 1, op or 1000b
         emit 1, 0
-
-        local tmp
-        match tmp:number, src, : 
-        jyes is_number
-
-        ; CASE: LABEL
-        compute src, src shr 1
-
-is_number:
-        ; CASE: NUMBER
         emit 2, src bswap 2
         exit
 
