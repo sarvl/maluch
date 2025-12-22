@@ -13,40 +13,70 @@ pstor? equ 011b
 irp <name,op>, mov,10h, add,20h, sub,21h, \
   and,22h, or,23h, xor,24h, not,25h, lsl,26h, \
   lsr,27h, cmp,31h, ldw,80h, stw,90h
-    macro name? dst, src
+    calminstruction name? dst, src
+        local dst_idx, src_idx, cmd
+        transform dst
+
         match [:dst_idx:], dst
-            if dst_idx = 0
-                err "Cannot modify R0."
-            end if
-    
-            match [:src_idx:], src
-                db op
-                db (dst_idx shl 4) or src_idx
-            else
-                db op or 1000b
-                db dst_idx shl 4
-                dw src bswap 2
-            end match
-        else
-            err "Invalid destination."
-        end match
-    end macro
+        jyes dst_is_reg
+
+        ; DESTINATION IS NOT A REGISTER
+        arrange cmd, =err "Destination must be a register."
+        assemble cmd
+        exit
+dst_is_reg:
+        check dst_idx = 0
+        jno dst_ok
+
+        ; DESTINATION IS R0
+        arrange cmd, =err "Cannot modify r0."
+        assemble cmd
+        exit
+dst_ok:
+        transform src
+        match [:src_idx:], src
+        jyes src_is_reg
+
+        ; SOURCE IS IMMEDIATE
+        emit 1, op or 1000b
+        emit 1, dst_idx shl 4
+        emit 2, src bswap 2
+        exit
+
+src_is_reg:
+        emit 1, op
+        emit 1, (dst_idx shl 4) or src_idx
+    end calminstruction
 end irp
 
-macro test? dst, src
+; The test instruction is separate, because it doesn't modify destination
+; so it can have r0 as it's dst
+calminstruction test? dst, src
+    local dst_idx, src_idx, cmd
+
+    transform dst
     match [:dst_idx:], dst
-        match [:src_idx:], src
-            db 32h
-            db (dst_idx shl 4) or src_idx
-        else
-            db 32h or 1000b
-            db dst_idx shl 4
-            dw src bswap 2
-        end match
-    else
-        err "Invalid destination."
-    end match
-end macro
+    jyes dst_is_reg
+
+    ; DESTINATION IS NOT A REGISTER
+    arrange cmd, =err "Destination must be a register."
+    assemble cmd
+    exit
+dst_is_reg:
+    transform src
+    match [:src_idx:], src
+    jyes src_is_reg
+
+    ; SOURCE IS IMMEDIATE
+    emit 1, 32h or 1000b
+    emit 1, dst_idx shl 4
+    emit 2, src bswap 2
+    exit
+
+src_is_reg:
+    emit 1, 32h
+    emit 1, (dst_idx shl 4) or src_idx
+end calminstruction
 
 ; JUMPS
 irp <name,op>, jmp,40h, bee,41h, bne,42h, \
@@ -64,10 +94,10 @@ irp <name,op>, jmp,40h, bee,41h, bne,42h, \
         local tmp
         match tmp:number, src, : 
         jyes is_number
-        
+
         ; CASE: LABEL
         compute src, src shr 1
-        
+
 is_number:
         ; CASE: NUMBER
         emit 2, src bswap 2
@@ -82,68 +112,114 @@ short_jump:
 end irp
 
 ; STACK
-macro push? src
-    match [:src_idx:], src
-        db $C0
-        db src_idx
-    else
-        db $C0 or 1000b
-        db 0
-        dw src bswap 2
-    end match
-end macro
+calminstruction push? src
+    local src_idx
 
-macro pull? dst
+    transform src
+    match [:src_idx:], src
+    jyes is_reg
+
+    ; PUSH IMMEDIATE
+    emit 1, $C0 or 1000b
+    emit 1, 0
+    emit 2, src bswap 2
+    exit
+
+is_reg:
+    ; PUSH REGISTER
+    emit 1, $C0
+    emit 1, src_idx
+end calminstruction
+
+calminstruction pull? dst
+    local dst_idx, cmd
+
+    transform dst
     match [:dst_idx:], dst
-        if dst_idx = 0
-            err "Cannot modify R0."
-        end if
-        db $D0
-        db dst_idx shl 4
-    else
-        err "Invalid destination."
-    end match
-end macro
+    jyes dst_ok
+
+    arrange cmd, =err "Destination must be a register."
+    assemble cmd
+    exit
+
+dst_ok:
+    check dst_idx = 0
+    jno no_error
+    arrange cmd, =err "Cannot modify r0."
+    assemble cmd
+    exit
+
+no_error:
+    emit 1, $D0
+    emit 1, dst_idx shl 4
+end calminstruction
 
 ; IO
-macro in? dev, dst
-    if dev > 7
-        err "Invalid IO device ID."
-    end if
+calminstruction in? dev, dst
+    local dst_idx, cmd
+    transform dst
 
+    check dev > 7
+    jno dev_ok
+    arrange cmd, =err "Invalid IO device ID (Must be 0-7)."
+    assemble cmd
+    exit
+
+dev_ok:
     match [:dst_idx:], dst
-        if dst_idx = 0
-            err "Cannot modify R0."
-        end if
-        db 60h or dev
-        db dst_idx shl 4
-    else
-        err "Invalid destination."
-    end match
-end macro
+    jyes dst_ok
+    arrange cmd, =err "Destination must be a register."
+    assemble cmd
+    exit
 
-macro out? dev, src
-    if dev > 7
-        err "Invalid IO device ID."
-    end if
+dst_ok:
+    check dst_idx = 0
+    jno final
 
+    arrange cmd, =err "Cannot modify r0."
+    assemble cmd
+    exit
+
+final:
+    emit 1, 60h or dev
+    emit 1, dst_idx shl 4
+end calminstruction
+
+calminstruction out? dev, src
+    local src_idx, cmd
+    transform src
+
+    check dev > 7
+    jno dev_ok
+
+    arrange cmd, =err "Invalid IO device ID (Must be 0-7)."
+    assemble cmd
+    exit
+
+dev_ok:
     match [:src_idx:], src
-        db 70h or dev
-        db src_idx
-    else
-        db 70h or 1000b or dev
-        db 0
-        dw src bswap 2
-    end match
-end macro
+    jyes is_reg
+
+    ; SOURCE IS IMMEDIATE
+    emit 1, 70h or 1000b or dev
+    emit 1, 0
+    emit 2, src bswap 2
+    exit
+
+is_reg:
+    ; SOURCE IS REGISTER
+    emit 1, 70h or dev
+    emit 1, src_idx
+
+end calminstruction
 
 ; RETURNS
-macro ret?
-    db $B0
-    db 0
-end macro
+calminstruction ret?
+    emit 1, $B0
+    emit 1, 0
+end calminstruction
 
-macro iret?
-    db $B1
-    db 0
-end macro
+calminstruction iret?
+    emit 1, $B1
+    emit 1, 0
+end calminstruction
