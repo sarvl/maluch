@@ -110,7 +110,7 @@ end calminstruction
 ; DYADIC
 irp <name,op>, mov,10h, add,20h, sub,21h, \
   and,22h, or,23h, xor,24h, not,25h, lsl,26h, \
-  lsr,27h, cmp,31h, ldw,80h, stw,90h
+  lsr,27h, cmp,31h, ldw,80h
     calminstruction name? dst, src
         local dst_idx, src_idx, cmd
         transform dst
@@ -146,6 +146,36 @@ src_is_reg:
         emit 1, (dst_idx shl 4) or src_idx
     end calminstruction
 end irp
+
+calminstruction stw? dst, src
+    local dst_idx, src_idx, cmd
+
+    match dst =, , dst
+    match src =, , src
+    transform dst
+    transform src
+
+    match [:src_idx:], src
+    jyes src_is_reg
+    
+    arrange cmd, =err "Invalid source for STW (Must be register)."
+    assemble cmd
+    exit
+
+src_is_reg:
+    match [:dst_idx:], dst
+    jyes dst_is_reg
+
+    emit 1, 90h or 1000b
+    emit 1, src_idx shl 4
+    emit 2, dst bswap 2
+    exit
+
+dst_is_reg:
+    emit 1, 90h
+    emit 1, (src_idx shl 4) or dst_idx
+    exit
+end calminstruction
 
 ; The test instruction is separate, because it doesn't modify destination
 ; so it can have r0 as it's dst

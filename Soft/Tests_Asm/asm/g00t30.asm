@@ -2,5 +2,5 @@
 
 include "../../Assembler/maluch.inc"
 
-    stw r5, r10
-    stw r5, 12
+    stw r10, r5
+    stw 12, r5
