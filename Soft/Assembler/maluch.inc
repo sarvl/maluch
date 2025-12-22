@@ -9,6 +9,74 @@ kb?    equ 001b
 gpu?   equ 010b
 pstor? equ 011b
 
+; DB AND DW REPLACEMENTS
+calminstruction db? data&
+    local value, cmd
+
+loop:
+    ; split first argument if there are more than one
+    match value =, data, data
+    jyes check_value
+
+    ; handle the last (or only) argument
+    match =?, data
+    jyes reserve_last ; jump if literal is "?"
+
+    emit 1, 0
+    emit 1, data
+    exit
+
+reserve_last:
+    arrange cmd, =rb 2
+    assemble cmd
+    exit
+
+check_value:
+    match =?, value
+    jyes reserve_value
+
+    emit 1, 0
+    emit 1, value
+    jump loop
+
+reserve_value:
+    arrange cmd, =rb 2
+    assemble cmd
+    jump loop
+end calminstruction
+
+calminstruction dw? data&
+    local value, cmd
+
+loop:
+    match value =, data, data
+    jyes check_value
+
+    ; handle last (or only) argument
+    match =?, data
+    jyes reserve_last
+
+    emit 2, data bswap 2
+    exit
+
+reserve_last:
+    arrange cmd, =rb 2
+    assemble cmd
+    exit
+
+check_value:
+    match =?, value
+    jyes reserve_value
+
+    emit 2, value bswap 2
+    jump loop
+
+reserve_value:
+    arrange cmd, =rb 2
+    assemble cmd
+    jump loop
+end calminstruction
+
 ; DYADIC
 irp <name,op>, mov,10h, add,20h, sub,21h, \
   and,22h, or,23h, xor,24h, not,25h, lsl,26h, \
