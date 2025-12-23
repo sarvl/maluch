@@ -99,13 +99,44 @@ void send_break(uint8_t code) {
     send_byte(code);
 }
 
-// Read buffer via io_addr: io_addr==001 reads data_out.
-// This function sets io_addr, ticks once to allow module to present data, captures data_out,
+// Read buffer via io_addr: io_addr==001 reads io_data_out.
+// This function sets io_addr, ticks once to allow module to present data, captures io_data_out,
 // then clears io_addr.
 uint8_t read_data_register() {
     top->io_addr = 1;
+    top->io_w_en = 0;
+    top->eval();
+
+    uint8_t val = (uint8_t)top->io_data_out;
     tick();
-    uint8_t val = (uint8_t)top->data_out;
+    // clear address/read strobe
+    top->io_addr = 0;
+    tick();
+    return val;
+}
+
+uint8_t read_data_register_wrong() {
+    top->io_addr = 1;
+    top->io_w_en = 1;
+    top->eval();
+
+    uint8_t val = (uint8_t)top->io_data_out;
+    if(val)
+        return val;
+
+    top->io_addr = 2;
+    top->io_w_en = 0;
+    top->eval();
+
+    val = (uint8_t)top->io_data_out;
+    if(val)
+        return val;
+
+    top->io_addr = 1;
+    top->io_w_en = 0;
+    top->eval();
+    val = (uint8_t)top->io_data_out;
+    tick();
     // clear address/read strobe
     top->io_addr = 0;
     tick();
@@ -122,9 +153,9 @@ void log_result(bool ok, const string &name, int got, int expected) {
     ++tests;
     if (ok) ++passed;
     if (ok) {
-        printf("[PASS] %-20s got=0x%02X (%02X)\n", name.c_str(), got, got);
+        printf("[PASS] %-33s got=0x%02X (%02X)\n", name.c_str(), got, got);
     } else {
-        printf("[FAIL] %-20s got=0x%02X expected=0x%02X\n", name.c_str(), got, expected);
+        printf("[FAIL] %-33s got=0x%02X expected=0x%02X\n", name.c_str(), got, expected);
     }
 }
 
@@ -219,6 +250,19 @@ void test_space() {
     log_result(got == ' ', "SPACE", got, ' ');
 }
 
+void test_wrong_id_or_instruction() {
+    top->io_addr = 0; tick();
+    send_make(0x1C); // space
+    send_break(0x1C);
+    bool ok_int = wait_for_int_or_timeout(500);
+    if (!ok_int) {
+        log_result(false, "a (no int)", 0xFF, 'a');
+        return;
+    }
+    uint8_t got = read_data_register_wrong();
+    log_result(got == 'a', "test id and instruction on 'a'", got, 'a');
+}
+
 // fuzz: send random make codes from given vector and verify that controller returns something (int + data).
 void fuzz_test(int runs) {
     vector<uint8_t> pool = {
@@ -299,6 +343,7 @@ int main(int argc, char** argv) {
     top->kclk = 1;
     top->kdata = 1;
     top->io_addr = 0;
+    top->io_w_en = 0;
     top->clk = 0;
     top->rstn = 1;   // start released
 
@@ -333,6 +378,9 @@ int main(int argc, char** argv) {
 
     // Test 5: SPACE
     test_space();
+
+    // Test 6: ID or instruction
+    test_wrong_id_or_instruction();
 
     // Optional fuzz tests
     if (fuzz_runs > 0) {
