@@ -7,19 +7,22 @@ input logic rstn,
 inout logic kclk,
 input logic kdata,
 input logic [2:0] io_addr,
+input logic io_w_en,
 
-output logic[7:0] data_out,
+output logic[7:0] io_data_out,
 output logic busy_flag,
 output logic int_flag
 );
+
+localparam KEYBOARD_ID = 3'b001;
 
 logic kclk_test;
 
 logic kclkf, kdataf;
 logic data_request;
-logic [7:0]datacur;
-logic [7:0]dataprev, dataprev_nxt;
-logic [3:0]cnt;
+logic [7:0] datacur;
+logic [7:0] dataprev, dataprev_nxt;
+logic [3:0] cnt;
 logic cflag;
 
 logic [15:0] scancode_pair, scancode_pair_nxt;
@@ -29,6 +32,8 @@ logic shifting, shifting_nxt;
 logic write_en, write_en_nxt;
 
 logic [7:0] ascii;
+
+logic busy_flag_nxt;
 logic [7:0] data_buffer, data_buffer_nxt;
 
 typedef enum {
@@ -39,14 +44,8 @@ typedef enum {
 
 state_t state, state_nxt;
 
-assign int_flag = (state == READY);
-assign busy_flag = ~(state == READY);
-assign data_out = (io_addr == 3'b001) ? data_buffer : 8'hz;
-assign kclk = (state == RECEIVE) ? 1'bz : 1'b0;
-assign kclk_test = (state == RECEIVE) ? 1'b1 : 1'b0;
 
-assign data_request = (io_addr == 3'b001) & ~busy_flag;
-    
+
 debouncer #(
     .COUNT_MAX(19),
     .COUNT_WIDTH(5)
@@ -64,15 +63,19 @@ debouncer #(
     .O(kdataf)
 );
 
+
+assign data_request = (io_addr == KEYBOARD_ID) & ~io_w_en;
+
 // FSM
 always_ff @(posedge clk or negedge rstn) begin
     if(!rstn) begin
         state <= RECEIVE;
-        pflag <= 0;
-        dataprev <= 0;
-        scancode_pair <= 0;
-        shifting = 0;
-        write_en = 0;
+        pflag <= '0;
+        dataprev <= '0;
+        scancode_pair <= '0;
+        shifting <= '0;
+        write_en <= '0;
+        data_buffer <= 8'h0;
     end else begin
         state <= state_nxt;
 
@@ -82,6 +85,7 @@ always_ff @(posedge clk or negedge rstn) begin
 
         shifting <= shifting_nxt;
         write_en <= write_en_nxt;
+
         data_buffer <= data_buffer_nxt;
     end
 end
@@ -126,7 +130,8 @@ always_comb begin
             endcase
         end
         READY: begin
-            state_nxt = (data_request) ? RECEIVE : READY;
+            if(data_request)
+                state_nxt = RECEIVE;
         end
     endcase
 end
@@ -212,6 +217,32 @@ always_comb begin
         8'h76: ascii = 8'h1B;                     // ESC
 
         default: ascii = 8'h00;
+    endcase
+end
+
+//Outputs
+always_ff @(posedge clk or negedge rstn) begin
+    if(!rstn) begin
+        busy_flag <= 1'b1;
+    end else begin
+        busy_flag <= busy_flag_nxt;
+    end
+end
+
+assign io_data_out = data_request ? data_buffer : 8'hz;
+assign int_flag = ~busy_flag;
+
+always_comb begin
+    busy_flag_nxt = busy_flag;
+
+    case(state)
+        RECEIVE: busy_flag_nxt = 1;
+        PROCESSING: ;
+        READY: begin
+            busy_flag_nxt = 0;
+            if(data_request)
+                busy_flag_nxt = 1;
+        end
     endcase
 end
 
