@@ -104,20 +104,21 @@ void send_break(uint8_t code) {
 // then clears io_addr.
 uint8_t read_data_register() {
     top->io_addr = 1;
-    top->io_w_en = 0;
+    top->io_r_en = 1;
     top->eval();
 
     uint8_t val = (uint8_t)top->io_data_out;
     tick();
     // clear address/read strobe
     top->io_addr = 0;
+    top->io_r_en = 1;
     tick();
     return val;
 }
 
 uint8_t read_data_register_wrong() {
     top->io_addr = 1;
-    top->io_w_en = 1;
+    top->io_r_en = 0;
     top->eval();
 
     uint8_t val = (uint8_t)top->io_data_out;
@@ -125,7 +126,7 @@ uint8_t read_data_register_wrong() {
         return val;
 
     top->io_addr = 2;
-    top->io_w_en = 0;
+    top->io_r_en = 1;
     top->eval();
 
     val = (uint8_t)top->io_data_out;
@@ -133,12 +134,13 @@ uint8_t read_data_register_wrong() {
         return val;
 
     top->io_addr = 1;
-    top->io_w_en = 0;
+    top->io_r_en = 1;
     top->eval();
     val = (uint8_t)top->io_data_out;
     tick();
     // clear address/read strobe
     top->io_addr = 0;
+    top->io_r_en = 0;
     tick();
     return val;
 }
@@ -343,7 +345,7 @@ int main(int argc, char** argv) {
     top->kclk = 1;
     top->kdata = 1;
     top->io_addr = 0;
-    top->io_w_en = 0;
+    top->io_r_en = 0;
     top->clk = 0;
     top->rstn = 1;   // start released
 

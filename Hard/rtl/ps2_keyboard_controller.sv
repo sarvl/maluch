@@ -7,7 +7,7 @@ input logic rstn,
 inout logic kclk,
 input logic kdata,
 input logic [2:0] io_addr,
-input logic io_w_en,
+input logic io_r_en,
 
 output logic[7:0] io_data_out,
 output logic busy_flag,
@@ -64,7 +64,7 @@ debouncer #(
 );
 
 
-assign data_request = (io_addr == KEYBOARD_ID) & ~io_w_en;
+assign data_request = (io_addr == KEYBOARD_ID) & io_r_en;
 
 // FSM
 always_ff @(posedge clk or negedge rstn) begin
