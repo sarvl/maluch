@@ -1,142 +1,119 @@
-#include "Valu.h"
+#include "Vdecoder.h"
 #include "verilated.h"
-#include "verilated_fst_c.h"
-#include <iostream>
+#include <cstdio>
 #include <cstdlib>
-#include <ctime>
-#include <filesystem>
 
-class Item {
-    private:
-        int16_t src1, src2, ref_result = 0, mod_result;
-        aluoperand_t aopcode = ADD;
-    
+// ------------------------------------------------------------
+// Helper macros
+// ------------------------------------------------------------
+#define CHECK(cond, msg)                                   \
+    do {                                                    \
+        if (!(cond)) {                                     \
+            printf("[FAIL] %s\n", msg);                    \
+            exit(1);                                       \
+        }                                                   \
+    } while (0)
 
-    public:
-        int16_t getSrc1() { return src1; }
-        int16_t getSrc2() { return src2; }
-        aluoperand_t getACode() { return aopcode; }
-        int8_t getACodeValue() { return aopcode; }
-        int16_t getReference() { return ref_result; }
+// ------------------------------------------------------------
+// Instruction encoder
+// OOOOJFFF'DDDDSSSS IIIIIIII'IIIIIIII
+// ------------------------------------------------------------
+uint32_t make_instr(uint8_t opcode, uint8_t funct,
+                    uint8_t rd, uint8_t rs)
+{
+    return  (opcode << 28) |
+            (0      << 27) |
+            (funct  << 24) |
+            (rd     << 20) |
+            (rs     << 16);
+}
 
-        void setResult(int16_t val) {
-            mod_result = val;
-        }
-        void init() {
-            srand(time(0));
-        }
+// ------------------------------------------------------------
+// Reset DUT state
+// ------------------------------------------------------------
+void reset(Vdecoder* top)
+{
+    top->instruction = 0;
+    top->reg_out1 = 0;
+    top->reg_out2 = 0;
+    top->io_data_r = 0;
+    top->eval();
+}
 
-        void randomize() {
-            src1 = rand();
-            src2 = rand();
-            aopcode = aluoperand_t(rand() % 8);
+// ------------------------------------------------------------
+// Execute instruction
+// ------------------------------------------------------------
+void exec_instr(Vdecoder* top, uint32_t instr)
+{
+    top->instruction = instr;
+    top->eval();
+}
 
-            switch (aopcode) {
-                case ADD:
-                    ref_result = src1 + src2;
-                    break;
-                case SUB:
-                    ref_result = src1 - src2;
-                    break;
-                case AND:
-                    ref_result = src1 & src2;
-                    break;
-                case OR:
-                    ref_result = src1 | src2;
-                    break;
-                case XOR:
-                    ref_result = src1 ^ src2;
-                    break;
-                case NOT:
-                    ref_result = ~src2;
-                    break;
-                case LSR:
-                    ref_result = static_cast<uint16_t>(src2) >> 1;
-                    break;
-                case LSL:
-                    ref_result = static_cast<uint16_t>(src2) << 1;
-                    break;
-            }
-        }
+// ------------------------------------------------------------
+// TEST: OUT instruction
+// Opcode: 0111
+// Behavior: IO[fff] <-- src
+// ------------------------------------------------------------
+void test_out(Vdecoder* top)
+{
+    printf("Starting OUT instruction test\n");
 
-        bool Verfiy() {
-            return mod_result == ref_result;
-        }
-        bool Verfiy(int16_t result) {
-            return result == ref_result;
-        }
-};
+    reset(top);
 
+    top->reg_out2 = 0x1234;
+    exec_instr(top, make_instr(0b0111, 0b101, 0, 2));
 
-int main(int argc, char* argv[]) {
+    CHECK(top->io_w_en == 1, "OUT: io_w_en should be 1");
+    CHECK(top->io_r_en == 0, "OUT: io_r_en should be 0");
+    CHECK(top->io_addr == 0b101, "OUT: wrong io_addr");
+    CHECK(top->io_data_w == 0x1234, "OUT: wrong io_data_w");
+
+    printf("[PASS] OUT instruction\n\n");
+}
+
+// ------------------------------------------------------------
+// TEST: IN instruction
+// Opcode: 0110
+// Behavior: Rd <-- IO[fff]
+// ------------------------------------------------------------
+void test_in(Vdecoder* top)
+{
+    printf("Starting IN instruction test\n");
+
+    reset(top);
+
+    exec_instr(top, make_instr(0b0110, 0b011, 4, 0));
+
+    CHECK(top->io_r_en == 1, "IN: io_r_en should be 1");
+    CHECK(top->io_w_en == 0, "IN: io_w_en should be 0");
+    CHECK(top->io_addr == 0b011, "IN: wrong io_addr");
+
+    // simulate IO device response
+    if (top->io_r_en && top->io_addr == 0b011)
+        top->io_data_r = 0xCAFE;
+
+    top->eval();
+
+    CHECK(top->reg_in == 0xCAFE, "IN: reg_in should equal io_data_r");
+
+    printf("[PASS] IN instruction\n\n");
+}
+
+// ------------------------------------------------------------
+// MAIN
+// ------------------------------------------------------------
+int main(int argc, char** argv)
+{
     Verilated::commandArgs(argc, argv);
-    VerilatedContext* contextp = new VerilatedContext;
-    Valu* top = new Valu(contextp);
+    Vdecoder* top = new Vdecoder;
 
-    int runs = 1000;
+    test_out(top);
+    test_in(top);
 
-    for (int i = 1; i < argc; i++) {
-        std::string arg = argv[i];
-        if (arg.find("n=") == 0) {
-            runs = std::stoi(arg.substr(2));
-        }
-    }
-
-    Item test_item;
-    bool successful = false;
-    int count[] = {0, 0};
-    test_item.init();
-
-
-    // VerilatedFstC* tfp = new VerilatedFstC;
-    Verilated::traceEverOn(true);
-    // top->trace(tfp, 99); 
-    // std::filesystem::create_directories("waveforms");
-    // tfp->open("waveforms/alu.fst");
-
-    // Simulate for 20 cycles
-    for (int i = 1; i <= runs; i++) {
-        contextp->timeInc(1);
-        test_item.randomize();
-
-        top->src1 = test_item.getSrc1();
-        top->src2 = test_item.getSrc2();
-        top->aopcode = test_item.getACodeValue();
-
-        top->eval();  // evaluate model for current state
-
-        successful = test_item.Verfiy(top->result);
-        count[successful]++;
-
-        // Optionally, print output signals at clock posedge
-        if (successful) {
-            printf("[PASS] %7d: opcode %1d; src1: %6d | src2: %6d | result: %6d \n",
-                i, test_item.getACodeValue(),
-                test_item.getSrc1(), 
-                test_item.getSrc2(), 
-                top->result);
-        } else {
-            printf("[FAIL] %7d: opcode %1d; src1: %6d | src2: %6d | result: %6d | expected: %6d \n",
-                i, test_item.getACodeValue(),
-                test_item.getSrc1(),
-                test_item.getSrc2(),
-                top->result, 
-                test_item.getReference());
-        }
-        
-        
-        // tfp->dump(contextp->time());
-    }
-    printf("--------------------------------------\n");
-    printf("ALU test \n checks: %d \n succesful: %d (%3.2f %%)\n failed: %d \n", 
-        runs,
-        count[1], (float(count[1])/runs)*100,
-        count[0]
-    );
-    printf("--------------------------------------\n");
-    top->final();
+    printf("=====================================\n");
+    printf("All decoder IO tests PASSED\n");
+    printf("=====================================\n");
 
     delete top;
-    delete contextp;
     return 0;
 }
