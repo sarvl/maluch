@@ -104,6 +104,56 @@ void test_in(Vdecoder* top)
 }
 
 // ------------------------------------------------------------
+// TEST: LDW instruction
+// Opcode: 1000
+// Behavior: Rd <-- MEM[src]
+// ------------------------------------------------------------
+void test_ldw(Vdecoder* top)
+{
+    printf("Starting LDW instruction test\n");
+
+    reset(top);
+
+    top->mem_ctrl_data_r = 0xDEAD;
+    exec_instr(top, make_instr(0b1000, 0b000, 3, 2));
+
+    CHECK(top->mem_ctrl_addres == top->reg_out2, "LDW: wrong memory address");
+    CHECK(top->mem_ctrl_write_en == 0, "LDW: mem_ctrl_write_en should be 0");
+
+    // Simulate memory controller response
+    if (top->mem_ctrl_addres == top->reg_out2)
+        top->mem_ctrl_data_r = 0xBEEF;
+
+    top->eval();
+
+    CHECK(top->reg_w_en == 1, "LDW: reg_w_en should be 1");
+    CHECK(top->reg_in == 0xBEEF, "LDW: reg_in should equal memory data");
+
+    printf("[FINISHED] LDW instruction\n\n");
+}
+
+// ------------------------------------------------------------
+// TEST: STW instruction
+// Opcode: 1001
+// Behavior: MEM[src] <-- Rd
+// ------------------------------------------------------------
+void test_stw(Vdecoder* top)
+{
+    printf("Starting STW instruction test\n");
+
+    reset(top);
+
+    top->reg_out1 = 0xDEAD;
+    exec_instr(top, make_instr(0b1001, 0b000, 3, 2));
+
+    CHECK(top->mem_ctrl_addres == top->reg_out2, "STW: wrong memory address");
+    CHECK(top->mem_ctrl_data_w == top->reg_out1, "STW: wrong memory data");
+    CHECK(top->mem_ctrl_write_en == 1, "STW: mem_ctrl_write_en should be 1");
+
+    printf("[FINISHED] STW instruction\n\n");
+}
+
+// ------------------------------------------------------------
 // MAIN
 // ------------------------------------------------------------
 int main(int argc, char** argv)
@@ -113,6 +163,8 @@ int main(int argc, char** argv)
 
     test_out(top);
     test_in(top);
+    test_ldw(top);
+    test_stw(top);
 
     printf("=====================================\n");
     printf("Simulation completed\n");
