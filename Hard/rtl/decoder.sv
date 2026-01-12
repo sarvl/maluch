@@ -31,7 +31,14 @@ module decoder (
     output logic [2:0] io_addr,
     output logic io_w_en,
     output logic io_r_en,
-    output logic [15:0] io_data_w
+    output logic [15:0] io_data_w,
+
+    // Memory controller
+    input logic [15:0] mem_ctrl_data_r,
+
+    output logic [15:0] mem_ctrl_addres,
+    output logic [15:0] mem_ctrl_data_w,
+    output logic mem_ctrl_write_en
 );
     import types::instr_t;
     instr_t i;
@@ -43,7 +50,7 @@ module decoder (
         addr_out2 = i.src_reg;
 
         addr_in = i.dest_reg;
-        reg_w_en = i.opcode inside {4'b0001, 4'b0010, 4'b0110} ? 1 : 0;
+        reg_w_en = i.opcode inside {4'b0001, 4'b0010, 4'b0110, 4'b1000} ? 1 : 0;
     end
 
     // io driver
@@ -54,6 +61,12 @@ module decoder (
         io_data_w = i.imm_valid ? i.imm : reg_out2;
     end
 
+    // memory controller driver
+    always_comb begin
+        mem_ctrl_addres = reg_out2;
+        mem_ctrl_data_w = reg_out1;
+        mem_ctrl_write_en = (i.opcode == 4'b1001) ? 1 : 0;
+    end
 
     // ALU driver
     always_comb begin
@@ -69,6 +82,7 @@ module decoder (
         case (i.opcode)
             default: _output = alu_ret;
             4'b0110: _output = io_data_r;
+            4'b1000: _output = mem_ctrl_data_r;
         endcase
     end
 
