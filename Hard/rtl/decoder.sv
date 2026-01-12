@@ -7,13 +7,18 @@
 
 module decoder (
     input logic [31:0]  instruction,
+
+    //ALU
     input logic [15:0]  alu_ret,
-    input logic [15:0]  reg_out1,
-    input logic [15:0]  reg_out2,
 
     output logic [15:0] src1,
     output logic [15:0] src2,
     output logic [2:0] alu_ctrl,
+
+    //Registers
+    input logic [15:0]  reg_out1,
+    input logic [15:0]  reg_out2,
+
     output logic [15:0] reg_in,
     output logic [3:0] addr_in,
     output logic [3:0] addr_out1,
