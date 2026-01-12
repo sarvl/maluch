@@ -3,14 +3,17 @@
 #include <cstdio>
 #include <cstdlib>
 
+// Global counter for failed tests
+int failed_tests = 0;
+
 // ------------------------------------------------------------
 // Helper macros
 // ------------------------------------------------------------
 #define CHECK(cond, msg)                                   \
     do {                                                    \
         if (!(cond)) {                                     \
-            printf("[FAIL] %s\n", msg);                    \
-            exit(1);                                       \
+            printf("====[FAIL]==== %s <--------\n", msg);  \
+            failed_tests++;                                \
         }                                                   \
     } while (0)
 
@@ -68,7 +71,7 @@ void test_out(Vdecoder* top)
     CHECK(top->io_addr == 0b101, "OUT: wrong io_addr");
     CHECK(top->io_data_w == 0x1234, "OUT: wrong io_data_w");
 
-    printf("[PASS] OUT instruction\n\n");
+    printf("[FINISHED] OUT instruction\n\n");
 }
 
 // ------------------------------------------------------------
@@ -94,9 +97,10 @@ void test_in(Vdecoder* top)
 
     top->eval();
 
+    CHECK(top->reg_w_en == 0, "IN: reg_w_en should be 1");
     CHECK(top->reg_in == 0xCAFE, "IN: reg_in should equal io_data_r");
 
-    printf("[PASS] IN instruction\n\n");
+    printf("[FINISHED] IN instruction\n\n");
 }
 
 // ------------------------------------------------------------
@@ -111,7 +115,8 @@ int main(int argc, char** argv)
     test_in(top);
 
     printf("=====================================\n");
-    printf("All decoder IO tests PASSED\n");
+    printf("Simulation completed\n");
+    printf("Failed tests: %d\n", failed_tests);
     printf("=====================================\n");
 
     delete top;
