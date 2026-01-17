@@ -51,6 +51,12 @@ module decoder (
 
         addr_in = i.dest_reg;
         reg_w_en = i.opcode inside {4'b0001, 4'b0010, 4'b0110, 4'b1000} ? 1 : 0;
+        
+        case (i.opcode)
+            default: reg_in = alu_ret;
+            4'b0110: reg_in = io_data_r;
+            4'b1000: reg_in = mem_ctrl_data_r;
+        endcase
     end
 
     // io driver
@@ -74,18 +80,5 @@ module decoder (
         src1 = reg_out1;
         src2 = i.imm_valid ? i.imm : reg_out2;
     end
-
-    logic [15:0]    _output;
-
-    // outcome driver
-    always_comb begin
-        case (i.opcode)
-            default: _output = alu_ret;
-            4'b0110: _output = io_data_r;
-            4'b1000: _output = mem_ctrl_data_r;
-        endcase
-    end
-
-    assign reg_in = _output;
 
 endmodule
