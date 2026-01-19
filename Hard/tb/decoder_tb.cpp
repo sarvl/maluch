@@ -61,8 +61,6 @@ void test_out(Vdecoder* top)
 {
     printf("Starting OUT instruction test\n");
 
-    reset(top);
-
     top->reg_out2 = 0x1234;
     exec_instr(top, make_instr(0b0111, 0b101, 0, 2));
 
@@ -83,8 +81,6 @@ void test_in(Vdecoder* top)
 {
     printf("Starting IN instruction test\n");
 
-    reset(top);
-
     exec_instr(top, make_instr(0b0110, 0b011, 4, 0));
 
     CHECK(top->io_r_en == 1, "IN: io_r_en should be 1");
@@ -97,7 +93,7 @@ void test_in(Vdecoder* top)
 
     top->eval();
 
-    CHECK(top->reg_w_en == 0, "IN: reg_w_en should be 1");
+    CHECK(top->reg_w_en == 1, "IN: reg_w_en should be 1");
     CHECK(top->reg_in == 0xCAFE, "IN: reg_in should equal io_data_r");
 
     printf("[FINISHED] IN instruction\n\n");
@@ -111,8 +107,6 @@ void test_in(Vdecoder* top)
 void test_ldw(Vdecoder* top)
 {
     printf("Starting LDW instruction test\n");
-
-    reset(top);
 
     top->mem_ctrl_data_r = 0xDEAD;
     exec_instr(top, make_instr(0b1000, 0b000, 3, 2));
@@ -141,8 +135,6 @@ void test_stw(Vdecoder* top)
 {
     printf("Starting STW instruction test\n");
 
-    reset(top);
-
     top->reg_out1 = 0xDEAD;
     exec_instr(top, make_instr(0b1001, 0b000, 3, 2));
 
@@ -160,6 +152,8 @@ int main(int argc, char** argv)
 {
     Verilated::commandArgs(argc, argv);
     Vdecoder* top = new Vdecoder;
+
+    reset(top);
 
     test_out(top);
     test_in(top);
