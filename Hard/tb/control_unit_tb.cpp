@@ -146,6 +146,45 @@ void test_stw(Vcontrol_unit* top)
 }
 
 // ------------------------------------------------------------
+// TEST: PUSH instruction
+// Opcode: 1100
+// Behavior: MEM[SP-1] <-- src, SP <-- SP-1
+// ------------------------------------------------------------
+void test_push(Vcontrol_unit* top) {
+    printf("Starting PUSH instruction test\n");
+
+    // Initialize inputs
+    top->reg_out1 = 0x0010;
+    top->reg_out2 = 0x00FF;
+    exec_instr(top, make_instr(0b1100, 0b000, 0, 3));
+
+    // Check ALU outputs for SP decrement
+    CHECK(top->alu_ctrl == 0b001, "PUSH: ALU control mismatch");
+    CHECK(top->src1 == 0x0010, "PUSH: ALU src1 mismatch");
+    CHECK(top->src2 == 0x0001, "PUSH: ALU src2 mismatch");
+
+     // Simulate ALU response
+    if (top->alu_ctrl == 0b001) {
+        top->alu_ret = top->src1 - top->src2;
+        top->mem_ctrl_addres = top->alu_ret;
+    }
+
+    top->eval();
+
+    // Check memory controller outputs for write
+    CHECK(top->mem_ctrl_addres == 0x000F, "PUSH: Memory address mismatch");
+    CHECK(top->mem_ctrl_data_w == 0x00FF, "PUSH: Memory data mismatch");
+    CHECK(top->mem_ctrl_write_en == 1, "PUSH: Memory write enable mismatch");
+
+    // Check register outputs for SP update
+    CHECK(top->addr_in == 0b0010, "PUSH: Register address mismatch");
+    CHECK(top->reg_in == 0x000F, "PUSH: Register data mismatch");
+    CHECK(top->reg_w_en == 1, "PUSH: Register write enable mismatch");
+
+    printf("[FINISHED] PUSH instruction\n\n");
+}
+
+// ------------------------------------------------------------
 // MAIN
 // ------------------------------------------------------------
 int main(int argc, char** argv)
@@ -159,6 +198,7 @@ int main(int argc, char** argv)
     test_in(top);
     test_ldw(top);
     test_stw(top);
+    test_push(top);
 
     printf("=====================================\n");
     printf("Simulation completed\n");
