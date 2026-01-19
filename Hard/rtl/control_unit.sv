@@ -3,7 +3,7 @@
     `define TYPES
 `endif
 
-module decoder (
+module control_unit (
     input logic [31:0]  instruction,
 
     output logic        csr_flags_we,

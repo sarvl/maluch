@@ -1,4 +1,4 @@
-#include "Vdecoder.h"
+#include "Vcontrol_unit.h"
 #include "verilated.h"
 #include <cstdio>
 #include <cstdlib>
@@ -34,7 +34,7 @@ uint32_t make_instr(uint8_t opcode, uint8_t funct,
 // ------------------------------------------------------------
 // Reset DUT state
 // ------------------------------------------------------------
-void reset(Vdecoder* top)
+void reset(Vcontrol_unit* top)
 {
     top->instruction = 0;
     top->reg_out1 = 0;
@@ -46,7 +46,7 @@ void reset(Vdecoder* top)
 // ------------------------------------------------------------
 // Execute instruction
 // ------------------------------------------------------------
-void exec_instr(Vdecoder* top, uint32_t instr)
+void exec_instr(Vcontrol_unit* top, uint32_t instr)
 {
     top->instruction = instr;
     top->eval();
@@ -57,7 +57,7 @@ void exec_instr(Vdecoder* top, uint32_t instr)
 // Opcode: 0111
 // Behavior: IO[fff] <-- src
 // ------------------------------------------------------------
-void test_out(Vdecoder* top)
+void test_out(Vcontrol_unit* top)
 {
     printf("Starting OUT instruction test\n");
 
@@ -77,7 +77,7 @@ void test_out(Vdecoder* top)
 // Opcode: 0110
 // Behavior: Rd <-- IO[fff]
 // ------------------------------------------------------------
-void test_in(Vdecoder* top)
+void test_in(Vcontrol_unit* top)
 {
     printf("Starting IN instruction test\n");
 
@@ -104,7 +104,7 @@ void test_in(Vdecoder* top)
 // Opcode: 1000
 // Behavior: Rd <-- MEM[src]
 // ------------------------------------------------------------
-void test_ldw(Vdecoder* top)
+void test_ldw(Vcontrol_unit* top)
 {
     printf("Starting LDW instruction test\n");
 
@@ -131,7 +131,7 @@ void test_ldw(Vdecoder* top)
 // Opcode: 1001
 // Behavior: MEM[src] <-- Rd
 // ------------------------------------------------------------
-void test_stw(Vdecoder* top)
+void test_stw(Vcontrol_unit* top)
 {
     printf("Starting STW instruction test\n");
 
@@ -151,7 +151,7 @@ void test_stw(Vdecoder* top)
 int main(int argc, char** argv)
 {
     Verilated::commandArgs(argc, argv);
-    Vdecoder* top = new Vdecoder;
+    Vcontrol_unit* top = new Vcontrol_unit;
 
     reset(top);
 
