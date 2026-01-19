@@ -6,6 +6,8 @@
 module decoder (
     input logic [31:0]  instruction,
 
+    output logic        csr_flags_we,
+
     // ALU
     input logic [15:0]  alu_ret,
     output logic [15:0] src1,
@@ -109,11 +111,13 @@ module decoder (
         alu_ctrl = 3'b000;
         src1 = 16'h0000;
         src2 = 16'h0000;
+        csr_flags_we = 0;
 
         if (i.opcode == OPCODE_ALU) begin
             alu_ctrl = i.funct;
             src1 = reg_out1;
             src2 = i.imm_valid ? i.imm : reg_out2;
+            csr_flags_we = 1;
         end
     end
 
