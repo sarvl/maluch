@@ -185,6 +185,48 @@ void test_push(Vcontrol_unit* top) {
 }
 
 // ------------------------------------------------------------
+// TEST: PULL instruction
+// Opcode: 1101
+// Behavior: Rd <-- MEM[SP], SP <-- SP+1
+// ------------------------------------------------------------
+void test_pull(Vcontrol_unit* top) {
+    printf("Starting PULL instruction test\n");
+
+    // Initialize inputs
+    top->reg_out1 = 0x00F0;
+    top->mem_ctrl_data_r = 0xABBA;
+    exec_instr(top, make_instr(0b1101, 0b000, 5, 0));
+
+    // Check ALU settings (calculating SP + 1)
+    CHECK(top->alu_ctrl == 0b000, "PULL: ALU control mismatch (should be ADD)");
+    CHECK(top->src1 == 0x00F0, "PULL: ALU src1 mismatch (should be old SP)");
+    CHECK(top->src2 == 0x0001, "PULL: ALU src2 mismatch");
+
+    // Simulate ALU response
+    if (top->alu_ctrl == 0b000) {
+        top->alu_ret = top->src1 + top->src2; 
+    }
+
+    top->eval();
+
+    // Check register file control signals
+    CHECK(top->addr_out1 == 0b0010, "PULL: addr_out1 should be SP index (2)");
+    CHECK(top->addr_in == 5, "PULL: addr_in mismatch");
+    CHECK(top->reg_w_en == 1, "PULL: reg_w_en mismatch");
+    CHECK(top->reg_in == 0xABBA, "PULL: reg_in mismatch (should be mem data)");
+    
+    // Check dedicated SP update signals
+    CHECK(top->sp_w_en == 1, "PULL: sp_w_en mismatch");
+    CHECK(top->sp_in == 0x00F1, "PULL: sp_in mismatch (should be SP+1)");
+
+    // Check memory reading
+    CHECK(top->mem_ctrl_addres == 0x00F0, "PULL: Memory address mismatch (old SP)");
+    CHECK(top->mem_ctrl_write_en == 0, "PULL: Memory write enable mismatch");
+
+    printf("[FINISHED] PULL instruction\n\n");
+}
+
+// ------------------------------------------------------------
 // MAIN
 // ------------------------------------------------------------
 int main(int argc, char** argv)
@@ -199,6 +241,7 @@ int main(int argc, char** argv)
     test_ldw(top);
     test_stw(top);
     test_push(top);
+    test_pull(top);
 
     printf("=====================================\n");
     printf("Simulation completed\n");
