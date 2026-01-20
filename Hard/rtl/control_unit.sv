@@ -50,6 +50,7 @@ module control_unit (
     localparam OPCODE_OUT = 4'b0111;
     localparam OPCODE_IN  = 4'b0110;
     localparam OPCODE_PUSH = 4'b1100;
+    localparam OPCODE_PULL = 4'b1101;
 
     // Registers driver
     always_comb begin
@@ -58,6 +59,8 @@ module control_unit (
         addr_in = 4'b0000;
         reg_w_en = 0;
         reg_in = 16'h0000;
+        sp_w_en = 0;
+        sp_in = 16'h0000;
 
         if (i.opcode == OPCODE_ALU) begin
             addr_out1 = i.dest_reg;
@@ -79,6 +82,13 @@ module control_unit (
             addr_in = 4'b0010;
             reg_in = alu_ret;
             reg_w_en = 1;
+        end else if (i.opcode == OPCODE_PULL) begin
+            addr_out1 = 4'b0010;
+            addr_in = i.dest_reg;
+            reg_in = mem_ctrl_data_r;
+            reg_w_en = 1;
+            sp_w_en = 1;
+            sp_in = alu_ret;
         end
     end
 
@@ -115,6 +125,8 @@ module control_unit (
             mem_ctrl_addres = alu_ret;
             mem_ctrl_data_w = reg_out2;
             mem_ctrl_write_en = 1;
+        end else if (i.opcode == OPCODE_PULL) begin
+            mem_ctrl_addres = reg_out1;
         end
     end
 
@@ -134,6 +146,10 @@ module control_unit (
             src1 = reg_out1;
             src2 = 16'h0001;
             alu_ctrl = 3'b001;
+        end else if (i.opcode == OPCODE_PULL) begin
+            src1 = reg_out1;
+            src2 = 16'h0001;
+            alu_ctrl = 3'b000;
         end
     end
 
