@@ -22,6 +22,8 @@ module control_unit (
     output logic [3:0] addr_out1,
     output logic [3:0] addr_out2,
     output logic reg_w_en,
+    output logic sp_w_en,
+    output logic [15:0] sp_in,
 
     // IO
     input logic [15:0] io_data_r,
