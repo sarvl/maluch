@@ -43,6 +43,9 @@ module control_unit (
     instr_t i;
     assign i = instruction;
 
+    // Constants
+    localparam REG_SP = 4'b0010;
+
     // Opcodes
     localparam OPCODE_ALU = 4'b0010;
     localparam OPCODE_LDW = 4'b1000;
@@ -79,11 +82,11 @@ module control_unit (
             reg_w_en = 1;
         end else if (i.opcode == OPCODE_PUSH) begin
             addr_out2 = i.src_reg;
-            addr_in = 4'b0010;
+            addr_in = REG_SP;
             reg_in = alu_ret;
             reg_w_en = 1;
         end else if (i.opcode == OPCODE_PULL) begin
-            addr_out1 = 4'b0010;
+            addr_out1 = REG_SP;
             addr_in = i.dest_reg;
             reg_in = mem_ctrl_data_r;
             reg_w_en = 1;
