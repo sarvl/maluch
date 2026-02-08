@@ -227,6 +227,29 @@ void test_pull(Vcontrol_unit* top) {
 }
 
 // ------------------------------------------------------------
+// TEST: BRANCH instruction
+// Opcode: 0100
+// Behavior: PC <-- Rs
+// ------------------------------------------------------------
+void test_branch(Vcontrol_unit* top) {
+    printf("Starting BRANCH instructions test\n");
+
+    top->reg_out2 = 0xB00B;
+    exec_instr(top, make_instr(0b0100, 0b000, 0, 5));
+
+    CHECK(top->addr_out2 == 5, "BRANCH: addr_out2 mismatch");
+    CHECK(top->instr_pointer_ctrl == 0xB00B, "BRANCH: instr_pointer_ctrl mismatch");
+
+    top->reg_out2 = 0xB00F;
+    exec_instr(top, make_instr(0b0101, 0b000, 0, 7));
+
+    CHECK(top->addr_out2 == 7, "BRANCH: addr_out2 mismatch");
+    CHECK(top->instr_pointer_ctrl == 0xB00F, "BRANCH: instr_pointer_ctrl mismatch");
+
+    printf("[FINISHED] BRANCH instructions\n\n");
+}
+
+// ------------------------------------------------------------
 // MAIN
 // ------------------------------------------------------------
 int main(int argc, char** argv)
@@ -242,6 +265,7 @@ int main(int argc, char** argv)
     test_stw(top);
     test_push(top);
     test_pull(top);
+    test_branch(top);
 
     printf("=====================================\n");
     printf("Simulation completed\n");
