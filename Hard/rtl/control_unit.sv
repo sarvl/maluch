@@ -7,6 +7,7 @@ module control_unit (
     input logic [31:0]  instruction,
 
     output logic        csr_flags_we,
+    output logic [15:0]  instr_pointer_ctrl,
 
     // ALU
     input logic [15:0]  alu_ret,
@@ -47,6 +48,7 @@ module control_unit (
     localparam REG_SP = 4'b0010;
 
     // Opcodes
+    localparam OPCODE_BRANCHING = 4'b010x;
     localparam OPCODE_ALU = 4'b0010;
     localparam OPCODE_LDW = 4'b1000;
     localparam OPCODE_STW = 4'b1001;
@@ -54,6 +56,15 @@ module control_unit (
     localparam OPCODE_IN  = 4'b0110;
     localparam OPCODE_PUSH = 4'b1100;
     localparam OPCODE_PULL = 4'b1101;
+
+    // Instruction pointer driver
+    always_comb begin
+        instr_pointer_ctrl = 16'h0000;
+
+        if (i.opcode ==? OPCODE_BRANCHING) begin
+            instr_pointer_ctrl = reg_out2;
+        end
+    end
 
     // Registers driver
     always_comb begin
@@ -65,7 +76,9 @@ module control_unit (
         sp_w_en = 0;
         sp_in = 16'h0000;
 
-        if (i.opcode == OPCODE_ALU) begin
+        if (i.opcode ==? OPCODE_BRANCHING) begin
+            addr_out2 = i.src_reg;
+        end else if (i.opcode == OPCODE_ALU) begin
             addr_out1 = i.dest_reg;
             addr_out2 = i.src_reg;
             addr_in = i.dest_reg;
