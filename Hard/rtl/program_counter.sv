@@ -5,7 +5,7 @@
 
 import types::csr_t;
 
-module counter (
+module program_counter (
         input logic [15:0]  instr_pointer,
         input csr_t         csr,
         input logic [31:0]  instruction,

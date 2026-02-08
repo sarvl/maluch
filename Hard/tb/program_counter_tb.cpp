@@ -1,4 +1,4 @@
-#include "Vcounter.h"
+#include "Vprogram_counter.h"
 #include "verilated.h"
 #include "verilated_fst_c.h"
 #include <iostream>
@@ -56,10 +56,10 @@ int main(int argc, char** argv) {
     Verilated::commandArgs(argc, argv);
     Verilated::traceEverOn(true);
 
-    Vcounter* dut = new Vcounter;
+    Vprogram_counter* dut = new Vprogram_counter;
     VerilatedFstC* tfp = new VerilatedFstC;
     dut->trace(tfp, 99);
-    tfp->open("waveforms/counter.fst");
+    tfp->open("waveforms/program_counter.fst");
 
     uint16_t test_code[] = {
         JMP, BEE, BNE, BGE, BLE, BLL, BGG, BOO,
