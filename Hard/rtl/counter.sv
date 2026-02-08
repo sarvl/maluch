@@ -9,19 +9,22 @@ module counter (
         input logic [15:0]  instr_pointer,
         input csr_t         csr,
         input logic [31:0]  instruction,
-        input logic [15:0]  src2,
-        output logic [15:0] _next_pointer
+        input logic [15:0]  instr_pointer_ctrl,
+        
+        output logic [15:0] _nxt_instr_pointer
 );
 
     import types::instr_t;
+    instr_t i;
+    assign i = instruction;
 
     logic branch_valid;
 
     logic [3:0] _code;
-    assign _code = {instruction[28], instruction[26:24]};
+    assign _code = {i.opcode[0], i.funct};
 
     logic branching;
-    assign branching = (instruction[31:28] ==? 4'b010x) ? 1 : 0;
+    assign branching = (i.opcode ==? 4'b010x) ? 1 : 0;
 
 
     always_comb begin
@@ -49,13 +52,10 @@ module counter (
 
     logic [15:0]    _pointer;
 
-    instr_t i;
-    assign i = instruction;
-
     always_comb _pointer = branching && branch_valid ?
-                            src2 : instr_pointer[15:0] + 2;
+                            instr_pointer_ctrl : instr_pointer + 2;
 
 
-    assign _next_pointer = _pointer;
+    assign _nxt_instr_pointer = _pointer;
 
 endmodule
