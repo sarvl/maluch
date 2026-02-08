@@ -6,11 +6,11 @@
 import types::csr_t;
 
 module counter (
-        input logic [31:0]  instr_pointer,
+        input logic [15:0]  instr_pointer,
         input csr_t         csr,
         input logic [31:0]  instruction,
         input logic [15:0]  src2,
-        output logic [31:0] _next_pointer
+        output logic [15:0] _next_pointer
 );
 
     import types::instr_t;
@@ -47,22 +47,15 @@ module counter (
 
     end
 
+    logic [15:0]    _pointer;
 
     instr_t i;
     assign i = instruction;
 
-    logic [15:0]    _pointer0;
-    logic [15:0]    _pointer1;
-
-    always_comb _pointer0 = branching && branch_valid ? src2 :
-                            i.imm_valid ? instr_pointer[15:0] + 1 :
-                            instr_pointer[15:0];
-
-    always_comb _pointer1 = branching && branch_valid ? src2 + 1 :
-                            i.imm_valid ? instr_pointer[15:0] + 2 :
-                            instr_pointer[15:0] + 1;
+    always_comb _pointer = branching && branch_valid ?
+                            src2 : instr_pointer[15:0] + 2;
 
 
-    assign _next_pointer = {_pointer0, _pointer1};
+    assign _next_pointer = _pointer;
 
 endmodule
