@@ -13,6 +13,14 @@ uint16_t FlashMemmory16::read(uint16_t address) {
     return memmory[address];
 }
 
+uint32_t FlashMemmory16::read32(uint16_t address) {
+    if (address + 1 >= memmory.size())
+        return ERASED_VALUE;
+
+    return (static_cast<uint32_t>(memmory[address]) << 16) |
+            static_cast<uint32_t>(memmory[address + 1]);
+}
+
 bool FlashMemmory16::write(uint16_t address, uint16_t data) {
     if (address >= memmory.size()) return false;
     return memmory[address] = data;

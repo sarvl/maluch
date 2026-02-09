@@ -21,6 +21,7 @@ class FlashMemmory16 {
         FlashMemmory16();
         ~FlashMemmory16();
         uint16_t read(uint16_t address);
+        uint32_t read32(uint16_t address);
         bool write(uint16_t address, uint16_t data);
         bool program(std::string file);
 };
