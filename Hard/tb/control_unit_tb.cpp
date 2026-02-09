@@ -54,6 +54,37 @@ void exec_instr(Vcontrol_unit* top, uint32_t instr)
 }
 
 // ------------------------------------------------------------
+// TEST: MOV instruction
+// Opcode: 0001
+// Behavior: Rd <-- Rs OR Rd <-- Imm
+// ------------------------------------------------------------
+void test_mov(Vcontrol_unit* top)
+{
+    printf("Starting MOV instruction test\n");
+
+    // Test Register version
+    // MOV R1, R2
+    top->reg_out2 = 0x8BAD;
+    exec_instr(top, make_instr(0b0001, 0, 0b000, 1, 2));
+
+    CHECK(top->reg_w_en == 1, "MOV: reg_w_en should be 1");
+    CHECK(top->addr_in == 1, "MOV: addr_in mismatch (dest)");
+    CHECK(top->addr_out2 == 2, "MOV: addr_out2 mismatch (src)");
+    CHECK(top->reg_in == 0x8BAD, "MOV: reg_in should equal reg_out2");
+
+    // Test Immediate version
+    // MOV R3, #0xC0DE
+    printf("Starting MOV immediate instruction test\n");
+    exec_instr(top, make_instr(0b0001, 1, 0b000, 3, 0, 0xC0DE));
+    
+    CHECK(top->reg_w_en == 1, "MOV(I): reg_w_en should be 1");
+    CHECK(top->addr_in == 3, "MOV(I): addr_in mismatch");
+    CHECK(top->reg_in == 0xC0DE, "MOV(I): reg_in should equal imm");
+
+    printf("[FINISHED] MOV instruction\n\n");
+}
+
+// ------------------------------------------------------------
 // TEST: OUT instruction
 // Opcode: 0111
 // Behavior: IO[fff] <-- src
@@ -428,6 +459,7 @@ int main(int argc, char** argv)
 
     reset(top);
 
+    test_mov(top);
     test_out(top);
     test_in(top);
     test_ldw(top);
