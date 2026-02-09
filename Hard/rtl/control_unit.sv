@@ -62,7 +62,7 @@ module control_unit (
         instr_pointer_ctrl = 16'h0000;
 
         if (i.opcode ==? OPCODE_BRANCHING) begin
-            instr_pointer_ctrl = reg_out2;
+            instr_pointer_ctrl = i.imm_valid ? i.imm : reg_out2;
         end
     end
 
@@ -118,7 +118,7 @@ module control_unit (
         if (i.opcode == OPCODE_OUT) begin
             io_addr = i.funct;
             io_w_en = 1;
-            io_data_w = reg_out2;
+            io_data_w = i.imm_valid ? i.imm : reg_out2;
         end else if (i.opcode == OPCODE_IN) begin
             io_addr = i.funct;
             io_r_en = 1;
@@ -132,14 +132,14 @@ module control_unit (
         mem_ctrl_write_en = 0;
 
         if (i.opcode == OPCODE_STW) begin
-            mem_ctrl_addres = reg_out2;
+            mem_ctrl_addres = i.imm_valid ? i.imm : reg_out2;
             mem_ctrl_data_w = reg_out1;
             mem_ctrl_write_en = 1;
         end else if (i.opcode == OPCODE_LDW) begin
-            mem_ctrl_addres = reg_out2;
+            mem_ctrl_addres = i.imm_valid ? i.imm : reg_out2;
         end else if (i.opcode == OPCODE_PUSH) begin
             mem_ctrl_addres = alu_ret;
-            mem_ctrl_data_w = reg_out2;
+            mem_ctrl_data_w = i.imm_valid ? i.imm : reg_out2;
             mem_ctrl_write_en = 1;
         end else if (i.opcode == OPCODE_PULL) begin
             mem_ctrl_addres = reg_out1;
