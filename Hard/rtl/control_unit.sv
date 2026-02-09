@@ -52,6 +52,7 @@ module control_unit (
     localparam OPCODE_BRANCHING = 4'b010x;
     localparam OPCODE_MOV = 4'b0001;
     localparam OPCODE_ALU = 4'b0010;
+    localparam OPCODE_CMP_TEST = 4'b0011;
     localparam OPCODE_LDW = 4'b1000;
     localparam OPCODE_STW = 4'b1001;
     localparam OPCODE_OUT = 4'b0111;
@@ -97,6 +98,10 @@ module control_unit (
             addr_in = i.dest_reg;
             reg_in = alu_ret;
             reg_w_en = 1;
+        end else if (i.opcode == OPCODE_CMP_TEST &&
+                     i.funct inside {3'b001, 3'b010}) begin
+            addr_out1 = i.dest_reg;
+            addr_out2 = i.src_reg;
         end else if (i.opcode == OPCODE_LDW) begin
             addr_out2 = i.src_reg;
             addr_in = i.dest_reg;
@@ -181,6 +186,12 @@ module control_unit (
         csr_flags_we = 0;
 
         if (i.opcode == OPCODE_ALU) begin
+            alu_ctrl = i.funct;
+            src1 = reg_out1;
+            src2 = i.imm_valid ? i.imm : reg_out2;
+            csr_flags_we = 1;
+        end else if (i.opcode == OPCODE_CMP_TEST &&
+                     i.funct inside {3'b001, 3'b010}) begin
             alu_ctrl = i.funct;
             src1 = reg_out1;
             src2 = i.imm_valid ? i.imm : reg_out2;
