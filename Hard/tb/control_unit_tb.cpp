@@ -250,6 +250,49 @@ void test_branch(Vcontrol_unit* top) {
 }
 
 // ------------------------------------------------------------
+// TEST: CALL instruction
+// Opcode: 1010
+// Behavior: MEM[SP-1] <-- PC_seq, SP <-- SP-1, PC <-- Rs
+// ------------------------------------------------------------
+void test_call(Vcontrol_unit* top) {
+    printf("Starting CALL instruction test\n");
+
+    // Initialize inputs
+    top->reg_out1 = 0x0200;
+    top->reg_out2 = 0xF00D;
+    top->instr_pointer_seq = 0x0084;
+    exec_instr(top, make_instr(0b1010, 0b000, 0, 6));
+
+    // Check PC update (Jump to target)
+    CHECK(top->instr_pointer_ctrl == 0xF00D, "CALL: instr_pointer_ctrl mismatch");
+
+    // Check ALU settings (Calculate new SP: SP - 1)
+    CHECK(top->alu_ctrl == 0b001, "CALL: ALU control mismatch (should be SUB)");
+    CHECK(top->src1 == 0x0200, "CALL: ALU src1 mismatch (SP)");
+    CHECK(top->src2 == 0x0001, "CALL: ALU src2 mismatch");
+
+    // Simulate ALU calculation
+    if (top->alu_ctrl == 0b001) {
+        top->alu_ret = top->src1 - top->src2; // 0x01FF
+    }
+
+    top->eval();
+
+    // Check Memory write (Push Return Address)
+    CHECK(top->mem_ctrl_addres == 0x01FF, "CALL: Memory address mismatch (New SP)");
+    CHECK(top->mem_ctrl_data_w == 0x0084, "CALL: Memory write data mismatch (Return Address)");
+    CHECK(top->mem_ctrl_write_en == 1, "CALL: Memory write enable mismatch");
+
+    // Check Registers/SP update
+    CHECK(top->addr_out1 == 0b0010, "CALL: addr_out1 should be SP index (2)");
+    CHECK(top->addr_out2 == 6, "CALL: addr_out2 should be src_reg (6)");
+    CHECK(top->sp_w_en == 1, "CALL: sp_w_en mismatch");
+    CHECK(top->sp_in == 0x01FF, "CALL: sp_in mismatch (New SP)");
+
+    printf("[FINISHED] CALL instruction\n\n");
+}
+
+// ------------------------------------------------------------
 // MAIN
 // ------------------------------------------------------------
 int main(int argc, char** argv)
@@ -266,6 +309,7 @@ int main(int argc, char** argv)
     test_push(top);
     test_pull(top);
     test_branch(top);
+    test_call(top);
 
     printf("=====================================\n");
     printf("Simulation completed\n");
