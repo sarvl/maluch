@@ -450,6 +450,60 @@ void test_ret(Vcontrol_unit* top) {
 }
 
 // ------------------------------------------------------------
+// TEST: CMP/TEST instruction
+// Opcode: 0011
+// Behavior: Compare/Test without storing result, update FLAGS
+// ------------------------------------------------------------
+void test_cmp_test(Vcontrol_unit* top) {
+    printf("Starting CMP instruction test\n");
+
+    // Test CMP (Register version)
+    top->reg_out1 = 0xAAAA;
+    top->reg_out2 = 0x5555;
+    exec_instr(top, make_instr(0b0011, 0, 0b001, 1, 2)); // Funct 001 = SUB equivalent
+
+    CHECK(top->alu_ctrl == 0b001, "CMP: ALU control mismatch (should be SUB/001)");
+    CHECK(top->addr_out1 == 1, "CMP: addr_out1 mismatch (src1)");
+    CHECK(top->addr_out2 == 2, "CMP: addr_out2 mismatch (src2)");
+    CHECK(top->csr_flags_we == 1, "CMP: csr_flags_we should be 1");
+    CHECK(top->reg_w_en == 0, "CMP: reg_w_en should be 0");
+
+    // Test TEST (Immediate version)
+    printf("Starting TEST immediate instruction test\n");
+    top->reg_out1 = 0xF0F0;
+    exec_instr(top, make_instr(0b0011, 1, 0b010, 3, 0, 0x00FF)); // Funct 010
+
+    CHECK(top->alu_ctrl == 0b010, "TEST: ALU control mismatch (should be 010)");
+    CHECK(top->addr_out1 == 3, "TEST: addr_out1 mismatch (dest_reg is src1)");
+    CHECK(top->src2 == 0x00FF, "TEST: src2 should be imm");
+    CHECK(top->csr_flags_we == 1, "TEST: csr_flags_we should be 1");
+    CHECK(top->reg_w_en == 0, "TEST: reg_w_en should be 0");
+
+    // Test other funct value for CMP/TEST opcode
+    printf("Starting other funct instruction test for CMP/TEST opcode \n");
+
+    top->reg_out1 = 0xAAAA;
+    top->reg_out2 = 0x5555;
+    exec_instr(top, make_instr(0b0011, 0, 0b000, 4, 5));
+
+    CHECK(top->alu_ctrl == 0b000, "OTHER: ALU control mismatch (should be 000)");
+    CHECK(top->addr_out1 == 0, "OTHER: addr_out1 mismatch (should be 0)");
+    CHECK(top->addr_out2 == 0, "OTHER: addr_out2 mismatch (should be 0)");
+    CHECK(top->csr_flags_we == 0, "OTHER: csr_flags_we should be 0");
+    CHECK(top->reg_w_en == 0, "OTHER: reg_w_en should be 0");
+
+    exec_instr(top, make_instr(0b0011, 1, 0b011, 3, 0, 0x00FF));
+
+    CHECK(top->alu_ctrl == 0b000, "OTHER: ALU control mismatch (should be 010)");
+    CHECK(top->addr_out1 == 0, "OTHER: addr_out1 mismatch (dest_reg is src1)");
+    CHECK(top->src2 == 0x0000, "OTHER: src2 should be imm");
+    CHECK(top->csr_flags_we == 0, "OTHER: csr_flags_we should be 1");
+    CHECK(top->reg_w_en == 0, "OTHER: reg_w_en should be 0");
+
+    printf("[FINISHED] CMP/TEST instructions\n\n");
+}
+
+// ------------------------------------------------------------
 // MAIN
 // ------------------------------------------------------------
 int main(int argc, char** argv)
@@ -469,6 +523,7 @@ int main(int argc, char** argv)
     test_branch(top);
     test_call(top);
     test_ret(top);
+    test_cmp_test(top);
 
     printf("=====================================\n");
     printf("Simulation completed\n");
