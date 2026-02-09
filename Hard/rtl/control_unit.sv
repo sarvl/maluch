@@ -102,16 +102,22 @@ module control_unit (
                      i.funct inside {3'b001, 3'b010}) begin
             addr_out1 = i.dest_reg;
             addr_out2 = i.src_reg;
+        end else if (i.opcode == OPCODE_STW) begin
+            addr_out1 = i.dest_reg;
+            addr_out2 = i.src_reg;
         end else if (i.opcode == OPCODE_LDW) begin
             addr_out2 = i.src_reg;
             addr_in = i.dest_reg;
             reg_in = mem_ctrl_data_r;
             reg_w_en = 1;
+        end else if (i.opcode == OPCODE_OUT) begin
+            addr_out2 = i.src_reg;
         end else if (i.opcode == OPCODE_IN) begin
             addr_in = i.dest_reg;
             reg_in = io_data_r;
             reg_w_en = 1;
         end else if (i.opcode == OPCODE_PUSH) begin
+            addr_out1 = REG_SP;
             addr_out2 = i.src_reg;
             sp_w_en = 1;
             sp_in = alu_ret;
