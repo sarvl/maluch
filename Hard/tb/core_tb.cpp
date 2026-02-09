@@ -22,8 +22,8 @@ public:
         return Memmory->program(filename);
     }
     
-    uint16_t getInstruction(uint16_t pc) {
-        return Memmory->read(pc);
+    uint32_t getInstruction(uint16_t pc) {
+        return Memmory->read32(pc);
     }
     
     bool toggleClock() {
@@ -115,13 +115,12 @@ int main(int argc, char* argv[]) {
         
         // On rising edge, feed new instruction
         if (cpu->clk) {
-            uint16_t finstr = tb.getInstruction(static_cast<uint16_t>(cpu->pointer >> 16));
-            uint16_t sinstr = tb.getInstruction(static_cast<uint16_t>(cpu->pointer & 0x0000FFFF));
-            cpu->instr_in = (static_cast<uint32_t>(finstr) << 16) + static_cast<uint32_t>(sinstr);
+            uint32_t instr = tb.getInstruction(static_cast<uint16_t>(cpu->pointer));
+            cpu->instr_in = static_cast<uint32_t>(instr);
             if (verbose) {
-                std::cout << "Cycle " << tb.getCycleCount() 
-                            << ": Pointer " << std::hex << cpu->pointer
-                            << " instruction 0x" << std::hex << cpu->instr_in << std::dec << std::endl;
+                std::cout << "Cycle " << std::dec << tb.getCycleCount() 
+                            << ": Pointer 0x" << std::hex << std::setw(8) << std::setfill('0') << cpu->pointer
+                            << " instruction: " << std::bitset<32>(cpu->instr_in) << std::endl;
             }
             instructions_executed++;
         }
