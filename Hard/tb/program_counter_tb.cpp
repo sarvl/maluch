@@ -22,6 +22,7 @@
 #define BAA 0b0101010100000000
 #define BBB 0b0101011000000000
 #define BNO 0b0101011100000000
+#define CALL 0b1010000000000000
 
 #define RUNS 20
 
@@ -63,12 +64,14 @@ int main(int argc, char** argv) {
 
     uint16_t test_code[] = {
         JMP, BEE, BNE, BGE, BLE, BLL, BGG, BOO,
-        BBS, BSS, BNS, BAE, BBE, BAA, BBB, BNO
+        BBS, BSS, BNS, BAE, BBE, BAA, BBB, BNO,
+        CALL
     };
 
     const char* test_name[] = {
         "JMP", "BEE", "BNE", "BGE", "BLE", "BLL", "BGG", "BOO",
-        "BBS", "BSS", "BNS", "BAE", "BBE", "BAA", "BBB", "BNO"
+        "BBS", "BSS", "BNS", "BAE", "BBE", "BAA", "BBB", "BNO",
+        "CALL"
     };
 
     // Initialize inputs
@@ -84,7 +87,7 @@ int main(int argc, char** argv) {
     dut->eval();
     tfp->dump(main_time);
 
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 17; i++) {
         int success_rate = 0;
         
         main_time += 10;
