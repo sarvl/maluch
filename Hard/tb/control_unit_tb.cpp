@@ -70,6 +70,13 @@ void test_out(Vcontrol_unit* top)
     CHECK(top->io_addr == 0b101, "OUT: wrong io_addr");
     CHECK(top->io_data_w == 0x1234, "OUT: wrong io_data_w");
 
+    // Test Immediate version
+    printf("Starting OUT immediate instruction test\n");
+    exec_instr(top, make_instr(0b0111, 1, 0b101, 0, 0, 0x5678));
+    CHECK(top->io_w_en == 1, "OUT(I): io_w_en should be 1");
+    CHECK(top->io_addr == 0b101, "OUT(I): wrong io_addr");
+    CHECK(top->io_data_w == 0x5678, "OUT(I): wrong io_data_w (should be imm)");
+
     printf("[FINISHED] OUT instruction\n\n");
 }
 
@@ -96,6 +103,9 @@ void test_in(Vcontrol_unit* top)
 
     CHECK(top->reg_w_en == 1, "IN: reg_w_en should be 1");
     CHECK(top->reg_in == 0xCAFE, "IN: reg_in should equal io_data_r");
+
+    // Test Immediate version
+    printf("IN instruction doesn't use immediate\n");
 
     printf("[FINISHED] IN instruction\n\n");
 }
@@ -124,6 +134,19 @@ void test_ldw(Vcontrol_unit* top)
     CHECK(top->reg_w_en == 1, "LDW: reg_w_en should be 1");
     CHECK(top->reg_in == 0xBEEF, "LDW: reg_in should equal memory data");
 
+    // Test Immediate version
+    printf("Starting LDW immediate instruction test\n");
+    exec_instr(top, make_instr(0b1000, 1, 0b000, 3, 0, 0x1234));
+    
+    CHECK(top->mem_ctrl_addres == 0x1234, "LDW(I): address should be imm");
+    
+    if (top->mem_ctrl_addres == 0x1234)
+        top->mem_ctrl_data_r = 0xAA55;
+    top->eval();
+
+    CHECK(top->reg_w_en == 1, "LDW(I): reg_w_en should be 1");
+    CHECK(top->reg_in == 0xAA55, "LDW(I): reg_in mismatch");
+
     printf("[FINISHED] LDW instruction\n\n");
 }
 
@@ -142,6 +165,15 @@ void test_stw(Vcontrol_unit* top)
     CHECK(top->mem_ctrl_addres == top->reg_out2, "STW: wrong memory address");
     CHECK(top->mem_ctrl_data_w == top->reg_out1, "STW: wrong memory data");
     CHECK(top->mem_ctrl_write_en == 1, "STW: mem_ctrl_write_en should be 1");
+
+    // Test Immediate version
+    printf("Starting STW immediate instruction test\n");
+    top->reg_out1 = 0xD1C3;
+    exec_instr(top, make_instr(0b1001, 1, 0b000, 3, 0, 0x4321));
+
+    CHECK(top->mem_ctrl_addres == 0x4321, "STW(I): address should be imm");
+    CHECK(top->mem_ctrl_data_w == 0xD1C3, "STW(I): wrong memory data");
+    CHECK(top->mem_ctrl_write_en == 1, "STW(I): mem_ctrl_write_en should be 1");
 
     printf("[FINISHED] STW instruction\n\n");
 }
@@ -179,7 +211,29 @@ void test_push(Vcontrol_unit* top) {
 
     // Check register outputs for SP update
     CHECK(top->sp_w_en == 1, "PUSH: sp_w_en mismatch");
-    CHECK(top->sp_in == 0x000F, "PUSH: sp_in mismatch (should be SP-1)");
+    CHECK(top->sp_in == top->alu_ret, "PUSH: sp_in mismatch (should be SP-1)");
+
+    // Test Immediate version (Push Constant)
+    printf("Starting PUSH immediate instruction test\n");
+    exec_instr(top, make_instr(0b1100, 1, 0b000, 0, 0, 0x9999));
+    
+    // Check ALU usage for SP decrement (SP-1)
+    CHECK(top->alu_ctrl == 0b001, "PUSH(I): ALU control mismatch (SUB)");
+    CHECK(top->src2 == 1, "PUSH(I): ALU src2 should be 1 for SP decrement");
+    
+    // Memory data should be the immediate
+    CHECK(top->mem_ctrl_data_w == 0x9999, "PUSH(I): memory data should be imm");
+    CHECK(top->mem_ctrl_write_en == 1, "PUSH(I): Memory write enable mismatch");
+
+    if (top->alu_ctrl == 0b001) {
+        top->alu_ret = top->src1 - top->src2;
+        top->mem_ctrl_addres = top->alu_ret;
+    }
+    top->eval();
+    
+    // SP update check
+    CHECK(top->sp_w_en == 1, "PUSH(I): SP write enable");
+    CHECK(top->sp_in == top->alu_ret, "PUSH(I): SP update value");
 
     printf("[FINISHED] PUSH instruction\n\n");
 }
@@ -223,6 +277,9 @@ void test_pull(Vcontrol_unit* top) {
     CHECK(top->mem_ctrl_addres == 0x00F0, "PULL: Memory address mismatch (old SP)");
     CHECK(top->mem_ctrl_write_en == 0, "PULL: Memory write enable mismatch");
 
+    // Test Immediate version
+    printf("PULL instruction doesn't use immediate\n");
+
     printf("[FINISHED] PULL instruction\n\n");
 }
 
@@ -245,6 +302,11 @@ void test_branch(Vcontrol_unit* top) {
 
     CHECK(top->addr_out2 == 7, "BRANCH: addr_out2 mismatch");
     CHECK(top->instr_pointer_ctrl == 0xB00F, "BRANCH: instr_pointer_ctrl mismatch");
+
+    // Test Immediate version
+    printf("Starting BRANCH immediate instruction test\n");
+    exec_instr(top, make_instr(0b0100, 1, 0b000, 0, 0, 0x8888));
+    CHECK(top->instr_pointer_ctrl == 0x8888, "BRANCH(I): PC should be imm");
 
     printf("[FINISHED] BRANCH instructions\n\n");
 }
@@ -288,6 +350,27 @@ void test_call(Vcontrol_unit* top) {
     CHECK(top->addr_out2 == 6, "CALL: addr_out2 should be src_reg (6)");
     CHECK(top->sp_w_en == 1, "CALL: sp_w_en mismatch");
     CHECK(top->sp_in == 0x01FF, "CALL: sp_in mismatch (New SP)");
+
+    // Test Immediate version
+    printf("Starting CALL immediate instruction test\n");
+    top->reg_out1 = 0x01FF; // Update SP for next test
+    top->instr_pointer_seq = 0x0090;
+    exec_instr(top, make_instr(0b1010, 1, 0b000, 0, 0, 0x4000));
+
+    CHECK(top->instr_pointer_ctrl == 0x4000, "CALL(I): PC should be imm");
+    
+    // Check SP decrement logic remains correct
+    CHECK(top->alu_ctrl == 0b001, "CALL(I): ALU control SUB");
+    CHECK(top->src2 == 1, "CALL(I): src2 should be 1");
+    // Check Mem Write
+    CHECK(top->mem_ctrl_write_en == 1, "CALL(I): Mem write enable");
+    
+    if (top->alu_ctrl == 0b001) {
+        top->alu_ret = top->src1 - top->src2;
+    }
+    top->eval();
+    
+    CHECK(top->sp_in == 0x01FE, "CALL(I): sp_in mismatch");
 
     printf("[FINISHED] CALL instruction\n\n");
 }
