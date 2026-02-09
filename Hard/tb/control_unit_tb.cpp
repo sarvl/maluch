@@ -100,6 +100,7 @@ void test_out(Vcontrol_unit* top)
     CHECK(top->io_r_en == 0, "OUT: io_r_en should be 0");
     CHECK(top->io_addr == 0b101, "OUT: wrong io_addr");
     CHECK(top->io_data_w == 0x1234, "OUT: wrong io_data_w");
+    CHECK(top->addr_out2 == 2, "OUT: addr_out2 mismatch");
 
     // Test Immediate version
     printf("Starting OUT immediate instruction test\n");
@@ -154,6 +155,7 @@ void test_ldw(Vcontrol_unit* top)
     exec_instr(top, make_instr(0b1000, 0, 0b000, 3, 2));
 
     CHECK(top->mem_ctrl_addres == top->reg_out2, "LDW: wrong memory address");
+    CHECK(top->addr_out2 == 2, "LDW: addr_out2 mismatch");
     CHECK(top->mem_ctrl_write_en == 0, "LDW: mem_ctrl_write_en should be 0");
 
     // Simulate memory controller response
@@ -196,6 +198,8 @@ void test_stw(Vcontrol_unit* top)
     CHECK(top->mem_ctrl_addres == top->reg_out2, "STW: wrong memory address");
     CHECK(top->mem_ctrl_data_w == top->reg_out1, "STW: wrong memory data");
     CHECK(top->mem_ctrl_write_en == 1, "STW: mem_ctrl_write_en should be 1");
+    CHECK(top->addr_out1 == 3, "STW: addr_out1 mismatch");
+    CHECK(top->addr_out2 == 2, "STW: addr_out2 mismatch");
 
     // Test Immediate version
     printf("Starting STW immediate instruction test\n");
@@ -205,6 +209,7 @@ void test_stw(Vcontrol_unit* top)
     CHECK(top->mem_ctrl_addres == 0x4321, "STW(I): address should be imm");
     CHECK(top->mem_ctrl_data_w == 0xD1C3, "STW(I): wrong memory data");
     CHECK(top->mem_ctrl_write_en == 1, "STW(I): mem_ctrl_write_en should be 1");
+    CHECK(top->addr_out1 == 3, "STW(I): addr_out1 mismatch");
 
     printf("[FINISHED] STW instruction\n\n");
 }
@@ -226,6 +231,8 @@ void test_push(Vcontrol_unit* top) {
     CHECK(top->alu_ctrl == 0b001, "PUSH: ALU control mismatch");
     CHECK(top->src1 == 0x0010, "PUSH: ALU src1 mismatch");
     CHECK(top->src2 == 0x0001, "PUSH: ALU src2 mismatch");
+    CHECK(top->addr_out1 == 0b0010, "PUSH: addr_out1 (SP) mismatch");
+    CHECK(top->addr_out2 == 3, "PUSH: addr_out2 (src) mismatch");
 
      // Simulate ALU response
     if (top->alu_ctrl == 0b001) {
@@ -251,6 +258,7 @@ void test_push(Vcontrol_unit* top) {
     // Check ALU usage for SP decrement (SP-1)
     CHECK(top->alu_ctrl == 0b001, "PUSH(I): ALU control mismatch (SUB)");
     CHECK(top->src2 == 1, "PUSH(I): ALU src2 should be 1 for SP decrement");
+    CHECK(top->addr_out1 == 0b0010, "PUSH(I): addr_out1 (SP) mismatch");
     
     // Memory data should be the immediate
     CHECK(top->mem_ctrl_data_w == 0x9999, "PUSH(I): memory data should be imm");
