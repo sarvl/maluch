@@ -5,6 +5,21 @@
 #include <vector>
 #include <cstdlib>
 
+// ------------------------------------------------------------
+// Instruction encoder
+// OOOOJFFF'DDDDSSSS IIIIIIII'IIIIIIII
+// ------------------------------------------------------------
+uint32_t make_instr(uint8_t opcode, uint8_t imm_valid, uint8_t funct,
+                    uint8_t rd, uint8_t rs, uint16_t imm = 0)
+{
+    return  (opcode    << 28) |
+            (imm_valid << 27) |
+            (funct     << 24) |
+            (rd        << 20) |
+            (rs        << 16) |
+            (imm       <<  0);
+}
+
 // Instruction definitions
 #define JMP 0b0100100000000000
 #define BEE 0b0100100100000000
