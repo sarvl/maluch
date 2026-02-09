@@ -3,22 +3,36 @@
     `define TYPES
 `endif
 `include "alu.sv"
-`include "decoder.sv"
+`include "control_unit.sv"
 `include "register_file.sv"
-`include "counter.sv"
+`include "program_counter.sv"
 
 /* verilator lint_off MULTITOP */
 module core(
     input logic clk,
     input logic _reset,
-    input logic [31:0] instr_in,
 
-    output logic [31:0] pointer
+    input logic [31:0] instr_in,
+    output logic [15:0] pointer,
+
+    input logic [15:0] io_data_r,
+    output logic [2:0] io_addr,
+    output logic io_w_en,
+    output logic io_r_en,
+    output logic [15:0] io_data_w,
+
+    input logic [15:0] mem_data_r,
+    output logic [15:0] mem_addr,
+    output logic [15:0] mem_data_w,
+    output logic mem_w_en,
+
+    input logic [7:0]   int_flags,
+    input logic [7:0]   busy_flags
 );
 
     logic [31:0]    instruction;
-    logic [31:0]    instr_pointer;
-    logic [31:0]    _next_pointer;
+    logic [15:0]    instr_pointer;
+    logic [15:0]    _next_pointer;
 
     logic [15:0]    src1;
     logic [15:0]    src2;
@@ -32,56 +46,93 @@ module core(
     logic [3:0]     addr_out1;
     logic [3:0]     addr_out2;
     logic           reg_w_en;
+    logic           sp_w_en;
+    logic [15:0]    sp_in;
+    logic           csr_flags_we;
+
+    logic [15:0]    instr_pointer_seq;
+    logic [15:0]    instr_pointer_ctrl;
 
     csr_t csr;
     csr_t _csr_next;
 
     // Driving outputs
-    always_ff @(posedge clk) instr_pointer <= _reset ? 1 : _next_pointer;
+    always_ff @(posedge clk) instr_pointer <= _reset ? 0 : _next_pointer;
 
     // Driving csr
-    always_ff @(posedge clk) csr <= _csr_next;
+    always_ff @(posedge clk)
+        if (csr_flags_we) csr <= _csr_next;
 
-    counter IP(
-        .instr_pointer,
-        .csr,
-        .instruction,
-        .src2,
-        ._next_pointer
+    program_counter IP(
+        .instr_pointer(instr_pointer),
+        .csr(csr),
+        .instruction(instruction),
+        .instr_pointer_ctrl(instr_pointer_ctrl),
+        
+        .instr_pointer_seq(instr_pointer_seq),
+        ._nxt_instr_pointer(_next_pointer)
     );
-    decoder Decoder(
-        .instruction,
-        .alu_ret,
-        .reg_out1,
-        .reg_out2,
+    control_unit CONTROL_UNIT(
+        .instruction(instruction),
+        .instr_pointer_seq(instr_pointer_seq),
 
-        .src1,
-        .src2,
-        .alu_ctrl,
-        .reg_in,
-        .addr_in,
-        .addr_out1,
-        .addr_out2,
-        .reg_w_en
+        .csr_flags_we(csr_flags_we),
+        .instr_pointer_ctrl(instr_pointer_ctrl),
+
+        // ALU
+        .alu_ret(alu_ret),
+        .src1(src1),
+        .src2(src2),
+        .alu_ctrl(alu_ctrl),
+
+        // Registers
+        .reg_out1(reg_out1),
+        .reg_out2(reg_out2),
+        .reg_in(reg_in),
+        .addr_in(addr_in),
+        .addr_out1(addr_out1),
+        .addr_out2(addr_out2),
+        .reg_w_en(reg_w_en),
+        .sp_w_en(sp_w_en),
+        .sp_in(sp_in),
+
+        // IO
+        .io_data_r(io_data_r),
+        .io_addr(io_addr),
+        .io_w_en(io_w_en),
+        .io_r_en(io_r_en),
+        .io_data_w(io_data_w),
+
+        // Memory controller
+        .mem_ctrl_data_r(mem_data_r),
+        .mem_ctrl_addres(mem_addr),
+        .mem_ctrl_data_w(mem_data_w),
+        .mem_ctrl_write_en(mem_w_en)
     );
     alu ALU(
-        .alu_ctrl,
-        .src1,
-        .src2,
+        .alu_ctrl(alu_ctrl),
+        .src1(src1),
+        .src2(src2),
 
-        .alu_ret,
-        ._csr_next
+        .alu_ret(alu_ret),
+        ._csr_next(_csr_next)
     );
     register_file register(
-        .clk,
-        .reg_w_en,
-        .reg_in,
-        .addr_in,
-        .addr_out1,
-        .addr_out2,
+        .clk(clk),
+        ._reset(_reset),
+        .reg_w_en(reg_w_en),
+        .sp_w_en(sp_w_en),
+        .reg_in(reg_in),
+        .sp_in(sp_in),
+        .addr_in(addr_in),
+        .addr_out1(addr_out1),
+        .addr_out2(addr_out2),
 
-        .reg_out1,
-        .reg_out2
+        .int_flags(int_flags),
+        .busy_flags(busy_flags),
+
+        .reg_out1(reg_out1),
+        .reg_out2(reg_out2)
     );
 
     assign pointer = instr_pointer;
