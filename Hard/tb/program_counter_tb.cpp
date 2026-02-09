@@ -37,11 +37,17 @@ TestDef test_defs[] = {
 
 #define RUNS 20
 
-bool check_condition(int code, uint8_t csr) {
+bool check_condition(int code, uint8_t csr, uint8_t opcode) {
     bool Sign = (csr >> 3) & 1;
     bool Overflow = (csr >> 2) & 1;
     bool Carry = (csr >> 1) & 1;
     bool Zero = (csr >> 0) & 1;
+
+    if (opcode == 10) { // CALL
+        return true;
+    } else if (opcode == 11) { // RET
+        return true;
+    }
 
     switch (code) {
         case 0b0000: return true;
@@ -114,7 +120,7 @@ int main(int argc, char** argv) {
             main_time += 5;
             tfp->dump(main_time);
 
-            bool taken = check_condition(code, rand_csr);
+            bool taken = check_condition(code, rand_csr, test_defs[i].opcode);
 
             uint16_t expected_val;
             if (taken) {
