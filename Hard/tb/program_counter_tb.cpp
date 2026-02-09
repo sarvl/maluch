@@ -21,23 +21,19 @@ uint32_t make_instr(uint8_t opcode, uint8_t imm_valid, uint8_t funct,
 }
 
 // Instruction definitions
-#define JMP 0b0100100000000000
-#define BEE 0b0100100100000000
-#define BNE 0b0100101000000000
-#define BGE 0b0100101100000000
-#define BLE 0b0100110000000000
-#define BLL 0b0100110100000000
-#define BGG 0b0100111000000000
-#define BOO 0b0100111100000000
-#define BBS 0b0101100000000000
-#define BSS 0b0101100100000000
-#define BNS 0b0101101000000000
-#define BAE 0b0101101100000000
-#define BBE 0b0101110000000000
-#define BAA 0b0101110100000000
-#define BBB 0b0101111000000000
-#define BNO 0b0101111100000000
-#define CALL 0b1010100000000000
+struct TestDef {
+    const char* name;
+    uint8_t opcode;
+    uint8_t funct;
+};
+
+TestDef test_defs[] = {
+    {"JMP", 4, 0}, {"BEE", 4, 1}, {"BNE", 4, 2}, {"BGE", 4, 3},
+    {"BLE", 4, 4}, {"BLL", 4, 5}, {"BGG", 4, 6}, {"BOO", 4, 7},
+    {"BBS", 5, 0}, {"BSS", 5, 1}, {"BNS", 5, 2}, {"BAE", 5, 3},
+    {"BBE", 5, 4}, {"BAA", 5, 5}, {"BBB", 5, 6}, {"BNO", 5, 7},
+    {"CALL", 10, 0}
+};
 
 #define RUNS 20
 
@@ -77,18 +73,6 @@ int main(int argc, char** argv) {
     dut->trace(tfp, 99);
     tfp->open("waveforms/program_counter.fst");
 
-    uint16_t test_code[] = {
-        JMP, BEE, BNE, BGE, BLE, BLL, BGG, BOO,
-        BBS, BSS, BNS, BAE, BBE, BAA, BBB, BNO,
-        CALL
-    };
-
-    const char* test_name[] = {
-        "JMP", "BEE", "BNE", "BGE", "BLE", "BLL", "BGG", "BOO",
-        "BBS", "BSS", "BNS", "BAE", "BBE", "BAA", "BBB", "BNO",
-        "CALL"
-    };
-
     // Initialize inputs
     dut->instr_pointer = 0;
     dut->csr = 0;
@@ -108,23 +92,20 @@ int main(int argc, char** argv) {
         main_time += 10;
         tfp->dump(main_time);
 
-        std::cout << "--- " << test_name[i] << " ---" << std::endl;
+        std::cout << "--- " << test_defs[i].name << " ---" << std::endl;
 
         for (int k = 0; k < RUNS; k++) {
             uint16_t val = rand() % 32000;
             uint16_t addr = rand() % 32000;
             uint8_t rand_csr = rand() & 0xF;
+            
+            // J determines if instruction is 32-bit (imm valid) or 16-bit
+            uint8_t imm_valid = rand() & 1;
 
-            int op_bit0 = (test_code[i] >> 12) & 1;
-            int funct3 = (test_code[i] >> 8) & 0x7;
-            int imm_valid = (test_code[i] >> 11) & 1;
-            int code = (op_bit0 << 3) | funct3;
+            int op_bit0 = test_defs[i].opcode & 1;
+            int code = (op_bit0 << 3) | test_defs[i].funct;
 
-            if (imm_valid) {
-                dut->instruction = (test_code[i] << 16) | val;
-            } else {
-                dut->instruction = (test_code[i] << 16);
-            }
+            dut->instruction = make_instr(test_defs[i].opcode, imm_valid, test_defs[i].funct, 0, 0, val);
             dut->instr_pointer_ctrl = addr;
             dut->csr = rand_csr;
 
@@ -145,8 +126,9 @@ int main(int argc, char** argv) {
             if (dut->_nxt_instr_pointer == expected_val) {
                 success_rate++;
             } else {
-                 std::cout << "Failed: " << test_name[i] 
+                 std::cout << "Failed: " << test_defs[i].name 
                            << " CSR=" << (int)rand_csr 
+                           << " J=" << (int)imm_valid
                            << " Expected=" << expected_val 
                            << " Got=" << dut->_nxt_instr_pointer << std::endl;
             }
