@@ -5,6 +5,7 @@
 
 module control_unit (
     input logic [31:0]  instruction,
+    input logic [15:0]  instr_pointer_seq,
 
     output logic        csr_flags_we,
     output logic [15:0]  instr_pointer_ctrl,
@@ -56,12 +57,15 @@ module control_unit (
     localparam OPCODE_IN  = 4'b0110;
     localparam OPCODE_PUSH = 4'b1100;
     localparam OPCODE_PULL = 4'b1101;
+    localparam OPCODE_CALL = 4'b1010;
 
     // Instruction pointer driver
     always_comb begin
         instr_pointer_ctrl = 16'h0000;
 
         if (i.opcode ==? OPCODE_BRANCHING) begin
+            instr_pointer_ctrl = i.imm_valid ? i.imm : reg_out2;
+        end else if (i.opcode == OPCODE_CALL) begin
             instr_pointer_ctrl = i.imm_valid ? i.imm : reg_out2;
         end
     end
@@ -105,6 +109,11 @@ module control_unit (
             reg_w_en = 1;
             sp_w_en = 1;
             sp_in = alu_ret;
+        end else if (i.opcode == OPCODE_CALL) begin
+            addr_out1 = REG_SP;
+            addr_out2 = i.src_reg;
+            sp_w_en = 1;
+            sp_in = alu_ret;
         end
     end
 
@@ -143,6 +152,10 @@ module control_unit (
             mem_ctrl_write_en = 1;
         end else if (i.opcode == OPCODE_PULL) begin
             mem_ctrl_addres = reg_out1;
+        end else if (i.opcode == OPCODE_CALL) begin
+            mem_ctrl_addres = alu_ret;
+            mem_ctrl_data_w = instr_pointer_seq;
+            mem_ctrl_write_en = 1;
         end
     end
 
@@ -166,6 +179,10 @@ module control_unit (
             src1 = reg_out1;
             src2 = 16'h0001;
             alu_ctrl = 3'b000;
+        end else if (i.opcode == OPCODE_CALL) begin
+            src1 = reg_out1;
+            src2 = 16'h0001;
+            alu_ctrl = 3'b001;
         end
     end
 
