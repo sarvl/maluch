@@ -28,7 +28,7 @@ module program_counter (
     assign branching = (i.opcode ==? 4'b010x) ? 1 : 0;
 
     logic subroute_ctrl;
-    assign subroute_ctrl = (i.opcode == 4'b1010) ? 1 : 0;
+    assign subroute_ctrl = i.opcode inside {4'b1010, 4'b1011} ? 1 : 0;
 
     always_comb begin
 
