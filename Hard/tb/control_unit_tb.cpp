@@ -271,7 +271,7 @@ void test_pull(Vcontrol_unit* top) {
     
     // Check dedicated SP update signals
     CHECK(top->sp_w_en == 1, "PULL: sp_w_en mismatch");
-    CHECK(top->sp_in == 0x00F1, "PULL: sp_in mismatch (should be SP+1)");
+    CHECK(top->sp_in == top->alu_ret, "PULL: sp_in mismatch (should be SP+1)");
 
     // Check memory reading
     CHECK(top->mem_ctrl_addres == 0x00F0, "PULL: Memory address mismatch (old SP)");
@@ -349,7 +349,7 @@ void test_call(Vcontrol_unit* top) {
     CHECK(top->addr_out1 == 0b0010, "CALL: addr_out1 should be SP index (2)");
     CHECK(top->addr_out2 == 6, "CALL: addr_out2 should be src_reg (6)");
     CHECK(top->sp_w_en == 1, "CALL: sp_w_en mismatch");
-    CHECK(top->sp_in == 0x01FF, "CALL: sp_in mismatch (New SP)");
+    CHECK(top->sp_in == top->alu_ret, "CALL: sp_in mismatch (New SP)");
 
     // Test Immediate version
     printf("Starting CALL immediate instruction test\n");
@@ -370,7 +370,7 @@ void test_call(Vcontrol_unit* top) {
     }
     top->eval();
     
-    CHECK(top->sp_in == 0x01FE, "CALL(I): sp_in mismatch");
+    CHECK(top->sp_in == top->alu_ret, "CALL(I): sp_in mismatch");
 
     printf("[FINISHED] CALL instruction\n\n");
 }
@@ -410,7 +410,7 @@ void test_ret(Vcontrol_unit* top) {
     // Check SP Update
     CHECK(top->addr_out1 == 0b0010, "RET: addr_out1 should be SP index (2)");
     CHECK(top->sp_w_en == 1, "RET: sp_w_en mismatch");
-    CHECK(top->sp_in == 0x01FF, "RET: sp_in mismatch (SP+1)");
+    CHECK(top->sp_in == top->alu_ret, "RET: sp_in mismatch (SP+1)");
 
     // Test Immediate version
     printf("RET instruction doesn't use immediate\n");
