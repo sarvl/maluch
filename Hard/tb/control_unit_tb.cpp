@@ -21,14 +21,15 @@ int failed_tests = 0;
 // Instruction encoder
 // OOOOJFFF'DDDDSSSS IIIIIIII'IIIIIIII
 // ------------------------------------------------------------
-uint32_t make_instr(uint8_t opcode, uint8_t funct,
-                    uint8_t rd, uint8_t rs)
+uint32_t make_instr(uint8_t opcode, uint8_t imm_valid, uint8_t funct,
+                    uint8_t rd, uint8_t rs, uint16_t imm = 0)
 {
-    return  (opcode << 28) |
-            (0      << 27) |
-            (funct  << 24) |
-            (rd     << 20) |
-            (rs     << 16);
+    return  (opcode    << 28) |
+            (imm_valid << 27) |
+            (funct     << 24) |
+            (rd        << 20) |
+            (rs        << 16) |
+            (imm       <<  0);
 }
 
 // ------------------------------------------------------------
@@ -62,7 +63,7 @@ void test_out(Vcontrol_unit* top)
     printf("Starting OUT instruction test\n");
 
     top->reg_out2 = 0x1234;
-    exec_instr(top, make_instr(0b0111, 0b101, 0, 2));
+    exec_instr(top, make_instr(0b0111, 0, 0b101, 0, 2));
 
     CHECK(top->io_w_en == 1, "OUT: io_w_en should be 1");
     CHECK(top->io_r_en == 0, "OUT: io_r_en should be 0");
@@ -81,7 +82,7 @@ void test_in(Vcontrol_unit* top)
 {
     printf("Starting IN instruction test\n");
 
-    exec_instr(top, make_instr(0b0110, 0b011, 4, 0));
+    exec_instr(top, make_instr(0b0110, 0, 0b011, 4, 0));
 
     CHECK(top->io_r_en == 1, "IN: io_r_en should be 1");
     CHECK(top->io_w_en == 0, "IN: io_w_en should be 0");
@@ -109,7 +110,7 @@ void test_ldw(Vcontrol_unit* top)
     printf("Starting LDW instruction test\n");
 
     top->mem_ctrl_data_r = 0xDEAD;
-    exec_instr(top, make_instr(0b1000, 0b000, 3, 2));
+    exec_instr(top, make_instr(0b1000, 0, 0b000, 3, 2));
 
     CHECK(top->mem_ctrl_addres == top->reg_out2, "LDW: wrong memory address");
     CHECK(top->mem_ctrl_write_en == 0, "LDW: mem_ctrl_write_en should be 0");
@@ -136,7 +137,7 @@ void test_stw(Vcontrol_unit* top)
     printf("Starting STW instruction test\n");
 
     top->reg_out1 = 0xDEAD;
-    exec_instr(top, make_instr(0b1001, 0b000, 3, 2));
+    exec_instr(top, make_instr(0b1001, 0, 0b000, 3, 2));
 
     CHECK(top->mem_ctrl_addres == top->reg_out2, "STW: wrong memory address");
     CHECK(top->mem_ctrl_data_w == top->reg_out1, "STW: wrong memory data");
@@ -156,7 +157,7 @@ void test_push(Vcontrol_unit* top) {
     // Initialize inputs
     top->reg_out1 = 0x0010;
     top->reg_out2 = 0x00FF;
-    exec_instr(top, make_instr(0b1100, 0b000, 0, 3));
+    exec_instr(top, make_instr(0b1100, 0, 0b000, 0, 3));
 
     // Check ALU outputs for SP decrement
     CHECK(top->alu_ctrl == 0b001, "PUSH: ALU control mismatch");
@@ -195,7 +196,7 @@ void test_pull(Vcontrol_unit* top) {
     // Initialize inputs
     top->reg_out1 = 0x00F0;
     top->mem_ctrl_data_r = 0xABBA;
-    exec_instr(top, make_instr(0b1101, 0b000, 5, 0));
+    exec_instr(top, make_instr(0b1101, 0, 0b000, 5, 0));
 
     // Check ALU settings (calculating SP + 1)
     CHECK(top->alu_ctrl == 0b000, "PULL: ALU control mismatch (should be ADD)");
@@ -235,13 +236,13 @@ void test_branch(Vcontrol_unit* top) {
     printf("Starting BRANCH instructions test\n");
 
     top->reg_out2 = 0xB00B;
-    exec_instr(top, make_instr(0b0100, 0b000, 0, 5));
+    exec_instr(top, make_instr(0b0100, 0, 0b000, 0, 5));
 
     CHECK(top->addr_out2 == 5, "BRANCH: addr_out2 mismatch");
     CHECK(top->instr_pointer_ctrl == 0xB00B, "BRANCH: instr_pointer_ctrl mismatch");
 
     top->reg_out2 = 0xB00F;
-    exec_instr(top, make_instr(0b0101, 0b000, 0, 7));
+    exec_instr(top, make_instr(0b0101, 0, 0b000, 0, 7));
 
     CHECK(top->addr_out2 == 7, "BRANCH: addr_out2 mismatch");
     CHECK(top->instr_pointer_ctrl == 0xB00F, "BRANCH: instr_pointer_ctrl mismatch");
@@ -261,7 +262,7 @@ void test_call(Vcontrol_unit* top) {
     top->reg_out1 = 0x0200;
     top->reg_out2 = 0xF00D;
     top->instr_pointer_seq = 0x0084;
-    exec_instr(top, make_instr(0b1010, 0b000, 0, 6));
+    exec_instr(top, make_instr(0b1010, 0, 0b000, 0, 6));
 
     // Check PC update (Jump to target)
     CHECK(top->instr_pointer_ctrl == 0xF00D, "CALL: instr_pointer_ctrl mismatch");
