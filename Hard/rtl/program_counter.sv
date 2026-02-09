@@ -56,10 +56,10 @@ module program_counter (
     logic [15:0]    _pointer, _pointer_seq;
 
     always_comb begin
-        _pointer_seq = instr_pointer + 2;
+        _pointer_seq = instr_pointer + (i.imm_valid ? 2 : 1);
 
         if (subroute_ctrl || (branching && branch_valid))
-            _pointer = instr_pointer_ctrl;
+            _pointer = i.imm_valid ? i.imm : instr_pointer_ctrl;
         else
             _pointer = _pointer_seq;
     end
