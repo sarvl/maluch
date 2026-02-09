@@ -99,9 +99,8 @@ module control_unit (
             reg_w_en = 1;
         end else if (i.opcode == OPCODE_PUSH) begin
             addr_out2 = i.src_reg;
-            addr_in = REG_SP;
-            reg_in = alu_ret;
-            reg_w_en = 1;
+            sp_w_en = 1;
+            sp_in = alu_ret;
         end else if (i.opcode == OPCODE_PULL) begin
             addr_out1 = REG_SP;
             addr_in = i.dest_reg;

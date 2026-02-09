@@ -178,9 +178,8 @@ void test_push(Vcontrol_unit* top) {
     CHECK(top->mem_ctrl_write_en == 1, "PUSH: Memory write enable mismatch");
 
     // Check register outputs for SP update
-    CHECK(top->addr_in == 0b0010, "PUSH: Register address mismatch");
-    CHECK(top->reg_in == 0x000F, "PUSH: Register data mismatch");
-    CHECK(top->reg_w_en == 1, "PUSH: Register write enable mismatch");
+    CHECK(top->sp_w_en == 1, "PUSH: sp_w_en mismatch");
+    CHECK(top->sp_in == 0x000F, "PUSH: sp_in mismatch (should be SP-1)");
 
     printf("[FINISHED] PUSH instruction\n\n");
 }
