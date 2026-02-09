@@ -376,6 +376,49 @@ void test_call(Vcontrol_unit* top) {
 }
 
 // ------------------------------------------------------------
+// TEST: RET instruction
+// Opcode: 1011
+// Behavior: PC <-- MEM[SP], SP <-- SP+1
+// ------------------------------------------------------------
+void test_ret(Vcontrol_unit* top) {
+    printf("Starting RET instruction test\n");
+
+    // Initialize inputs
+    top->reg_out1 = 0x01FE; // Current SP
+    top->mem_ctrl_data_r = 0xBAAD; // Return Address located on stack
+    
+    exec_instr(top, make_instr(0b1011, 0, 0b000, 0, 0));
+
+    // Check PC update (Jump to Return Address read from memory)
+    CHECK(top->instr_pointer_ctrl == 0xBAAD, "RET: instr_pointer_ctrl mismatch (should be mem data)");
+
+    // Check Memory Read Address (Read from current SP)
+    CHECK(top->mem_ctrl_addres == 0x01FE, "RET: Memory address mismatch (must match current SP)");
+    CHECK(top->mem_ctrl_write_en == 0, "RET: Memory write enable mismatch (should be read)");
+
+    // Check ALU settings (Calculate SP+1)
+    CHECK(top->alu_ctrl == 0b000, "RET: ALU control mismatch (should be ADD)");
+    CHECK(top->src1 == 0x01FE, "RET: ALU src1 mismatch (SP)");
+    CHECK(top->src2 == 0x0001, "RET: ALU src2 mismatch");
+
+    // Simulate ALU calculation
+    if (top->alu_ctrl == 0b000) {
+        top->alu_ret = top->src1 + top->src2; // 0x01FF
+    }
+    top->eval();
+
+    // Check SP Update
+    CHECK(top->addr_out1 == 0b0010, "RET: addr_out1 should be SP index (2)");
+    CHECK(top->sp_w_en == 1, "RET: sp_w_en mismatch");
+    CHECK(top->sp_in == 0x01FF, "RET: sp_in mismatch (SP+1)");
+
+    // Test Immediate version
+    printf("RET instruction doesn't use immediate\n");
+
+    printf("[FINISHED] RET instruction\n\n");
+}
+
+// ------------------------------------------------------------
 // MAIN
 // ------------------------------------------------------------
 int main(int argc, char** argv)
@@ -393,6 +436,7 @@ int main(int argc, char** argv)
     test_pull(top);
     test_branch(top);
     test_call(top);
+    test_ret(top);
 
     printf("=====================================\n");
     printf("Simulation completed\n");
