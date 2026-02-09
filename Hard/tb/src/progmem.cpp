@@ -1,20 +1,20 @@
 #include "progmem.h"
 
-FlashMemmory16::FlashMemmory16(size_t size) : mem_size(size) {
-    memmory.resize(size, ERASED_VALUE);
+FlashMemmory16::FlashMemmory16() {
+    memmory.fill(ERASED_VALUE);
 }
 
 FlashMemmory16::~FlashMemmory16() {
-    delete &memmory;
+    // No cleanup necessary for std::array
 }
 
 uint16_t FlashMemmory16::read(uint16_t address) {
-    if (address >= mem_size) return ERASED_VALUE;
+    if (address >= memmory.size()) return ERASED_VALUE;
     return memmory[address];
 }
 
 bool FlashMemmory16::write(uint16_t address, uint16_t data) {
-    if (address >= mem_size) return false;
+    if (address >= memmory.size()) return false;
     return memmory[address] = data;
 }
 
@@ -54,6 +54,10 @@ bool FlashMemmory16::program(std::string filename) {
         
         try {
             // Convert binary string to integer
+            if (pointer >= memmory.size()) {
+                std::cerr << "Error: Program too large for memory at " << pointer << std::endl;
+                return false;
+            }
             memmory[pointer++] = std::stoul(line, nullptr, 2);
 
             std::cout << "Loaded instruction " << count++ 

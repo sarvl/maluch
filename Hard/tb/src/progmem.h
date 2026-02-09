@@ -1,7 +1,7 @@
 #ifndef PROGMEM_H
 #define PROGMEM_H
 
-#include <vector>
+#include <array>
 #include <cstdint>
 #include <string>
 #include <cstdlib>
@@ -13,13 +13,12 @@
 
 class FlashMemmory16 {
     private:
-        std::vector<uint16_t> memmory;
+        static constexpr size_t MEM_SIZE = 0x10000;
+        std::array<uint16_t, MEM_SIZE> memmory;
         static constexpr uint16_t ERASED_VALUE = 0x0000;
-        
-        size_t mem_size;
 
     public:
-        FlashMemmory16(size_t size = 0x10000);
+        FlashMemmory16();
         ~FlashMemmory16();
         uint16_t read(uint16_t address);
         bool write(uint16_t address, uint16_t data);
