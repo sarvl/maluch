@@ -11,6 +11,7 @@ module program_counter (
         input logic [31:0]  instruction,
         input logic [15:0]  instr_pointer_ctrl,
         
+        output logic [15:0]  instr_pointer_seq,
         output logic [15:0] _nxt_instr_pointer
 );
 
@@ -26,6 +27,8 @@ module program_counter (
     logic branching;
     assign branching = (i.opcode ==? 4'b010x) ? 1 : 0;
 
+    logic subroute_ctrl;
+    assign subroute_ctrl = (i.opcode == 4'b1010) ? 1 : 0;
 
     always_comb begin
 
@@ -50,12 +53,18 @@ module program_counter (
 
     end
 
-    logic [15:0]    _pointer;
+    logic [15:0]    _pointer, _pointer_seq;
 
-    always_comb _pointer = branching && branch_valid ?
-                            instr_pointer_ctrl : instr_pointer + 2;
+    always_comb begin
+        _pointer_seq = instr_pointer + 2;
 
+        if (subroute_ctrl || (branching && branch_valid))
+            _pointer = instr_pointer_ctrl;
+        else
+            _pointer = _pointer_seq;
+    end
 
+    assign instr_pointer_seq = _pointer_seq;
     assign _nxt_instr_pointer = _pointer;
 
 endmodule
