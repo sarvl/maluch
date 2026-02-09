@@ -39,8 +39,8 @@ module register_file #(
     logic [DataWidth-1:0] regs[3:NumRegs-1];
 
     // Write logic
-    always_ff @(posedge clk or negedge _reset) begin
-        if (!_reset) begin
+    always_ff @(posedge clk or posedge _reset) begin
+        if (_reset) begin
             for (int i=3; i<NumRegs; i++) begin
                 regs[i] <= '0;
             end
