@@ -32,7 +32,7 @@ TestDef test_defs[] = {
     {"BLE", 4, 4}, {"BLL", 4, 5}, {"BGG", 4, 6}, {"BOO", 4, 7},
     {"BBS", 5, 0}, {"BSS", 5, 1}, {"BNS", 5, 2}, {"BAE", 5, 3},
     {"BBE", 5, 4}, {"BAA", 5, 5}, {"BBB", 5, 6}, {"BNO", 5, 7},
-    {"CALL", 10, 0}
+    {"CALL", 10, 0}, {"RET", 11, 0}
 };
 
 #define RUNS 20
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
     dut->eval();
     tfp->dump(main_time);
 
-    for (int i = 0; i < 17; i++) {
+    for (int i = 0; i < 18; i++) {
         int success_rate = 0;
         
         main_time += 10;
