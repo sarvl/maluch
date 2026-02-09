@@ -6,23 +6,23 @@
 #include <cstdlib>
 
 // Instruction definitions
-#define JMP 0b0100000000000000
-#define BEE 0b0100000100000000
-#define BNE 0b0100001000000000
-#define BGE 0b0100001100000000
-#define BLE 0b0100010000000000
-#define BLL 0b0100010100000000
-#define BGG 0b0100011000000000
-#define BOO 0b0100011100000000
-#define BBS 0b0101000000000000
-#define BSS 0b0101000100000000
-#define BNS 0b0101001000000000
-#define BAE 0b0101001100000000
-#define BBE 0b0101010000000000
-#define BAA 0b0101010100000000
-#define BBB 0b0101011000000000
-#define BNO 0b0101011100000000
-#define CALL 0b1010000000000000
+#define JMP 0b0100100000000000
+#define BEE 0b0100100100000000
+#define BNE 0b0100101000000000
+#define BGE 0b0100101100000000
+#define BLE 0b0100110000000000
+#define BLL 0b0100110100000000
+#define BGG 0b0100111000000000
+#define BOO 0b0100111100000000
+#define BBS 0b0101100000000000
+#define BSS 0b0101100100000000
+#define BNS 0b0101101000000000
+#define BAE 0b0101101100000000
+#define BBE 0b0101110000000000
+#define BAA 0b0101110100000000
+#define BBB 0b0101111000000000
+#define BNO 0b0101111100000000
+#define CALL 0b1010100000000000
 
 #define RUNS 20
 
@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
     };
 
     // Initialize inputs
-    dut->instr_pointer = 1;
+    dut->instr_pointer = 0;
     dut->csr = 0;
     dut->instruction = 0;
     dut->instr_pointer_ctrl = 0;
@@ -96,11 +96,20 @@ int main(int argc, char** argv) {
         std::cout << "--- " << test_name[i] << " ---" << std::endl;
 
         for (int k = 0; k < RUNS; k++) {
+            uint16_t val = rand() % 32000;
             uint16_t addr = rand() % 32000;
+            uint8_t rand_csr = rand() & 0xF;
 
-            uint8_t rand_csr = rand() & 0xF; 
+            int op_bit0 = (test_code[i] >> 12) & 1;
+            int funct3 = (test_code[i] >> 8) & 0x7;
+            int imm_valid = (test_code[i] >> 11) & 1;
+            int code = (op_bit0 << 3) | funct3;
 
-            dut->instruction = (test_code[i] << 16) | addr;
+            if (imm_valid) {
+                dut->instruction = (test_code[i] << 16) | val;
+            } else {
+                dut->instruction = (test_code[i] << 16);
+            }
             dut->instr_pointer_ctrl = addr;
             dut->csr = rand_csr;
 
@@ -109,12 +118,14 @@ int main(int argc, char** argv) {
             main_time += 5;
             tfp->dump(main_time);
 
-            int op_bit0 = (test_code[i] >> 12) & 1;
-            int funct3 = (test_code[i] >> 8) & 0x7;
-            int code = (op_bit0 << 3) | funct3;
-
             bool taken = check_condition(code, rand_csr);
-            uint16_t expected_val = taken ? addr : (dut->instr_pointer + 2);
+
+            uint16_t expected_val;
+            if (taken) {
+                expected_val = imm_valid ? val : addr;
+            } else {
+                expected_val = dut->instr_pointer + (imm_valid ? 2 : 1);
+            }
 
             if (dut->_nxt_instr_pointer == expected_val) {
                 success_rate++;
