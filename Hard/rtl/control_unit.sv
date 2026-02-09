@@ -50,6 +50,7 @@ module control_unit (
 
     // Opcodes
     localparam OPCODE_BRANCHING = 4'b010x;
+    localparam OPCODE_MOV = 4'b0001;
     localparam OPCODE_ALU = 4'b0010;
     localparam OPCODE_LDW = 4'b1000;
     localparam OPCODE_STW = 4'b1001;
@@ -85,6 +86,11 @@ module control_unit (
 
         if (i.opcode ==? OPCODE_BRANCHING) begin
             addr_out2 = i.src_reg;
+        end else if (i.opcode == OPCODE_MOV) begin
+            addr_out2 = i.src_reg;
+            addr_in = i.dest_reg;
+            reg_in = i.imm_valid ? i.imm : reg_out2;
+            reg_w_en = 1;
         end else if (i.opcode == OPCODE_ALU) begin
             addr_out1 = i.dest_reg;
             addr_out2 = i.src_reg;
