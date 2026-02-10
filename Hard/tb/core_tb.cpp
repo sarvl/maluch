@@ -18,6 +18,8 @@ private:
     uint64_t cycle_count = 0;
     
 public:
+    uint64_t ns_count = 0;
+
     bool loadInstructions(const std::string& filename) {
         return Memmory->program(filename);
     }
@@ -35,10 +37,13 @@ public:
     }
     
     bool toggleClock() {
-        clk = !clk;
-        if (clk) { // Rising edge
+        ns_count = (ns_count + 1) % 20;
+        bool next_clk = (ns_count <= 10);
+
+        if (!clk && next_clk) {
             cycle_count++;
         }
+        clk = next_clk;
         return clk;
     }
     
@@ -121,12 +126,13 @@ int main(int argc, char* argv[]) {
         // Toggle clock
         cpu->clk = tb.toggleClock();
         
-        // On rising edge, feed new instruction
-        if (cpu->clk) {
-            uint32_t instr = tb.getInstruction(static_cast<uint16_t>(cpu->pointer));
+        // Feed new instruction slightly after rising edge
+        uint32_t instr = tb.getInstruction(static_cast<uint16_t>(cpu->pointer));
+        
+        if (tb.ns_count == 3) { // Simulating instruction fetch delay
             cpu->instr_in = static_cast<uint32_t>(instr);
             if (verbose) {
-                std::cout << "Cycle " << std::dec << tb.getCycleCount() 
+                std::cout << "Cycle " << std::dec << (tb.getCycleCount() + 1) 
                             << ": Pointer 0x" << std::hex << std::setw(8) << std::setfill('0') << cpu->pointer
                             << " instruction to execute: 0x" << cpu->instr_in << std::endl;
             }
@@ -136,7 +142,7 @@ int main(int argc, char* argv[]) {
         // Evaluate the CPU
         cpu->eval();
 
-        if (!cpu->clk && cpu->mem_w_en) {
+        if (!cpu->clk && cpu->mem_w_en && tb.ns_count == 13) { // Simulating memory write delay
             std::cout << "Memory write: Address 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->mem_addr
                       << " Data 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->mem_data_w << std::dec << std::endl;
             tb.writeData(static_cast<uint16_t>(cpu->mem_addr), static_cast<uint16_t>(cpu->mem_data_w));
