@@ -30,6 +30,9 @@ module program_counter (
     logic subroute_ctrl;
     assign subroute_ctrl = i.opcode inside {4'b1010, 4'b1011} ? 1 : 0;
 
+    logic invalid;
+    assign invalid = i.opcode == 4'b0000 ? 1 : 0;
+
     always_comb begin
 
         unique case (_code)
@@ -56,11 +59,12 @@ module program_counter (
     logic [15:0]    _pointer, _pointer_seq;
 
     always_comb begin
+        _pointer = instr_pointer;
         _pointer_seq = instr_pointer + (i.imm_valid ? 2 : 1);
 
         if (subroute_ctrl || (branching && branch_valid))
             _pointer = i.imm_valid ? i.imm : instr_pointer_ctrl;
-        else
+        else if (!invalid)
             _pointer = _pointer_seq;
     end
 
