@@ -128,11 +128,22 @@ int main(int argc, char* argv[]) {
             if (verbose) {
                 std::cout << "Cycle " << std::dec << tb.getCycleCount() 
                             << ": Pointer 0x" << std::hex << std::setw(8) << std::setfill('0') << cpu->pointer
-                            << " instruction: " << std::bitset<32>(cpu->instr_in) << std::endl;
+                            << " instruction to execute: 0x" << cpu->instr_in << std::endl;
             }
             instructions_executed++;
         }
-        
+
+        // Evaluate the CPU
+        cpu->eval();
+
+        if (!cpu->clk && cpu->mem_w_en) {
+            std::cout << "Memory write: Address 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->mem_addr
+                      << " Data 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->mem_data_w << std::dec << std::endl;
+            tb.writeData(static_cast<uint16_t>(cpu->mem_addr), static_cast<uint16_t>(cpu->mem_data_w));
+        }
+
+        cpu->mem_data_r = tb.getData(static_cast<uint16_t>(cpu->mem_addr));
+
         // Evaluate the CPU
         cpu->eval();
         
