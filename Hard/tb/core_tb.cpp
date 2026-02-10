@@ -25,6 +25,14 @@ public:
     uint32_t getInstruction(uint16_t pc) {
         return Memmory->read32(pc);
     }
+
+    uint16_t getData(uint16_t address) {
+        return Memmory->read(address);
+    }
+
+    void writeData(uint16_t address, uint16_t data) {
+        Memmory->write(address, data);
+    }
     
     bool toggleClock() {
         clk = !clk;
