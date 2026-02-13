@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Applying reset..." << std::endl;
     cpu->_reset = 1;
     cpu->clk = 0;
-    cpu->instr_in = 0;
+    cpu->mem2core_instr = 0;
     cpu->eval();
     if (tfp) tfp->dump(contextp->time());
     contextp->timeInc(1);
@@ -127,14 +127,14 @@ int main(int argc, char* argv[]) {
         cpu->clk = tb.toggleClock();
         
         // Feed new instruction slightly after rising edge
-        uint32_t instr = tb.getInstruction(static_cast<uint16_t>(cpu->pointer));
+        uint32_t instr = tb.getInstruction(static_cast<uint16_t>(cpu->core2mem_instr_pointer));
         
         if (tb.ns_count == 3) { // Simulating instruction fetch delay
-            cpu->instr_in = static_cast<uint32_t>(instr);
+            cpu->mem2core_instr = static_cast<uint32_t>(instr);
             if (verbose) {
                 std::cout << "Cycle " << std::dec << (tb.getCycleCount() + 1) 
-                            << ": Pointer 0x" << std::hex << std::setw(8) << std::setfill('0') << cpu->pointer
-                            << " instruction to execute: 0x" << cpu->instr_in << std::endl;
+                            << ": Pointer 0x" << std::hex << std::setw(8) << std::setfill('0') << cpu->core2mem_instr_pointer
+                            << " instruction to execute: 0x" << cpu->mem2core_instr << std::endl;
             }
             instructions_executed++;
         }
@@ -142,13 +142,13 @@ int main(int argc, char* argv[]) {
         // Evaluate the CPU
         cpu->eval();
 
-        if (!cpu->clk && cpu->mem_w_en && tb.ns_count == 13) { // Simulating memory write delay
-            std::cout << "Memory write: Address 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->mem_addr
-                      << " Data 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->mem_data_w << std::dec << std::endl;
-            tb.writeData(static_cast<uint16_t>(cpu->mem_addr), static_cast<uint16_t>(cpu->mem_data_w));
+        if (!cpu->clk && cpu->core2mem_w_en && tb.ns_count == 13) { // Simulating memory write delay
+            std::cout << "Memory write: Address 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->core2mem_addr
+                      << " Data 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->core2mem_data_w << std::dec << std::endl;
+            tb.writeData(static_cast<uint16_t>(cpu->core2mem_addr), static_cast<uint16_t>(cpu->core2mem_data_w));
         }
 
-        cpu->mem_data_r = tb.getData(static_cast<uint16_t>(cpu->mem_addr));
+        cpu->mem2core_data_r = tb.getData(static_cast<uint16_t>(cpu->core2mem_addr));
 
         // Evaluate the CPU
         cpu->eval();

@@ -12,22 +12,21 @@ module core(
     input logic clk,
     input logic _reset,
 
-    input logic [31:0] instr_in,
-    output logic [15:0] pointer,
+    input logic [31:0] mem2core_instr,
+    output logic [15:0] core2mem_instr_pointer,
 
-    input logic [15:0] io_data_r,
-    output logic [2:0] io_addr,
-    output logic io_w_en,
-    output logic io_r_en,
-    output logic [15:0] io_data_w,
+    input logic [15:0] mem2core_data_r,
+    output logic [15:0] core2mem_addr,
+    output logic [15:0] core2mem_data_w,
+    output logic core2mem_w_en,
 
-    input logic [15:0] mem_data_r,
-    output logic [15:0] mem_addr,
-    output logic [15:0] mem_data_w,
-    output logic mem_w_en,
-
-    input logic [7:0]   int_flags,
-    input logic [7:0]   busy_flags
+    input logic [7:0] io2core_int_f,
+    input logic [7:0] io2core_busy_f
+    input logic [15:0] io2core_data_r,
+    output logic [2:0] core2io_addr,
+    output logic core2io_w_en,
+    output logic core2io_r_en,
+    output logic [15:0] core2io_data_w,
 );
 
     logic [31:0]    instruction;
@@ -97,17 +96,17 @@ module core(
         .sp_in(sp_in),
 
         // IO
-        .io_data_r(io_data_r),
-        .io_addr(io_addr),
-        .io_w_en(io_w_en),
-        .io_r_en(io_r_en),
-        .io_data_w(io_data_w),
+        .io_data_r(io2core_data_r),
+        .io_addr(core2io_addr),
+        .io_w_en(core2io_w_en),
+        .io_r_en(core2io_r_en),
+        .io_data_w(core2io_data_w),
 
         // Memory controller
-        .mem_ctrl_data_r(mem_data_r),
-        .mem_ctrl_addres(mem_addr),
-        .mem_ctrl_data_w(mem_data_w),
-        .mem_ctrl_write_en(mem_w_en)
+        .mem_ctrl_data_r(mem2core_data_r),
+        .mem_ctrl_addres(core2mem_addr),
+        .mem_ctrl_data_w(core2mem_data_w),
+        .mem_ctrl_write_en(core2mem_w_en)
     );
     alu ALU(
         .alu_ctrl(alu_ctrl),
@@ -128,14 +127,14 @@ module core(
         .addr_out1(addr_out1),
         .addr_out2(addr_out2),
 
-        .int_flags(int_flags),
-        .busy_flags(busy_flags),
+        .int_flags(io2core_int_f),
+        .busy_flags(io2core_busy_f),
 
         .reg_out1(reg_out1),
         .reg_out2(reg_out2)
     );
 
-    assign pointer = instr_pointer;
-    assign instruction = instr_in;
+    assign core2mem_instr_pointer = instr_pointer;
+    assign instruction = mem2core_instr;
 
 endmodule
