@@ -9,6 +9,9 @@ kb?    equ 001b
 gpu?   equ 010b
 pstor? equ 011b
 
+gpu_invalid? equ 00b
+gpu_minimal? equ 01b
+gpu_full?    equ 10b
 
 ; LABEL INTERCEPTING
 struc ? tail&
