@@ -269,7 +269,7 @@ no_error:
 end calminstruction
 
 ; IO
-calminstruction in? dev, dst
+calminstruction in? dst, dev
     local dst_idx, cmd
     transform dst
 

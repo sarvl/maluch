@@ -2,4 +2,4 @@
 
 include "../../Assembler/maluch.inc"
 
-    in 5, r10
+    in r10, 5

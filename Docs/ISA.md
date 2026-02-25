@@ -64,7 +64,7 @@ word - 16bit, base length on which ISA operates
 |baa src | 0101 | 101 | if(FC = 0 and FZ = 0) IP <-- src (branch if above (unsigned)) |
 |bbb src | 0101 | 110 | if(FC = 1) IP <-- src (branch if below (unsigned)) |
 |bno src | 0101 | 111 | if(FO = 0) IP <-- src (branch if no overflow)
-|in fff Rd | 0110 | fff  | Rd <-- IO[fff] |
+|in Rd fff | 0110 | fff  | Rd <-- IO[fff] |
 |out fff src | 0111 | fff  | IO[fff] <-- src |
 |ldw Rd src | 1000 | XXX | Rd <-- MEM[src] |
 |stw src Rd | 1001 | XXX | MEM[src] <-- Rd |
@@ -454,7 +454,7 @@ even though a flag may be undefined for given instruction, it is always modified
 - description: if(FO = 0) IP <-- src (branch if no overflow)
 
 ### IN 
-- instruction: in Rd 
+- instruction: in Rd fff
 - opcode 0110 
 - funct: fff  
 - flags: unmodified
