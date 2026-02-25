@@ -67,7 +67,7 @@ word - 16bit, base length on which ISA operates
 |in fff Rd | 0110 | fff  | Rd <-- IO[fff] |
 |out fff src | 0111 | fff  | IO[fff] <-- src |
 |ldw Rd src | 1000 | XXX | Rd <-- MEM[src] |
-|stw Rd src | 1001 | XXX | MEM[src] <-- Rd |
+|stw src Rd | 1001 | XXX | MEM[src] <-- Rd |
 |call src | 1010 | XXX | MEM[SP - 1] <-- IP ; SP <-- SP - 1 ; IP <-- src |
 |ret | 1011 | 000 | IP <-- MEM[SP] ; SP <-- SP + 1|
 |iret | 1011 | 001 | IP <-- MEM[SP] ; SP <-- SP + 1 ; turns on interrupts |
@@ -461,21 +461,21 @@ even though a flag may be undefined for given instruction, it is always modified
 - description: Rd <-- IO[fff] 
 
 ### OUT 
-- instruction: out Rd 
+- instruction: out fff src
 - opcode 0111 
 - funct: fff  
 - flags: unmodified
-- description: IO[fff] <--- Rd 
+- description: IO[fff] <--- src
 
 ### LDW 
-- instruction: ldw Rd src 
+- instruction: ldw Rd src
 - opcode 1000 
 - funct: XXX 
 - flags: unmodified
 - description: Rd <-- MEM[src] 
 
 ### STW 
-- instruction: stw Rd src 
+- instruction: stw src Rd 
 - opcode 1001 
 - funct: XXX 
 - flags: unmodified
@@ -514,4 +514,4 @@ even though a flag may be undefined for given instruction, it is always modified
 - opcode 1101 
 - funct: XXX 
 - flags: unmodified
-- description: Rd <-- MEM[SP] ; SP <-- SP + 2  
+- description: Rd <-- MEM[SP] ; SP <-- SP + 2

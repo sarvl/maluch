@@ -32,26 +32,23 @@ loop:
     match value =, data, data
     jyes process_value
     
-    ; Handle the last argument (no comma left)
+    ; LAST ARG
     arrange value, data
-    arrange data, 
+    arrange data,
     
 process_value:
-    ; 2. Check for Reserve (?)
     match =?, value
     jyes reserve
     
-    ; 3. Check for String Literal ('...')
-    ; The :quoted modifier matches only quoted strings
+    ; CHECK FOR STRING
     match tmp:quoted, value, :
     jyes is_string
     
-    ; 4. Default: Number or Label
+    emit 1, 0
     emit 1, value
     jump next_item
     
 is_string:
-    ; Iterate over string characters
     compute len, lengthof value
     compute i, 0
 str_loop:
@@ -65,7 +62,6 @@ str_loop:
     jump str_loop
     
 reserve:
-    ; emit with 1 argument reserves uninitialized space (like rb)
     emit 1
     
 next_item:
@@ -82,7 +78,6 @@ loop:
     match value =, data, data
     jyes check_value
 
-    ; handle last (or only) argument
     match =?, data
     jyes reserve_last
 
@@ -223,7 +218,7 @@ irp <name,op>, jmp,40h, bee,41h, bne,42h, \
         exit
 
 short_jump:
-        ; CASE: SHORT INDEX
+        ; CASE: REGISTER
         emit 1, op
         emit 1, src_idx
     end calminstruction
