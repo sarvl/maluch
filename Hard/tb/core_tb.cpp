@@ -142,6 +142,15 @@ int main(int argc, char* argv[]) {
         // Evaluate the CPU
         cpu->eval();
 
+        if (cpu->core2io_w_en && tb.ns_count == 12) { // Simulating I/O write delay
+            std::cout << "I/O write: Address 0x" << std::hex << std::setw(4) << std::setfill('0') << (int)cpu->core2io_addr
+                      << " Data 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->core2io_data_w << std::dec << std::endl;
+        } else if (cpu->core2io_r_en && tb.ns_count == 12) { // Simulating I/O read delay
+            cpu->io2core_data_r = 0xABCD; // Example I/O read data
+            std::cout << "I/O read: Address 0x" << std::hex << std::setw(4) << std::setfill('0') << (int)cpu->core2io_addr
+                      << " Data read: 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->io2core_data_r << std::dec << std::endl;
+        }
+
         if (!cpu->clk && cpu->core2mem_w_en && tb.ns_count == 13) { // Simulating memory write delay
             std::cout << "Memory write: Address 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->core2mem_addr
                       << " Data 0x" << std::hex << std::setw(4) << std::setfill('0') << cpu->core2mem_data_w << std::dec << std::endl;
