@@ -21,12 +21,12 @@ module core(
     output logic core2mem_w_en,
 
     input logic [7:0] io2core_int_f,
-    input logic [7:0] io2core_busy_f
+    input logic [7:0] io2core_busy_f,
     input logic [15:0] io2core_data_r,
     output logic [2:0] core2io_addr,
     output logic core2io_w_en,
     output logic core2io_r_en,
-    output logic [15:0] core2io_data_w,
+    output logic [15:0] core2io_data_w
 );
 
     logic [31:0]    instruction;
