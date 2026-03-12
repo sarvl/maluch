@@ -39,7 +39,7 @@ public:
     
     bool toggleClock() {
         ns_count = (ns_count + 1) % 20;
-        bool next_clk = (ns_count <= 10);
+        bool next_clk = (ns_count < 10);
 
         if (!clk && next_clk) {
             cycle_count++;
@@ -179,7 +179,7 @@ int main(int argc, char* argv[]) {
             tb.printStatus();
         }
 
-        if (tb.getCycleCount() %20 == 0 ) tfp->flush();
+        if (tfp && tb.getCycleCount() % 20 == 0 && tb.ns_count == 0) tfp->flush();
         
         contextp->timeInc(1);
     }
