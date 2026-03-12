@@ -26,7 +26,10 @@ module register_file #(
     // Outside inputs
     input logic [7:0]   int_flags,
     input logic [7:0]   busy_flags,
+    input logic         irq_f,
+    input logic         iret_f,
     // Outputs
+    output logic [7:0]  masked_int_flags,
     output logic [15:0] reg_out1,
     output logic [15:0] reg_out2
 );
@@ -34,9 +37,11 @@ module register_file #(
     regflags_t reg0;
     assign reg0.int_flags = int_flags;
     assign reg0.busy_flags = busy_flags;
-    regmask_t reg1;
+    regmask_t reg1, reg1_buf;
     logic [DataWidth-1:0] reg2;
     logic [DataWidth-1:0] regs[3:NumRegs-1];
+
+    assign masked_int_flags = reg0.int_flags & reg1.int_mask;
 
     // Write logic
     always_ff @(posedge clk or posedge _reset) begin
@@ -57,6 +62,11 @@ module register_file #(
                     2: reg2 <= reg_in;
                     default: regs[addr_in] <= reg_in;
                 endcase
+            end else if (irq_f) begin
+                reg1 <= 0;
+                reg1_buf <= reg1;
+            end else if (iret_f) begin
+                reg1 <= reg1_buf;
             end
         end
     end
@@ -65,13 +75,13 @@ module register_file #(
     // Read logic
     always_comb begin
         case (addr_out1)
-            0: reg_out1 = {reg0.int_flags & reg1.int_mask, reg0.busy_flags};
+            0: reg_out1 = {masked_int_flags, reg0.busy_flags};
             1: reg_out1 = reg1;
             2: reg_out1 = reg2;
             default: reg_out1 = regs[addr_out1];
         endcase
         case (addr_out2)
-            0: reg_out2 = {reg0.int_flags & reg1.int_mask, reg0.busy_flags};
+            0: reg_out2 = {masked_int_flags, reg0.busy_flags};
             1: reg_out2 = reg1;
             2: reg_out2 = reg2;
             default: reg_out2 = regs[addr_out2];

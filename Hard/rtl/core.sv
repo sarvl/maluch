@@ -29,7 +29,10 @@ module core(
     output logic [15:0] core2io_data_w
 );
 
-    logic [31:0]    instruction;
+    localparam logic [15:0] IRQ_MICROCODE = 16'hC800; //1100 1000 0000 0000
+
+    logic [31:0]    instruction /* verilator public */;
+    logic [31:0]    int_instr;
     logic [15:0]    instr_pointer;
     logic [15:0]    _next_pointer;
 
@@ -49,18 +52,30 @@ module core(
     logic [15:0]    sp_in;
     logic           csr_flags_we;
 
+    logic irq_f;
+    logic iret_f;
+    logic [3:0] irq_relative_addr;
+    logic [7:0] masked_int_flags;
+
     logic [15:0]    instr_pointer_seq;
     logic [15:0]    instr_pointer_ctrl;
 
     csr_t csr;
     csr_t _csr_next;
+    csr_t csr_buf;
 
     // Driving outputs
-    always_ff @(posedge clk) instr_pointer <= _reset ? 0 : _next_pointer;
+    always_ff @(posedge clk) instr_pointer <= _reset ? 0 : 
+                                                irq_f ? {12'hfff, irq_relative_addr} : _next_pointer;
+    
+    always_ff @(posedge clk) int_instr <= {IRQ_MICROCODE, _next_pointer};
 
     // Driving csr
-    always_ff @(posedge clk)
+    always_ff @(posedge clk) begin
         if (csr_flags_we) csr <= _csr_next;
+        else if (irq_f) csr_buf <= csr;
+        else if (iret_f) csr <= csr_buf;
+    end
 
     program_counter IP(
         .instr_pointer(instr_pointer),
@@ -77,6 +92,7 @@ module core(
 
         .csr_flags_we(csr_flags_we),
         .instr_pointer_ctrl(instr_pointer_ctrl),
+        .iret_f(iret_f),
 
         // ALU
         .alu_ret(alu_ret),
@@ -129,12 +145,24 @@ module core(
 
         .int_flags(io2core_int_f),
         .busy_flags(io2core_busy_f),
+        .irq_f(irq_f),
+        .iret_f(iret_f),
 
+        .masked_int_flags(masked_int_flags),
         .reg_out1(reg_out1),
         .reg_out2(reg_out2)
     );
+    interrupt_controller INT_CTRL(
+        .clk(clk),
+        ._reset(_reset),
+        .masked_int_flags(masked_int_flags),
+        .iret_f(iret_f),
+
+        .irq_f(irq_f),
+        .irq_relative_addr(irq_relative_addr)
+    );
 
     assign core2mem_instr_pointer = instr_pointer;
-    assign instruction = mem2core_instr;
+    assign instruction = irq_f ? int_instr : mem2core_instr;
 
 endmodule

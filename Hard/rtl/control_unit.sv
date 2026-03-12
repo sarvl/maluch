@@ -9,6 +9,7 @@ module control_unit (
 
     output logic        csr_flags_we,
     output logic [15:0]  instr_pointer_ctrl,
+    output logic        iret_f,
 
     // ALU
     input logic [15:0]  alu_ret,
@@ -47,6 +48,7 @@ module control_unit (
 
     // Constants
     localparam REG_SP = 4'b0010;
+    localparam IRET_FUNCT = 3'b001;
 
     // Opcodes
     localparam OPCODE_BRANCHING = 4'b010?;
@@ -261,5 +263,7 @@ module control_unit (
             default: ;
         endcase
     end
+
+    assign iret_f = (i.opcode == OPCODE_RET && i.funct == IRET_FUNCT);
 
 endmodule
