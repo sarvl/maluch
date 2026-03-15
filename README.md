@@ -5,31 +5,25 @@ mALUch is a simple 16 bit cpu, created mostly as a design exercise
 ## Running Simulation and Compiling Tools
 To compile simulator it is necessary to have ncurses installed  
 
-All that is necessary to compile existing tooling is
-```
-make init
-```
-
-then assemble test program as 
-```
-./assemble.sh Progs/os_test.cpp out.bin
+```bash
+cd Soft/Simulator
+make
 ```
 
-and finally run it as 
+To run a file it's as simple as
+```bash
+./simulate path/to/file
 ```
-./simulate out.bin
-```
-
-to get list of commands type
-```
-help
-```
-to switch between windows use TAB
 
 ## Assembler  
-in Soft/  
-Created as sort of an experiment as a `.cpp` file, to create an assembly see for example in `Progs/` that includes `asm.h`.  
-Use via `./assembly.sh`, this compiles `.cpp` "assembly" file that creates binary, execution of that binary outputs text file with encoded instructions. This later can be simulated by simulator.
+To use assembler it is necessary to have fasmg installed
+
+The assembler is implemented as a fasmg .inc file, so to write your own program you have to have `include "path/to/maluch.inc"` included in your file.  
+To compile a program do
+```bash
+fasmg main.asm [output]
+```
+The output name is optional, the default is the name of the input file sans the extension.
 
 ## Physical Implementation
 work in progress 😎
