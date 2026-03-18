@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./assemble.sh ./Tests/asm/$1.cpp Tests/out/$1.txt
+fasmg ./Tests_Asm/asm/$1.asm Tests_Asm/out/$1.bin

@@ -19,6 +19,8 @@ To run a file it's as simple as
 To use assembler it is necessary to have fasmg installed
 
 The assembler is implemented as a fasmg .inc file, so to write your own program you have to have `include "path/to/maluch.inc"` included in your file.  
+To just do `include "maluch.inc"` make sure to add the path to maluch.inc to an environment variable called INCLUDE.
+
 To compile a program do
 ```bash
 fasmg main.asm [output]
