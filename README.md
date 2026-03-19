@@ -36,5 +36,26 @@ in Simulator/
 mostly straightforward implementation with no interesting quirks, type `help` for list of commands, use `tab` to switch between COMMANDS window and SCREEN window.
 
 ## Authors
-[@sarvl](https://github.com/sarvl)  
+### ISA
 [@Racuun](https://github.com/Racuun)  
+[@sarvl](https://github.com/sarvl) 
+
+### Hardware
+
+#### FPGA
+[@Antoni-S](https://github.com/Antoni-S)  
+[@didlox1](https://github.com/didlox1)  
+[@K-Walega-AGH](https://github.com/K-Walega-AGH)  
+[@Racuun](https://github.com/Racuun)   
+[@xKraZx](https://github.com/xKraZx)  
+
+#### PCB
+[@Bercikowsky](https://github.com/Bercikowsky)  
+[@Jasiopi](https://github.com/Jasiopi)  
+[@MerlinTheProgrammist](https://github.com/MerlinTheProgramist)  
+[@Rudgosz](https://github.com/Rudgosz)  
+[@sarvl](https://github.com/sarvl)  
+
+### Software
+[@PieVieRo](https://github.com/PieVieRo)  
+[@sarvl](https://github.com/sarvl)  
