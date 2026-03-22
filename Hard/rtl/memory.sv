@@ -7,15 +7,15 @@ module memory #(
 )(
     input   logic                   clk,
     input   logic                   write_en,
-    input   logic [AddrSize-1:0]    addr,                   // Data address (RAM/VRAM/ROM writes, RAM reads)
-    input   logic [AddrSize-1:0]    instr_addr,             // Instruction address (ROM reads)
+    input   logic [AddrSize-1:0]    addr,                   
+    input   logic [AddrSize-1:0]    instr_addr,             
     input   logic [DataSize-1:0]    data_in, 
     input logic [AddrSize-1:0]      mem_vram_addr,
     input logic                     mem_prog_write_en,
 
     output  logic [DataSize-1:0]    mem_vram_data,
-    output  logic [2*DataSize-1:0]  data_out,               // Data from addr
-    output  logic [2*DataSize-1:0]  instr_data_out         // Instruction data from instr_addr
+    output  logic [2*DataSize-1:0]  data_out,               
+    output  logic [2*DataSize-1:0]  instr_data_out         
 
 
 );
@@ -99,7 +99,6 @@ module memory #(
     assign   prog_ram2_en = mem_prog_write_en && ram2_en;
     assign   prog_vram_en = mem_prog_write_en && !ram_en;
 
-    // ROM programming: even instruction address updates ROM1 (even words), odd goes ROM2 (odd words)
     assign rom1_write_en = (mem_prog_write_en && !instr_addr[0]);
     assign rom2_write_en = (mem_prog_write_en && instr_addr[0]);
     assign rom1_addr = addr[0] ?  addr[14:1] + 1 : addr[14:1];
