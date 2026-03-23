@@ -141,9 +141,9 @@ int main(int argc, char* argv[]) {
             core_read_done = true;
         }
         // Simulate memory delay: respond with data after read request
-        // ram returns {0xFFFF, actual_data} so lower 16 bits are the actual data
+        // ram returns actual_data (16-bit)
         if (tb.getCycleCount() == 3 && tb.ns_count == 10 && core_read_done) {
-            mc->mem_data_out = (0xFFFF0000) | core_data_r;  // upper=0xFFFF, lower=data
+            mc->mem_data_out = core_data_r;
             mc->eval();
             check("Core read data", mc->mem2core_data_r, core_data_r);
         }

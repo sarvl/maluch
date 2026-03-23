@@ -14,7 +14,7 @@ module memory #(
     input logic                     mem_prog_write_en,
 
     output  logic [DataSize-1:0]    mem_vram_data,
-    output  logic [2*DataSize-1:0]  data_out,               
+    output  logic [DataSize-1:0]  data_out,               
     output  logic [2*DataSize-1:0]  instr_data_out         
 
 
@@ -82,7 +82,7 @@ module memory #(
     logic [DataSize-1:0]    rom2_data_o;
     logic [AddrSize-3:0]    rom1_addr;
     logic [AddrSize-3:0]    rom2_addr;
-    logic [2*DataSize-1:0]  rom_d_out;
+    logic [DataSize-1:0]  rom_d_out;
     logic rom1_write_en;
     logic rom2_write_en;
 
@@ -107,9 +107,9 @@ module memory #(
 
     assign ram_d_out = ram1_en ? ram1_data_o : (ram2_en ? ram2_data_o : {16{1'b1}});
 
-    assign rom_d_out = addr[0] ? {rom2_data_o, rom1_data_o} : {rom1_data_o, rom2_data_o};
+    assign rom_d_out = addr[0] ? rom2_data_o : rom1_data_o;
 
-    assign data_out = ram_en ? {{16{1'b1}}, ram_d_out} : rom_d_out;
+    assign data_out = ram_en ? ram_d_out : rom_d_out;
 
 
 

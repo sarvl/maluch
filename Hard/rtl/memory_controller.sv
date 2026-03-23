@@ -12,7 +12,7 @@ module memory_controller #(
     output logic [DataSize-1:0]      mem_data_in,
     output logic                     mem_prog_write_en,
     input  logic [DataSize-1:0]      mem_vram_data,
-    input  logic [2*DataSize-1:0]    mem_data_out,
+    input  logic [DataSize-1:0]    mem_data_out,
     input  logic [2*DataSize-1:0]    mem_instr_data_out,
 
     // Core
@@ -60,7 +60,7 @@ always_comb begin
             mem_write_en = 1'b1;
             mem_data_in  = core2mem_data_w;
         end else begin
-            mem2core_data_r = mem_data_out[15:0];
+            mem2core_data_r = mem_data_out;
         end
     end
 end

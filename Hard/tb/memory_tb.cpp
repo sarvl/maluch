@@ -141,13 +141,13 @@ int main(int argc, char* argv[]) {
             mem->write_en = 0;
             mem->addr = 0x8000;
             mem->eval();
-            check("RAM read 0x8000", mem->data_out, 0xFFFFABCD);
+            check("RAM read 0x8000", mem->data_out, 0xABCD);
             mem->addr = 0x8001;
             mem->eval();
-            check("RAM read 0x8001", mem->data_out, 0xFFFF5678);
+            check("RAM read 0x8001", mem->data_out, 0x5678);
             mem->addr = 0x8002;
             mem->eval();
-            check("RAM read 0x8002", mem->data_out, 0xFFFF9ABC);
+            check("RAM read 0x8002", mem->data_out, 0x9ABC);
         }
 
         // RAM instruction read (instr_data_out) to verify interleaving across banks
@@ -199,21 +199,21 @@ int main(int argc, char* argv[]) {
             mem->addr = 0x0000;
             mem->instr_addr = 0x0000;
             mem->eval();
-            check("ROM data 0x0000", mem->data_out, 0x56789ABC);
+            check("ROM data 0x0000", mem->data_out, 0x5678);
             check("ROM instr 0x0000", mem->instr_data_out, 0x56789ABC);
         }
         if (tb.getCycleCount() == 12 && tb.ns_count == 10) {
             mem->addr = 0x0001;
             mem->instr_addr = 0x0001;
             mem->eval();
-            check("ROM data 0x0001", mem->data_out, 0x9ABC5678);
+            check("ROM data 0x0001", mem->data_out, 0x9ABC);
             check("ROM instr 0x0001", mem->instr_data_out, 0x9ABC5678);
         }
         if (tb.getCycleCount() == 13 && tb.ns_count == 10) {
             mem->addr = 0x0002;
             mem->instr_addr = 0x0002;
             mem->eval();
-            check("ROM data 0x0002", mem->data_out, 0x56780000);
+            check("ROM data 0x0002", mem->data_out, 0x5678);
             check("ROM instr 0x0002", mem->instr_data_out, 0x56780000);
         }
 
