@@ -39,9 +39,6 @@ public:
         ns_count = 0;
     }
 
-    void printStatus() {
-        std::cout << "Cycle: " << cycle_count << std::dec << std::endl;
-    }
 };
 
 int main(int argc, char* argv[]) {
@@ -209,9 +206,7 @@ int main(int argc, char* argv[]) {
         if (tfp) tfp->dump(contextp->time());
         contextp->timeInc(1);
 
-        if (verbose && tb.getCycleCount() % 100 == 0) {
-            tb.printStatus();
-        }
+
 
         if (tb.getCycleCount() % 20 == 0 && tfp) tfp->flush();
     }

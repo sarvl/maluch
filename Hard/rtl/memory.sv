@@ -26,10 +26,12 @@ module memory #(
 
     ram #(.AddrSize(14)) RAM1   (.clk(clk), .prog_data(data_in), .data_out(ram1_data_o), .data_addr(addr[14:1]), .data_write_en(_w_ram1_en),
     .prog_write_en(prog_ram1_en), .instr_addr(ram1_instr_addr), .instr_data_out(ram1_instr_data_o) );
+
     ram #(.AddrSize(14)) RAM2   (.clk(clk), .prog_data(data_in), .data_out(ram2_data_o), .data_addr(addr[14:1]), .data_write_en(_w_ram2_en),
     .prog_write_en(prog_ram2_en), .instr_addr(ram2_instr_addr), .instr_data_out(ram2_instr_data_o) );
-    ram #(.AddrSize(15)) VRAM   (.clk(clk), .prog_data(data_in), .data_out(mem_vram_data), .data_addr(mem_vram_addr[14:0]), 
-    .data_write_en(_w_vram_en),.prog_write_en(1'b0),.instr_addr('0),.instr_data_out());
+
+    ram #(.AddrSize(15)) VRAM   (.clk(clk), .prog_data(data_in), .data_out(), .data_addr(addr[14:0]), 
+    .data_write_en(_w_vram_en),.prog_write_en(1'b0),.instr_addr(mem_vram_addr[14:0]),.instr_data_out(mem_vram_data));
 
 
     rom #(.AddrSize(14)) ROM1    (.clk(clk), .instr_addr(rom1_instr_addr), .instr_data_out(rom1_instr_data_o),
@@ -87,7 +89,7 @@ module memory #(
     logic   ram_en, ram1_en, ram2_en;
     logic [DataSize-1:0]    ram1_data_o, ram2_data_o, ram_d_out;
     logic _w_ram1_en, _w_ram2_en, _w_vram_en;
-    logic prog_ram1_en, prog_ram2_en, prog_vram_en;
+    logic prog_ram1_en, prog_ram2_en;
     assign ram_en  = addr[AddrSize-1];
     assign ram1_en = !addr[0] && ram_en;
     assign ram2_en =  addr[0] && ram_en;
@@ -97,7 +99,6 @@ module memory #(
     assign   _w_vram_en = write_en && !ram_en;
     assign   prog_ram1_en = mem_prog_write_en && ram1_en;
     assign   prog_ram2_en = mem_prog_write_en && ram2_en;
-    assign   prog_vram_en = mem_prog_write_en && !ram_en;
 
     assign rom1_write_en = (mem_prog_write_en && !instr_addr[0]);
     assign rom2_write_en = (mem_prog_write_en && instr_addr[0]);
