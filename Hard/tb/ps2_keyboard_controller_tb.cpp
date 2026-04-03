@@ -50,8 +50,14 @@ void tick() {
 
 // Poll until int_flag asserted or timeout tick cycles (returns true if asserted)
 bool wait_for_int_or_timeout(int timeout_ticks) {
+    while (top->kclk__en == 0 && top->kclk__out != 0) {
+        tick();
+    }
     for (int i = 0; i < timeout_ticks; ++i) {
-        if (top->int_flag) return true;
+        if (top->int_flag){
+            return true;
+        }
+
         tick();
     }
     return top->int_flag;
@@ -70,12 +76,12 @@ uint8_t ps2_parity(uint8_t b) {
 void ps2_bit(int b) {
     top->kdata = b ? 1 : 0;
 
-    top->kclk = 0;
+    top->kclk = 1;
     for (int i = 0; i < 21; i++) {
         tick();
     }
 
-    top->kclk = 1;
+    top->kclk = 0;
     for (int i = 0; i < 21; i++) {
         tick();
     }
@@ -88,8 +94,6 @@ void send_byte(uint8_t b) {
     for (int i = 0; i < 8; ++i) ps2_bit( (b >> i) & 1 );
     ps2_bit(p); // parity
     ps2_bit(1); // stop (line released/high)
-
-    tick(); tick();
 }
 
 void send_make(uint8_t code) { send_byte(code); }
@@ -111,7 +115,7 @@ uint8_t read_data_register() {
     tick();
     // clear address/read strobe
     top->io_addr = 0;
-    top->io_r_en = 1;
+    top->io_r_en = 0;
     tick();
     return val;
 }
