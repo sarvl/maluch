@@ -65,6 +65,7 @@ debouncer #(
 
 
 assign data_request = (io_addr == KEYBOARD_ID) & io_r_en;
+assign kclk = (state == READY) ? 1'b0 : 1'bz;
 
 // FSM
 always_ff @(posedge clk or negedge rstn) begin
