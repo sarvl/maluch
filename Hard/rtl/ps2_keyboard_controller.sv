@@ -1,17 +1,17 @@
 
 
 module ps2_keyboard_controller(
-input logic clk,
-input logic rstn,
+    input logic clk,
+    input logic rstn,
 
-inout logic kclk,
-input logic kdata,
-input logic [2:0] io_addr,
-input logic io_r_en,
+    inout logic kclk,
+    input logic kdata,
 
-output logic[7:0] io_data_out,
-output logic busy_flag,
-output logic int_flag
+    input logic [2:0] io2kb_addr,
+    input logic io2kb_r_en,
+    output logic[15:0] kb2io_data_r,
+    output logic kb2io_busy_f,
+    output logic kb2io_int_f
 );
 
 localparam KEYBOARD_ID = 3'b001;
@@ -30,8 +30,8 @@ logic write_en, write_en_nxt;
 
 logic [7:0] ascii;
 
-logic busy_flag_nxt;
-logic [7:0] data_buffer, data_buffer_nxt;
+logic busy_flag, busy_flag_nxt;
+logic [15:0] data_buffer, data_buffer_nxt;
 
 typedef enum {
     RECEIVE,
@@ -59,7 +59,7 @@ debouncer #(
 );
 
 
-assign data_request = (io_addr == KEYBOARD_ID) & io_r_en;
+assign data_request = (io2kb_addr == KEYBOARD_ID) & io2kb_r_en;
 assign kclk = (state == READY) ? 1'b0 : 1'bz;
 
 // Inputs
@@ -111,7 +111,7 @@ always_ff @(posedge clk or negedge rstn) begin
         state <= RECEIVE;
         dataprev <= '0;
         shifting <= '0;
-        data_buffer <= 8'h0;
+        data_buffer <= '0;
     end else begin
         state <= state_nxt;
         dataprev <= dataprev_nxt;
@@ -141,7 +141,7 @@ always_comb begin
                         state_nxt = RECEIVE;
                     end
                     16'hF0??: begin
-                        data_buffer_nxt = ascii;
+                        data_buffer_nxt = {8'h0, ascii};
                         state_nxt = READY;
                     end
                     default: state_nxt = RECEIVE;
@@ -226,8 +226,9 @@ always_ff @(posedge clk or negedge rstn) begin
     end
 end
 
-assign io_data_out = data_request ? data_buffer : 8'hz;
-assign int_flag = ~busy_flag;
+assign kb2io_data_r = data_request ? data_buffer : 16'hz;
+assign kb2io_int_f = ~busy_flag;
+assign kb2io_busy_f = busy_flag;
 
 always_comb begin
     busy_flag_nxt = busy_flag;

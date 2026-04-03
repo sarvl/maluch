@@ -48,19 +48,19 @@ void tick() {
     dump_and_advance();
 }
 
-// Poll until int_flag asserted or timeout tick cycles (returns true if asserted)
+// Poll until kb2io_int_f asserted or timeout tick cycles (returns true if asserted)
 bool wait_for_int_or_timeout(int timeout_ticks) {
     while (top->kclk__en == 0 && top->kclk__out != 0) {
         tick();
     }
     for (int i = 0; i < timeout_ticks; ++i) {
-        if (top->int_flag){
+        if (top->kb2io_int_f){
             return true;
         }
 
         tick();
     }
-    return top->int_flag;
+    return top->kb2io_int_f;
 }
 
 // -----------------------
@@ -103,48 +103,48 @@ void send_break(uint8_t code) {
     send_byte(code);
 }
 
-// Read buffer via io_addr: io_addr==001 reads io_data_out.
-// This function sets io_addr, ticks once to allow module to present data, captures io_data_out,
-// then clears io_addr.
+// Read buffer via io2kb_addr: io2kb_addr==001 reads kb2io_data_r.
+// This function sets io2kb_addr, ticks once to allow module to present data, captures kb2io_data_r,
+// then clears io2kb_addr.
 uint8_t read_data_register() {
-    top->io_addr = 1;
-    top->io_r_en = 1;
+    top->io2kb_addr = 1;
+    top->io2kb_r_en = 1;
     top->eval();
 
-    uint8_t val = (uint8_t)top->io_data_out;
+    uint8_t val = (uint8_t)top->kb2io_data_r;
     tick();
     // clear address/read strobe
-    top->io_addr = 0;
-    top->io_r_en = 0;
+    top->io2kb_addr = 0;
+    top->io2kb_r_en = 0;
     tick();
     return val;
 }
 
 uint8_t read_data_register_wrong() {
-    top->io_addr = 1;
-    top->io_r_en = 0;
+    top->io2kb_addr = 1;
+    top->io2kb_r_en = 0;
     top->eval();
 
-    uint8_t val = (uint8_t)top->io_data_out;
+    uint8_t val = (uint8_t)top->kb2io_data_r;
     if(val)
         return val;
 
-    top->io_addr = 2;
-    top->io_r_en = 1;
+    top->io2kb_addr = 2;
+    top->io2kb_r_en = 1;
     top->eval();
 
-    val = (uint8_t)top->io_data_out;
+    val = (uint8_t)top->kb2io_data_r;
     if(val)
         return val;
 
-    top->io_addr = 1;
-    top->io_r_en = 1;
+    top->io2kb_addr = 1;
+    top->io2kb_r_en = 1;
     top->eval();
-    val = (uint8_t)top->io_data_out;
+    val = (uint8_t)top->kb2io_data_r;
     tick();
     // clear address/read strobe
-    top->io_addr = 0;
-    top->io_r_en = 0;
+    top->io2kb_addr = 0;
+    top->io2kb_r_en = 0;
     tick();
     return val;
 }
@@ -170,7 +170,7 @@ void log_result(bool ok, const string &name, int got, int expected) {
 // -----------------------
 void test_send_char(const string &name, uint8_t scancode, uint8_t expected_ascii) {
     // clear flags
-    top->io_addr = 0;
+    top->io2kb_addr = 0;
     tick();
 
     send_make(scancode);
@@ -179,7 +179,7 @@ void test_send_char(const string &name, uint8_t scancode, uint8_t expected_ascii
     }
     send_break(scancode);
 
-    // wait for int_flag (controller interrupt) or timeout
+    // wait for kb2io_int_f (controller interrupt) or timeout
     bool ok_int = wait_for_int_or_timeout(500);
     if (!ok_int) {
         log_result(false, name + " (no int)", 0xFF, expected_ascii);
@@ -194,7 +194,7 @@ void test_send_char(const string &name, uint8_t scancode, uint8_t expected_ascii
 
 void test_shift_A() {
     // press shift (0x12), press A (0x1C) => expect 'A'
-    top->io_addr = 0; tick();
+    top->io2kb_addr = 0; tick();
 
     send_make(0x12); // shift
     for (int i = 0; i < 80; ++i) tick();
@@ -216,7 +216,7 @@ void test_shift_A() {
 }
 
 void test_backspace() {
-    top->io_addr = 0; tick();
+    top->io2kb_addr = 0; tick();
     send_make(0x66); // backspace
     send_break(0x66);
     bool ok_int = wait_for_int_or_timeout(500);
@@ -229,7 +229,7 @@ void test_backspace() {
 }
 
 void test_enter() {
-    top->io_addr = 0; tick();
+    top->io2kb_addr = 0; tick();
     send_make(0x5A); // Enter
     send_break(0x5A);
     bool ok_int = wait_for_int_or_timeout(500);
@@ -244,7 +244,7 @@ void test_enter() {
 }
 
 void test_space() {
-    top->io_addr = 0; tick();
+    top->io2kb_addr = 0; tick();
     send_make(0x29); // space
     send_break(0x29);
     bool ok_int = wait_for_int_or_timeout(500);
@@ -257,7 +257,7 @@ void test_space() {
 }
 
 void test_wrong_id_or_instruction() {
-    top->io_addr = 0; tick();
+    top->io2kb_addr = 0; tick();
     send_make(0x1C); // space
     send_break(0x1C);
     bool ok_int = wait_for_int_or_timeout(500);
@@ -348,8 +348,8 @@ int main(int argc, char** argv) {
     // --- Initial conditions ---
     top->kclk = 1;
     top->kdata = 1;
-    top->io_addr = 0;
-    top->io_r_en = 0;
+    top->io2kb_addr = 0;
+    top->io2kb_r_en = 0;
     top->clk = 0;
     top->rstn = 1;   // start released
 
