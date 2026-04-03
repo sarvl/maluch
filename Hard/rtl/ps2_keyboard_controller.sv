@@ -19,14 +19,11 @@ localparam KEYBOARD_ID = 3'b001;
 logic kclk_test;
 
 logic kclkf, kdataf;
+logic p_kclkf;
 logic data_request;
-logic [7:0] datacur;
+logic [7:0] datacur, datacur_nxt;
 logic [7:0] dataprev, dataprev_nxt;
-logic [3:0] cnt;
-logic cflag;
-
-logic [15:0] scancode_pair, scancode_pair_nxt;
-logic pflag, pflag_nxt;
+logic [3:0] cnt, cnt_nxt;
 
 logic shifting, shifting_nxt;
 logic write_en, write_en_nxt;
@@ -38,12 +35,10 @@ logic [7:0] data_buffer, data_buffer_nxt;
 
 typedef enum {
     RECEIVE,
-    PROCESSING,
     READY
 } state_t;
 
 state_t state, state_nxt;
-
 
 
 debouncer #(
@@ -67,68 +62,91 @@ debouncer #(
 assign data_request = (io_addr == KEYBOARD_ID) & io_r_en;
 assign kclk = (state == READY) ? 1'b0 : 1'bz;
 
+// Inputs
+always_ff @(posedge clk or negedge rstn) begin
+    if(!rstn) begin
+        cnt <= 0;
+        datacur <= 8'h0;
+    end else begin
+        cnt <= cnt_nxt;
+        datacur <= datacur_nxt;
+        p_kclkf <= kclkf;
+    end
+end
+
+always_comb begin
+    cnt_nxt = cnt;
+    datacur_nxt = datacur;
+
+    case (state)
+        RECEIVE: begin
+            if (!kclkf && p_kclkf) begin
+                case(cnt)
+                    0:;//Start bit
+                    1:datacur_nxt[0]=kdataf;
+                    2:datacur_nxt[1]=kdataf;
+                    3:datacur_nxt[2]=kdataf;
+                    4:datacur_nxt[3]=kdataf;
+                    5:datacur_nxt[4]=kdataf;
+                    6:datacur_nxt[5]=kdataf;
+                    7:datacur_nxt[6]=kdataf;
+                    8:datacur_nxt[7]=kdataf;
+                    9: ;
+                    10: ;
+                endcase
+
+                if(cnt<=9)
+                    cnt_nxt=cnt+1;
+                else if(cnt==10)
+                    cnt_nxt=0;
+            end
+        end
+        READY: ;
+    endcase
+end
+
 // FSM
 always_ff @(posedge clk or negedge rstn) begin
     if(!rstn) begin
         state <= RECEIVE;
-        pflag <= '0;
         dataprev <= '0;
-        scancode_pair <= '0;
         shifting <= '0;
-        write_en <= '0;
         data_buffer <= 8'h0;
     end else begin
         state <= state_nxt;
-
-        pflag <= pflag_nxt;
         dataprev <= dataprev_nxt;
-        scancode_pair <= scancode_pair_nxt;
-
         shifting <= shifting_nxt;
-        write_en <= write_en_nxt;
-
         data_buffer <= data_buffer_nxt;
     end
 end
 
 always_comb begin
     state_nxt = state;
-
-    pflag_nxt = pflag;
     dataprev_nxt = dataprev;
-    scancode_pair_nxt = scancode_pair;
-
     shifting_nxt = shifting;
-
     data_buffer_nxt = data_buffer;
 
     case (state)
         RECEIVE: begin
-            if (cflag == 1'b1 && pflag == 1'b0) begin
-                scancode_pair_nxt = {dataprev, datacur};
+            if(!kclkf && p_kclkf && cnt == 10) begin
                 dataprev_nxt = datacur;
-
-                state_nxt = PROCESSING;
+                
+                priority casez({dataprev, datacur})
+                    16'hF012: begin
+                        shifting_nxt = 0;
+                        state_nxt = RECEIVE;
+                    end
+                    16'h??12: begin
+                        shifting_nxt = 1;
+                        state_nxt = RECEIVE;
+                    end
+                    16'hF0??: begin
+                        data_buffer_nxt = ascii;
+                        state_nxt = READY;
+                    end
+                    default: state_nxt = RECEIVE;
+                endcase
             end
-
-            pflag_nxt = cflag;
-        end
-        PROCESSING: begin
-            priority casez(scancode_pair)
-                16'hF012: begin
-                    shifting_nxt = 0;
-                    state_nxt = RECEIVE;
-                end
-                16'h??12: begin
-                    shifting_nxt = 1;
-                    state_nxt = RECEIVE;
-                end
-                16'hF0??: begin
-                    data_buffer_nxt = ascii;
-                    state_nxt = READY;
-                end
-                default: state_nxt = RECEIVE;
-            endcase
         end
         READY: begin
             if(data_request)
@@ -137,31 +155,9 @@ always_comb begin
     endcase
 end
 
-// Receiving scancodes
-always_ff @(negedge kclkf) begin
-    case(cnt)
-        0:;//Start bit
-        1:datacur[0]<=kdataf;
-        2:datacur[1]<=kdataf;
-        3:datacur[2]<=kdataf;
-        4:datacur[3]<=kdataf;
-        5:datacur[4]<=kdataf;
-        6:datacur[5]<=kdataf;
-        7:datacur[6]<=kdataf;
-        8:datacur[7]<=kdataf;
-        9:cflag<=1'b1;
-        10:cflag<=1'b0;
-    endcase
-
-    if(cnt<=9)
-        cnt<=cnt+1;
-    else if(cnt==10)
-        cnt<=0;
-end
-
 //Translating scancodes to ASCII
 always_comb begin
-    unique case (scancode_pair[7:0])
+    unique case (datacur)
         8'h1C: ascii = shifting ? "A" : "a"; // A
         8'h32: ascii = shifting ? "B" : "b"; // B
         8'h21: ascii = shifting ? "C" : "c"; // C
@@ -238,7 +234,6 @@ always_comb begin
 
     case(state)
         RECEIVE: busy_flag_nxt = 1;
-        PROCESSING: ;
         READY: begin
             busy_flag_nxt = 0;
             if(data_request)
