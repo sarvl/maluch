@@ -25,7 +25,7 @@ char *name_lut[] = {
     /* 1000 */ "ldw",     "ldw",     "ldw",     "ldw",     "ldw",     "ldw",     "ldw",     "ldw", 
     /* 1001 */ "stw",     "stw",     "stw",     "stw",     "stw",     "stw",     "stw",     "stw", 
     /* 1010 */ "call",    "call",    "call",    "call",    "call",    "call",    "call",    "call",
-    /* 1011 */ "ret",     "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",
+    /* 1011 */ "ret",     "iret",    "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",
     /* 1100 */ "push",    "push",    "push",    "push",    "push",    "push",    "push",    "push", 
     /* 1101 */ "pull",    "pull",    "pull",    "pull",    "pull",    "pull",    "pull",    "pull", 
     /* 1110 */ "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd",   "rsrvd", 
@@ -102,8 +102,10 @@ int main(int argc, char *argv[argc]) {
             case 0x5:
             case 0xA:
             case 0xC:
-            case 0xD:
                 ADD_SRC();
+                break;
+            case 0xD:
+                ADD_DST();
                 break;
             case 0x6:
                 ADD_DST();
