@@ -103,47 +103,13 @@ void send_break(uint8_t code) {
     send_byte(code);
 }
 
-// Read buffer via io2kb_addr: io2kb_addr==001 reads kb2io_data_r.
-// This function sets io2kb_addr, ticks once to allow module to present data, captures kb2io_data_r,
-// then clears io2kb_addr.
+// Read buffer directly from kb2io_data_r after the controller raises the interrupt flag.
+// The controller only drives the bus while io2kb_r_en is asserted.
 uint8_t read_data_register() {
-    top->io2kb_addr = 1;
     top->io2kb_r_en = 1;
     top->eval();
-
+    tick();
     uint8_t val = (uint8_t)top->kb2io_data_r;
-    tick();
-    // clear address/read strobe
-    top->io2kb_addr = 0;
-    top->io2kb_r_en = 0;
-    tick();
-    return val;
-}
-
-uint8_t read_data_register_wrong() {
-    top->io2kb_addr = 1;
-    top->io2kb_r_en = 0;
-    top->eval();
-
-    uint8_t val = (uint8_t)top->kb2io_data_r;
-    if(val)
-        return val;
-
-    top->io2kb_addr = 2;
-    top->io2kb_r_en = 1;
-    top->eval();
-
-    val = (uint8_t)top->kb2io_data_r;
-    if(val)
-        return val;
-
-    top->io2kb_addr = 1;
-    top->io2kb_r_en = 1;
-    top->eval();
-    val = (uint8_t)top->kb2io_data_r;
-    tick();
-    // clear address/read strobe
-    top->io2kb_addr = 0;
     top->io2kb_r_en = 0;
     tick();
     return val;
@@ -170,7 +136,7 @@ void log_result(bool ok, const string &name, int got, int expected) {
 // -----------------------
 void test_send_char(const string &name, uint8_t scancode, uint8_t expected_ascii) {
     // clear flags
-    top->io2kb_addr = 0;
+    top->io2kb_r_en = 0;
     tick();
 
     send_make(scancode);
@@ -194,7 +160,7 @@ void test_send_char(const string &name, uint8_t scancode, uint8_t expected_ascii
 
 void test_shift_A() {
     // press shift (0x12), press A (0x1C) => expect 'A'
-    top->io2kb_addr = 0; tick();
+    top->io2kb_r_en = 0; tick();
 
     send_make(0x12); // shift
     for (int i = 0; i < 80; ++i) tick();
@@ -216,7 +182,7 @@ void test_shift_A() {
 }
 
 void test_backspace() {
-    top->io2kb_addr = 0; tick();
+    top->io2kb_r_en = 0; tick();
     send_make(0x66); // backspace
     send_break(0x66);
     bool ok_int = wait_for_int_or_timeout(500);
@@ -229,7 +195,7 @@ void test_backspace() {
 }
 
 void test_enter() {
-    top->io2kb_addr = 0; tick();
+    top->io2kb_r_en = 0; tick();
     send_make(0x5A); // Enter
     send_break(0x5A);
     bool ok_int = wait_for_int_or_timeout(500);
@@ -244,7 +210,7 @@ void test_enter() {
 }
 
 void test_space() {
-    top->io2kb_addr = 0; tick();
+    top->io2kb_r_en = 0; tick();
     send_make(0x29); // space
     send_break(0x29);
     bool ok_int = wait_for_int_or_timeout(500);
@@ -257,7 +223,7 @@ void test_space() {
 }
 
 void test_wrong_id_or_instruction() {
-    top->io2kb_addr = 0; tick();
+    top->io2kb_r_en = 0; tick();
     send_make(0x1C); // space
     send_break(0x1C);
     bool ok_int = wait_for_int_or_timeout(500);
@@ -265,7 +231,7 @@ void test_wrong_id_or_instruction() {
         log_result(false, "a (no int)", 0xFF, 'a');
         return;
     }
-    uint8_t got = read_data_register_wrong();
+    uint8_t got = read_data_register();
     log_result(got == 'a', "test id and instruction on 'a'", got, 'a');
 }
 
@@ -348,7 +314,6 @@ int main(int argc, char** argv) {
     // --- Initial conditions ---
     top->kclk = 1;
     top->kdata = 1;
-    top->io2kb_addr = 0;
     top->io2kb_r_en = 0;
     top->clk = 0;
     top->rstn = 1;   // start released
