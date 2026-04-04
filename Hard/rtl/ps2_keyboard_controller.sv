@@ -7,7 +7,6 @@ module ps2_keyboard_controller(
     inout logic kclk,
     input logic kdata,
 
-    input logic [2:0] io2kb_addr,
     input logic io2kb_r_en,
     output logic[15:0] kb2io_data_r,
     output logic kb2io_busy_f,
@@ -20,7 +19,6 @@ logic kclk_test;
 
 logic kclkf, kdataf;
 logic p_kclkf;
-logic data_request;
 logic [7:0] datacur, datacur_nxt;
 logic [7:0] dataprev, dataprev_nxt;
 logic [3:0] cnt, cnt_nxt;
@@ -59,7 +57,6 @@ debouncer #(
 );
 
 
-assign data_request = (io2kb_addr == KEYBOARD_ID) & io2kb_r_en;
 assign kclk = (state == READY) ? 1'b0 : 1'bz;
 
 // Inputs
@@ -149,7 +146,7 @@ always_comb begin
             end
         end
         READY: begin
-            if(data_request)
+            if(io2kb_r_en)
                 state_nxt = RECEIVE;
         end
     endcase
@@ -226,7 +223,7 @@ always_ff @(posedge clk or negedge rstn) begin
     end
 end
 
-assign kb2io_data_r = data_request ? data_buffer : 16'hz;
+assign kb2io_data_r = io2kb_r_en ? data_buffer : 16'hz;
 assign kb2io_int_f = ~busy_flag;
 assign kb2io_busy_f = busy_flag;
 
@@ -237,7 +234,7 @@ always_comb begin
         RECEIVE: busy_flag_nxt = 1;
         READY: begin
             busy_flag_nxt = 0;
-            if(data_request)
+            if(io2kb_r_en)
                 busy_flag_nxt = 1;
         end
     endcase
