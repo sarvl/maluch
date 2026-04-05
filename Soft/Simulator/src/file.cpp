@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <bit>
 
-#include "../../utility/src/file.h"
 #include "../../utility/src/log.h"
 
 constexpr int hexd_to_val(char const hexd)
