@@ -27,7 +27,8 @@ module graphics_card_tb ();
   logic [ 7:0] vram_write_data;
 
   // IO ports to cpu decoder
-  logic [ 2:0] io2gpu_addr;
+  logic        gpu2io_busy_f;
+  logic        gpu2io_int_f;
   logic        io2gpu_w_en;
   logic [15:0] io2gpu_data_w;
   assign io2gpu_data_w = {instruction, color};
@@ -36,9 +37,10 @@ module graphics_card_tb ();
       .clk(clk),
       ._reset(_reset),
       // IO ports to cpu decoder
-      .io2gpu_addr(io2gpu_addr),
       .io2gpu_w_en(io2gpu_w_en),
       .io2gpu_data_w(io2gpu_data_w),
+      .gpu2io_busy_f(gpu2io_busy_f),
+      .gpu2io_int_f(gpu2io_int_f),
       // Other connections
       .h_sync(h_sync),
       .v_sync(v_sync),
@@ -104,7 +106,6 @@ module graphics_card_tb ();
   initial begin
     // Defaults
     clk = 0;
-    io2gpu_addr = 3'd2;
     io2gpu_w_en = 1;
 
     instruction = 8'h00;

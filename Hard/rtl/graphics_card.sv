@@ -12,7 +12,8 @@ module graphics_card (
     output logic        v_sync,
     output logic        video_enable,
     // IO ports to cpu decoder (according to interface.pdf)
-    input  logic [ 2:0] io2gpu_addr,
+    output logic        gpu2io_int_f,
+    output logic        gpu2io_busy_f,
     input  logic        io2gpu_w_en,
     input  logic [15:0] io2gpu_data_w,
     // To VRAM (read-only)
@@ -26,9 +27,10 @@ module graphics_card (
       .clk(clk),
       ._reset(_reset),
       // IO ports to cpu decoder
-      .io_addr(io2gpu_addr),
       .io_w_en(io2gpu_w_en),
       .io_data_w(io2gpu_data_w),
+      .io_irq(gpu2io_int_f),
+      .io_busy(gpu2io_busy_f),
       //Other connections to GPU
       .v_sync(v_sync),
       .address(address),

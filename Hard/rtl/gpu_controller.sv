@@ -12,7 +12,8 @@ module gpu_controller (
     output logic [ 7:0] data_out,
 
     // IO ports to cpu decoder
-    input logic [ 2:0] io_addr,
+    output logic       io_irq,
+    output logic       io_busy,
     input logic        io_w_en,
     input logic [15:0] io_data_w
 );
@@ -23,9 +24,10 @@ module gpu_controller (
       .clk(clk),
       ._reset(_reset),
       // IO ports to cpu decoder
-      .io_addr(io_addr),
       .io_w_en(io_w_en),
       .io_data_w(io_data_w),
+      .io_busy(io_busy),
+      .io_irq(io_irq),
       // Other connections to GPU
       .color_data(color_data),
       .mode(mode)
