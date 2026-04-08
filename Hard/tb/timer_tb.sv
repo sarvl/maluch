@@ -4,22 +4,24 @@
 module timer_tb ();
   logic clk;
   logic _reset;
-  logic ack;
-  logic irq;
+  logic io2tim_r_en;
+  logic tim2io_int_f;
+  logic tim2io_busy_f;
 
   timer timer (
       .clk(clk),
       ._reset(_reset),
-      .ack(ack),
-      .irq(irq)
+      .io2tim_r_en(io2tim_r_en),
+      .tim2io_int_f(tim2io_int_f),
+      .tim2io_busy_f(tim2io_busy_f)
   );
 
   always #0.5 clk = ~clk;  //1MHz clock
 
   initial begin
-    clk    = 1'b0;
-    _reset = 1'b1;
-    ack    = 1'b0;
+    clk         = 1'b0;
+    _reset      = 1'b1;
+    io2tim_r_en = 1'b0;
 
     // reset
     repeat (2) @(posedge clk);
@@ -28,19 +30,19 @@ module timer_tb ();
     _reset = 1'b1;
 
     // wait for irq to go high
-    wait (irq === 1'b1);
+    wait (tim2io_int_f === 1'b1);
     repeat (500) @(posedge clk);
 
     // service (ack) for 1 cycle
-    @(posedge clk) ack <= 1'b1;
-    @(posedge clk) ack <= 1'b0;
+    @(posedge clk) io2tim_r_en <= 1'b1;
+    @(posedge clk) io2tim_r_en <= 1'b0;
 
     // next interrupt
-    @(posedge clk) wait (irq === 1'b1);
+    @(posedge clk) wait (tim2io_int_f === 1'b1);
 
     // service again
-    @(posedge clk) ack <= 1'b1;
-    @(posedge clk) ack <= 1'b0;
+    @(posedge clk) io2tim_r_en <= 1'b1;
+    @(posedge clk) io2tim_r_en <= 1'b0;
     repeat (5) @(posedge clk);
     $finish;
   end

@@ -5,9 +5,10 @@ module timer #(
     input logic clk,
     input logic _reset,
 
-    // ack should be pulsed high for clk cycle when the interrupt is serviced
-    input  logic ack,
-    output logic irq
+    // io2tim_r_en should be pulsed high for clk cycle when the interrupt is serviced
+    input  logic io2tim_r_en,
+    output logic tim2io_int_f,
+    output logic tim2io_busy_f
 );
 
   // number of clock cycles in the period
@@ -18,19 +19,23 @@ module timer #(
 
   always_ff @(posedge clk) begin
     if (!_reset) begin
-      count <= '0;
-      irq   <= 1'b0;
+      count         <= '0;
+      tim2io_int_f  <= 1'b0;
+      tim2io_busy_f <= 1'b0;
     end else begin
-      if (irq) begin
-        if (ack) begin  // clear interrupt
-          irq   <= 1'b0;
-          count <= '0;
+      if (tim2io_int_f) begin
+        if (io2tim_r_en) begin  // clear interrupt
+          tim2io_int_f  <= 1'b0;
+          tim2io_busy_f <= 1'b0;
+          count         <= '0;
         end
       end else begin
         if (count == PERIOD_CYCLES - 1) begin
-          irq <= 1'b1;  // raise interrupt
+          tim2io_int_f  <= 1'b1;  // raise interrupt
+          tim2io_busy_f <= 1'b0;  // when  not counting - not busy
         end else begin
-          count <= count + 1'b1;
+          count         <= count + 1'b1;
+          tim2io_busy_f <= 1'b1;  // when counting - busy
         end
       end
     end
