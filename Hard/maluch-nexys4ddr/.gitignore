@@ -1,0 +1,55 @@
+# =========================================
+# Vivado Logs, Journals, and Temp Files
+# =========================================
+*.jou
+*.log
+*.str
+*.dmp
+*.pb
+*.mif
+
+# =========================================
+# Vivado Generated Directories (DO NOT COMMIT)
+# =========================================
+# These folders are regenerated automatically by Vivado 
+# during synthesis, implementation, and simulation.
+.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+
+# =========================================
+# Simulation and Hardware Binaries
+# =========================================
+# Waveform databases (Massive files)
+*.wdb
+*.vcd
+
+# Bitstreams and Hardware Handoff files
+# (Usually you want to release these via GitHub Releases, not track in repo)
+*.bit
+*.xsa
+*.ltx
+*.pdi
+*.sysdef
+
+# =========================================
+# Vitis / Xilinx SDK (Embedded Software)
+# =========================================
+# If you keep Vitis workspaces in the same repo
+workspace/
+.metadata/
+*.elf
+
+# =========================================
+# OS Generated Files
+# =========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
