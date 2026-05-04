@@ -240,7 +240,18 @@
       "mpn": "",
       "sch_revision": "1"
     },
-    "layer_pairs": [],
+    "layer_pairs": [
+      {
+        "bottomLayer": 2,
+        "enabled": true,
+        "topLayer": 0
+      },
+      {
+        "bottomLayer": 8,
+        "enabled": true,
+        "topLayer": 6
+      }
+    ],
     "layer_presets": [],
     "viewports": []
   },
