@@ -2775,88 +2775,6 @@
 		(uuid "be5955b2-dcc9-44c0-b77c-41445c37bcdd")
 	)
 	(symbol
-		(lib_id "Device:C")
-		(at 123.19 45.72 180)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "04227669-5e2d-4452-a2c3-1f19a309b72e")
-		(property "Reference" "C28"
-			(at 127 44.4499 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Value" "100nF"
-			(at 127 46.9899 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
-			(at 122.2248 41.91 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" "https://www.tme.eu/pl/details/cs1005x7r104k100nr/kondensatory-mlcc-smd/samwha/"
-			(at 123.19 45.72 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Unpolarized capacitor"
-			(at 123.19 45.72 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "2"
-			(uuid "76f50e88-529b-499c-b689-cb8280422464")
-		)
-		(pin "1"
-			(uuid "85f47b58-ac9d-4f3c-a33c-373db422e1e2")
-		)
-		(instances
-			(project "memory_controller"
-				(path "/dccec861-b967-466c-843e-d6d1ad6064ce/65198342-3b70-4e1d-8493-7cbe3d0407e3"
-					(reference "C28")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "mALUch_lib:RAM__AS7C1026B-10TCN")
 		(at 149.86 97.79 0)
 		(unit 1)
@@ -3076,8 +2994,8 @@
 		)
 	)
 	(symbol
-		(lib_id "power:VCC")
-		(at 123.19 41.91 0)
+		(lib_id "Device:C")
+		(at 127 49.53 180)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -3086,9 +3004,31 @@
 		(in_pos_files yes)
 		(dnp no)
 		(fields_autoplaced yes)
-		(uuid "1e545615-6b9a-478c-92cf-3830e06036f5")
-		(property "Reference" "#PWR0188"
-			(at 123.19 45.72 0)
+		(uuid "091a9a96-443f-4ee4-9f94-435df0e27587")
+		(property "Reference" "C28"
+			(at 130.81 48.2599 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "100nF"
+			(at 130.81 50.7999 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Capacitor_SMD:C_0402_1005Metric"
+			(at 126.0348 45.72 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3098,18 +3038,8 @@
 				)
 			)
 		)
-		(property "Value" "VCC"
-			(at 123.19 36.83 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 123.19 41.91 0)
+		(property "Datasheet" "https://www.tme.eu/pl/details/cs1005x7r104k100nr/kondensatory-mlcc-smd/samwha/"
+			(at 127 49.53 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3119,8 +3049,8 @@
 				)
 			)
 		)
-		(property "Datasheet" ""
-			(at 123.19 41.91 0)
+		(property "Description" "Unpolarized capacitor"
+			(at 127 49.53 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -3130,24 +3060,16 @@
 				)
 			)
 		)
-		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 123.19 41.91 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
+		(pin "2"
+			(uuid "74b6b341-a7a4-4cbd-99ad-8b32e924d0d1")
 		)
 		(pin "1"
-			(uuid "cde278e4-331c-40d1-96f9-ae5a691eaabc")
+			(uuid "d387e055-9ae2-4f6b-bdee-2d5897c2c566")
 		)
 		(instances
 			(project "memory_controller"
 				(path "/dccec861-b967-466c-843e-d6d1ad6064ce/65198342-3b70-4e1d-8493-7cbe3d0407e3"
-					(reference "#PWR0188")
+					(reference "C28")
 					(unit 1)
 				)
 			)
@@ -3311,84 +3233,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 123.19 49.53 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "44bbb26b-9295-49f0-8e48-838932ff6534")
-		(property "Reference" "#PWR0189"
-			(at 123.19 55.88 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 123.19 54.61 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 123.19 49.53 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 123.19 49.53 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 123.19 49.53 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "188bc5d2-7f7f-4983-8eaf-7bb0f9e217bd")
-		)
-		(instances
-			(project "memory_controller"
-				(path "/dccec861-b967-466c-843e-d6d1ad6064ce/65198342-3b70-4e1d-8493-7cbe3d0407e3"
-					(reference "#PWR0189")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "power:VCC")
 		(at 137.16 45.72 0)
 		(unit 1)
@@ -3467,6 +3311,84 @@
 		)
 	)
 	(symbol
+		(lib_id "power:VCC")
+		(at 127 45.72 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "6b6b7e98-8cf9-4a93-a146-e21f483246b7")
+		(property "Reference" "#PWR0188"
+			(at 127 49.53 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "VCC"
+			(at 127 40.64 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 127 45.72 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 127 45.72 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VCC\""
+			(at 127 45.72 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "ca1996e7-c1c0-4687-854f-2f86e2e34d60")
+		)
+		(instances
+			(project "memory_controller"
+				(path "/dccec861-b967-466c-843e-d6d1ad6064ce/65198342-3b70-4e1d-8493-7cbe3d0407e3"
+					(reference "#PWR0188")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "power:GND")
 		(at 137.16 53.34 0)
 		(unit 1)
@@ -3539,6 +3461,84 @@
 			(project "memory_controller"
 				(path "/dccec861-b967-466c-843e-d6d1ad6064ce/65198342-3b70-4e1d-8493-7cbe3d0407e3"
 					(reference "#PWR0169")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 127 53.34 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "bed15f2c-eb52-42d0-b37e-9b0a42dacc0a")
+		(property "Reference" "#PWR0189"
+			(at 127 59.69 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 127 58.42 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 127 53.34 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 127 53.34 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 127 53.34 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "27842eed-2079-4ac1-91c4-d3aaf9aad982")
+		)
+		(instances
+			(project "memory_controller"
+				(path "/dccec861-b967-466c-843e-d6d1ad6064ce/65198342-3b70-4e1d-8493-7cbe3d0407e3"
+					(reference "#PWR0189")
 					(unit 1)
 				)
 			)
