@@ -1,0 +1,52 @@
+`include "io_controller.sv"
+`include "ascii_controller.sv"
+`include "clear_engine.sv"
+
+module gpu_controller (
+    input  logic        clk,
+    input  logic        _reset,
+    input  logic [19:0] address,
+    input  logic        v_sync,
+    input  logic [15:0] vram_data, 
+    output logic [15:0] vram_addr,
+    output logic [ 7:0] data_out,
+
+    // IO ports to cpu decoder
+    output logic       io_irq,
+    output logic       io_busy,
+    input logic        io_w_en,
+    input logic [15:0] io_data_w
+);
+  logic [15:0] color_data;
+  logic mode;
+
+  io_controller io_controller (
+      .clk(clk),
+      ._reset(_reset),
+      // IO ports to cpu decoder
+      .io_w_en(io_w_en),
+      .io_data_w(io_data_w),
+      .io_busy(io_busy),
+      .io_irq(io_irq),
+      // Other connections to GPU
+      .color_data(color_data),
+      .mode(mode)
+  );
+
+  logic [12:0] ascii_address;
+  logic [ 7:0] data_ascii;
+
+  ascii_controller ascii_controller (
+      .clk(clk),
+      ._reset(_reset),
+      .color_data(color_data),
+      .vram_data(vram_data),
+      .address(address),
+      .ascii_address(ascii_address),
+      .data_ascii(data_ascii)
+  );
+  assign data_out = data_ascii;
+
+  assign vram_addr = {3'b0, ascii_address}; // Port B of VRAM uses [14:0], so this is fine.
+
+endmodule : gpu_controller
