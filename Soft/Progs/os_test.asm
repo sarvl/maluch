@@ -104,7 +104,7 @@ shell_cmd_help:
 
 shell_cmd_echo:
         mov temp_0, buffer+5
-        mov temp_1, ($FF-5)
+        mov temp_1, (100h-16-5)
         call kernel_screen_print_str_nl
         jmp shell_loop
 
@@ -216,7 +216,7 @@ kernel_screen_print_bool_false:
         ret
 
 kernel_screen_clear:
-        mov temp_0, $7FFF
+        mov temp_0, $1DFF
         mov temp_1, ' '
 
 kernel_screen_clear_loop:
@@ -271,6 +271,7 @@ kb_handler:
         push saved_0
         push saved_1
         push temp_0
+        push temp_1
         in saved_0, kb 
         ldw saved_1, buffer_pos
         mov temp_0, saved_0
@@ -291,6 +292,7 @@ kb_handler:
 IHR_1_skip_0:
         stw buffer_pos, saved_1
         
+        pull temp_1
         pull temp_0
         pull saved_1
         pull saved_0
@@ -305,6 +307,7 @@ IHR_1_new_cmd:
 check:
         stw cmd_ready, temp_0
 
+        pull temp_1
         pull temp_0
         pull saved_1
         pull saved_0
@@ -321,6 +324,7 @@ IHR_1_buffer_reduce:
         stw buffer_pos, saved_1
 
 IHR_1_ret:
+        pull temp_1
         pull temp_0
         pull saved_1
         pull saved_0
