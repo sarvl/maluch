@@ -2,7 +2,7 @@ CD := '\033[0m'    #color default
 CR := '\033[0;31m' #color red
 CY := '\033[0;33m' #color yellow 
 
-FILES := out/log.o out/file.o
+FILES := out/log.o
 
 debug :=
 
