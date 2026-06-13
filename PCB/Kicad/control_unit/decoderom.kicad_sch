@@ -2685,7 +2685,7 @@
 		(uuid "0fa22e97-9e7f-4fae-884e-11e7f9a3c443")
 	)
 	(label "memop0"
-		(at 138.43 99.695 0)
+		(at 138.43 104.775 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2725,7 +2725,7 @@
 		(uuid "1b52933a-5555-4c8b-b0bb-49d670727ab7")
 	)
 	(label "ioop0"
-		(at 82.55 109.855 0)
+		(at 82.55 112.395 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3025,7 +3025,7 @@
 		(uuid "6333f284-4ea1-473c-b20d-063b0d4bd894")
 	)
 	(label "ioop1"
-		(at 82.55 112.395 0)
+		(at 82.55 109.855 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3225,7 +3225,7 @@
 		(uuid "a6ce0404-036e-4d2c-b1f0-d5b9b3cdc2ad")
 	)
 	(label "memop2"
-		(at 138.43 104.775 0)
+		(at 138.43 99.695 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3695,7 +3695,7 @@
 	)
 	(hierarchical_label "iosrc"
 		(shape output)
-		(at 195.58 107.315 0)
+		(at 256.54 97.155 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -3750,7 +3750,7 @@
 	)
 	(hierarchical_label "isstack"
 		(shape output)
-		(at 256.54 97.155 0)
+		(at 195.58 107.315 0)
 		(effects
 			(font
 				(size 1.27 1.27)

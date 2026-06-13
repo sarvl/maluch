@@ -144,7 +144,7 @@
         "min_text_thickness": 0.2,
         "min_through_hole_diameter": 0.2,
         "min_track_width": 0.1,
-        "min_via_annular_width": 0.255,
+        "min_via_annular_width": 0.05,
         "min_via_diameter": 0.25,
         "solder_mask_to_copper_clearance": 0.0,
         "use_height_for_length_calcs": true
@@ -194,7 +194,8 @@
         }
       ],
       "track_widths": [
-        0.0
+        0.0,
+        0.5
       ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
@@ -767,7 +768,7 @@
         "uuid": "dccec861-b967-466c-843e-d6d1ad6064ce"
       }
     ],
-    "used_designators": "J8,Cip2-5,Cr2-4,Cinsr2-4,Cbc2-4,Cbd2-27,#PWR370-507,Cir2,C1-14,Ud5-8,U1",
+    "used_designators": "",
     "variants": []
   },
   "sheets": [
