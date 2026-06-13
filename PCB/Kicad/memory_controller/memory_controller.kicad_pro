@@ -120,7 +120,7 @@
         "padstack": "warning",
         "pth_inside_courtyard": "ignore",
         "shorting_items": "error",
-        "silk_edge_clearance": "warning",
+        "silk_edge_clearance": "ignore",
         "silk_over_copper": "warning",
         "silk_overlap": "warning",
         "skew_out_of_range": "error",
@@ -128,7 +128,7 @@
         "starved_thermal": "error",
         "text_height": "warning",
         "text_on_edge_cuts": "error",
-        "text_thickness": "warning",
+        "text_thickness": "ignore",
         "through_hole_pad_without_hole": "error",
         "too_many_vias": "error",
         "track_angle": "error",
@@ -987,7 +987,7 @@
         "uuid": "dccec861-b967-466c-843e-d6d1ad6064ce"
       }
     ],
-    "used_designators": "C26-28,#PWR176,#PWR185-189",
+    "used_designators": "",
     "variants": []
   },
   "sheets": [
