@@ -1,0 +1,140 @@
+(footprint "MLC1260"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(property "Value" "MLC1260"
+		(at 5.5 13.2 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "2af5a48a-5069-492c-ae73-bd468ad6e7fb")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 5.5 5.3 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "7cca5a2b-20b6-4a37-9479-3c1267139703")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 5.5 5.3 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "6502c58c-0f6a-4205-b8e2-68e97b9e0c2c")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Reference" "REF**"
+		(at 6.1 5.3 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "0cf85dc3-ea20-4d8d-95b0-c4e44d7e0118")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -0.2 0)
+		(end -0.2 10.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "ae079a8d-c674-4480-b853-b45affa82c4a")
+	)
+	(fp_line
+		(start 11.6 0)
+		(end 11.6 10.5)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "F.SilkS")
+		(uuid "33279a07-de9b-4ba0-865a-40f05aad800f")
+	)
+	(fp_rect
+		(start -1.5 -1.5)
+		(end 12.9 12)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "d9e666e4-0db0-4db5-b80e-2b11bb2cea2c")
+	)
+	(fp_rect
+		(start 0 0)
+		(end 11.4 10.5)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "8ff79655-5f9d-4d17-a6a6-f6000ee2c1c0")
+	)
+	(fp_text user "${REFERENCE}"
+		(at 5.6 14.9 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "4c21f0bb-8ca8-4d1c-9a85-0d8e0727f49a")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" smd roundrect
+		(at 5.6 0.8)
+		(size 2.7 4.5)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.15)
+		(solder_mask_margin 0.12)
+		(uuid "a4fc25ae-3bd0-4bf9-a62b-55e8b29667c4")
+	)
+	(pad "2" smd roundrect
+		(at 5.6 9.7)
+		(size 2.7 4.5)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(roundrect_rratio 0.15)
+		(solder_mask_margin 0.12)
+		(uuid "df558f24-38c8-425e-a78d-0d9b4ae7b00b")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/../lib/mALUch_lib.pretty/models/MLC1260.STEP"
+		(offset
+			(xyz 5.5 -5.3 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz -90 -0 -0)
+		)
+	)
+)
