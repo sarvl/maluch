@@ -1,0 +1,4 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "mALUch_lib") (type "KiCad") (uri "/home/szop/Projects/ALU/maluch-pcb/PCB/Kicad/lib/mALUch_lib.pretty") (options "") (descr ""))
+)

@@ -11004,6 +11004,52 @@
 		)
 	)
 	(sheet
+		(at 38.1 152.4)
+		(size 25.4 12.7)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(fill
+			(color 0 0 0 0)
+		)
+		(uuid "066d4a5f-3fc1-4a85-8606-6d924bb3c557")
+		(property "Sheetname" "Power"
+			(at 38.1 151.6884 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left bottom)
+			)
+		)
+		(property "Sheetfile" "power.kicad_sch"
+			(at 38.1 165.6846 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		)
+		(instances
+			(project "control_unit"
+				(path "/dccec861-b967-466c-843e-d6d1ad6064ce"
+					(page "33")
+				)
+			)
+		)
+	)
+	(sheet
 		(at 63.5 63.5)
 		(size 50.8 63.5)
 		(exclude_from_sim no)

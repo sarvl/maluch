@@ -2,10 +2,30 @@
 
 mALUch is a simple 16 bit cpu, created mostly as a design exercise 
 
+## Running Simulation and Compiling Tools
+To compile simulator it is necessary to have ncurses installed  
+
+```bash
+cd Soft/Simulator
+make
+```
+
+To run a file it's as simple as
+```bash
+./simulate path/to/file
+```
+
 ## Assembler  
-in Soft/  
-Created as sort of an experiment as a `.cpp` file, to create an assembly see for example in `Progs/` that includes `asm.h`.  
-Use via `./assembly.sh`, this compiles `.cpp` "assembly" file that creates binary, execution of that binary outputs text file with encoded instructions. This later can be simulated by simulator.
+To use assembler it is necessary to have fasmg installed
+
+The assembler is implemented as a fasmg .inc file, so to write your own program you have to have `include "path/to/maluch.inc"` included in your file.  
+To just do `include "maluch.inc"` make sure to add the path to maluch.inc to an environment variable called INCLUDE.
+
+To compile a program do
+```bash
+fasmg main.asm [output]
+```
+The output name is optional, the default is the name of the input file sans the extension.
 
 ## Physical Implementation
 work in progress 😎
@@ -16,5 +36,26 @@ in Simulator/
 mostly straightforward implementation with no interesting quirks, type `help` for list of commands, use `tab` to switch between COMMANDS window and SCREEN window.
 
 ## Authors
-[@sarvl](https://github.com/sarvl)  
+### ISA
 [@Racuun](https://github.com/Racuun)  
+[@sarvl](https://github.com/sarvl) 
+
+### Hardware
+
+#### FPGA
+[@Antoni-S](https://github.com/Antoni-S)  
+[@didlox1](https://github.com/didlox1)  
+[@K-Walega-AGH](https://github.com/K-Walega-AGH)  
+[@Racuun](https://github.com/Racuun)   
+[@xKraZx](https://github.com/xKraZx)  
+
+#### PCB
+[@Bercikowsky](https://github.com/Bercikowsky)  
+[@Jasiopi](https://github.com/Jasiopi)  
+[@MerlinTheProgrammist](https://github.com/MerlinTheProgramist)  
+[@Rudgosz](https://github.com/Rudgosz)  
+[@sarvl](https://github.com/sarvl)  
+
+### Software
+[@PieVieRo](https://github.com/PieVieRo)  
+[@sarvl](https://github.com/sarvl)  

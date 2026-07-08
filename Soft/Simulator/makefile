@@ -2,6 +2,8 @@ default: out/main.o out/instruction.o out/file.o out/tui.o ../utility/out/log.o 
 	@echo linking
 	@g++ -std=c++23 -O3 -Wall -Wextra -pedantic out/* ../utility/out/log.o ../utility/out/file.o -lncurses -o simulate
 	
+init:
+	@mkdir -p out/
 
 out/main.o: src/main.cpp
 	@echo compiling main.cpp

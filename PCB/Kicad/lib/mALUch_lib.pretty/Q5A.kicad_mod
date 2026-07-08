@@ -1,0 +1,201 @@
+(footprint "Q5A"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Q5A")
+	(tags "MOSFET (N-Channel)")
+	(property "Reference" "Q**"
+		(at 0.2005 -0.15 0)
+		(layer "F.SilkS")
+		(uuid "b8a1cf42-a13e-4eba-95f0-4917a54bcedf")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Value" "Q5A"
+		(at 0.2005 -0.15 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "87a9d9c9-1274-47c2-9fbc-7871cbaac3d9")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.254)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "ea117544-f7e8-4c7b-b1f9-23ff4cfb78b6")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "f977406f-7711-4e83-bb60-bdd2cea4ac29")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_line
+		(start -2.875 -2.45)
+		(end 2.875 -2.45)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "80d64703-97f7-44e7-a497-4227fedbd660")
+	)
+	(fp_line
+		(start 2.875 2.45)
+		(end -2.875 2.45)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "605a1ee1-fe3c-4a74-8c50-523fbcf50bdc")
+	)
+	(fp_circle
+		(center 3.5705 1.937)
+		(end 3.53794 1.937)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "ec93819a-391a-457f-8e86-daf540f97521")
+	)
+	(fp_line
+		(start -2.875 -2.45)
+		(end 2.875 -2.45)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "303adab7-a2cd-44df-8a7b-7cc7bf764ed7")
+	)
+	(fp_line
+		(start -2.875 2.45)
+		(end -2.875 -2.45)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "042f7631-43d7-422c-914c-b92555fe9d5b")
+	)
+	(fp_line
+		(start 2.875 -2.45)
+		(end 2.875 2.45)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "59d73424-481f-44d5-ad22-33f78a87e8c5")
+	)
+	(fp_line
+		(start 2.875 2.45)
+		(end -2.875 2.45)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(layer "Dwgs.User")
+		(uuid "2b3e8ffd-4bd7-4e7b-a73c-13db07bfbf07")
+	)
+	(pad "1" smd rect
+		(at 2.7525 1.905 90)
+		(size 0.675 0.75)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "51f91164-fa04-4d3a-aab3-a0cba6a58221")
+	)
+	(pad "2" smd rect
+		(at 2.7525 0.635 90)
+		(size 0.675 0.75)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "98537459-e4c3-47c3-9514-e42e820eee66")
+	)
+	(pad "3" smd rect
+		(at 2.7525 -0.635 90)
+		(size 0.675 0.75)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "f3b9462a-bcbe-4b76-b8a6-897b42eb70af")
+	)
+	(pad "4" smd rect
+		(at 2.7525 -1.905 90)
+		(size 0.675 0.75)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "347fc13a-cb90-465c-bf75-4f2469f75440")
+	)
+	(pad "5" smd rect
+		(at -2.8 -1.905)
+		(size 0.655 0.675)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "cba41590-3ad3-4065-9364-e165d0710c8e")
+	)
+	(pad "6" smd rect
+		(at -2.8 -0.635)
+		(size 0.655 0.675)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "380ab56a-f648-479d-9a07-e290f3295a99")
+	)
+	(pad "7" smd rect
+		(at -2.8 0.635)
+		(size 0.655 0.675)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "eecfca7f-f609-45b4-bd7f-ae59bf3ca924")
+	)
+	(pad "8" smd rect
+		(at -2.8 1.893)
+		(size 0.655 0.675)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "61dc8dd5-dd2a-4d0c-b017-dc15fcd64b58")
+	)
+	(pad "9" smd rect
+		(at -0.325 0)
+		(size 4.295 4.51)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(thermal_bridge_angle 45)
+		(uuid "7dacbe52-1eef-4d10-8d11-43be47f5868a")
+	)
+	(embedded_fonts no)
+	(model "/home/szop/Projects/ALU/maluch-pcb/PCB/Kicad/lib/mALUch_lib.pretty/models/CSD18531Q5A.stp"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
